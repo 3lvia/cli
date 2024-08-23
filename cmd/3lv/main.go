@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/3lvia/cli/pkg/build"
+	"github.com/3lvia/cli/pkg/deploy"
 	"github.com/urfave/cli/v2"
 )
 
@@ -56,7 +58,7 @@ func main() {
 						Value:   false,
 					},
 				},
-				Action: build,
+				Action: build.Build,
 			},
 			{
 				Name:    "deploy",
@@ -92,7 +94,7 @@ func main() {
 						Value:   "aks",
 					},
 				},
-				Action: deploy,
+				Action: deploy.Deploy,
 			},
 		},
 	}

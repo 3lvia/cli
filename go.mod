@@ -1,4 +1,4 @@
-module github.com/3lvia/3lv
+module github.com/3lvia/cli
 
 go 1.22.6
 

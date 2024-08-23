@@ -1,4 +1,4 @@
-package main
+package build
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-//go:embed templates
+//go:embed *.tmpl*
 var templates embed.FS
 
 type GenerateDockerfileOptions struct {
@@ -144,7 +144,7 @@ func writeDockerfile(
 
 	defer dockerfile.Close()
 
-	dockerfileTemplate, err := template.New(templateFile).ParseFS(templates, path.Join("templates", templateFile))
+	dockerfileTemplate, err := template.New(templateFile).ParseFS(templates, templateFile)
 	if err != nil {
 		return "", fmt.Errorf("Failed to parse Dockerfile template: %s", err)
 	}

@@ -1,4 +1,4 @@
-package main
+package deploy
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func deploy(c *cli.Context) error {
+func Deploy(c *cli.Context) error {
 	if c.NArg() <= 0 {
 		return cli.Exit("No input provided", 1)
 	}

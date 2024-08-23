@@ -1,4 +1,4 @@
-package main
+package build
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func build(c *cli.Context) error {
+func Build(c *cli.Context) error {
 	if c.NArg() <= 0 {
 		return cli.Exit("No input provided", 1)
 	}
