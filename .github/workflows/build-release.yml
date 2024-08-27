@@ -30,6 +30,7 @@ jobs:
           checkout: 'false'
           registry: 'ghcr'
           project-file: 'go.mod'
+          go-main-package-dir: './cmd/3lv'
           docker-cache-tag: ${{ github.event_name == 'push' && 'latest' }}
           docker-additional-tags: ${{ steps.version.outputs.version_tag }}
           ghcr-omit-repository-name: 'true'
