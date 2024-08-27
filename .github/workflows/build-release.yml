@@ -9,15 +9,19 @@ jobs:
   build:
     name: Build
     runs-on: elvia-runner
-    permissions:
-      contents: write
-      packages: write
+    outputs:
+      version-tag: ${{ steps.get-version.outputs.version_tag }}
+      major-version-tag: ${{ steps.get-version.outputs.major_version_tag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Resolve version
-        run: echo "VERSION_TAG=v$(cat VERSION)" >> "$GITHUB_ENV"
+        id: get-version
+        run: |
+          version=$(cat VERSION)
+          echo "VERSION_TAG=v$version" >> "$GITHUB_OUTPUT"
+          echo "MAJOR_VERSION_TAG=v$(echo $version | cut -d. -f1)" >> "$GITHUB_OUTPUT"
 
       - name: Build
         uses: 3lvia/core-github-actions-templates/build@trunk
@@ -25,33 +29,44 @@ jobs:
           name: '3lv'
           checkout: 'false'
           registry: 'ghcr'
-          project-file: 'Dockerfile'
+          project-file: 'go.mod'
           docker-cache-tag: ${{ github.event_name == 'push' && 'latest' }}
-          docker-additional-tags: ${{ env.VERSION_TAG }}
+          docker-additional-tags: ${{ steps.version.outputs.version_tag }}
           ghcr-omit-repository-name: 'true'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+  release:
+    name: Release
+    needs: [build]
+    runs-on: elvia-runner
+    if: ${{ github.event_name == 'push' }}
+    env:
+      VERSION_TAG: ${{ needs.build.outputs.version-tag }}
+      MAJOR_VERSION_TAG: ${{ needs.build.outputs.major-version-tag }}
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Create release if new version
-        if: ${{ github.event_name == 'push' }}
         run: |
           latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
-          if [[ "$latest_version" == '${{ env.VERSION_TAG }}' ]]; then
+          if [[ "$latest_version" == "$VERSION_TAG" ]]; then
             echo "Version already released."
             exit 0
           fi
 
-          gh release create \
-            '${{ env.VERSION_TAG }}' \
-            --generate-notes
+          gh release create "$VERSION_TAG" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Override major tag
-        if: ${{ github.event_name == 'push' }}
+      - name: Override old major tag
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
 
           git fetch --tags
-          git tag '${{ env.MAJOR_VERSION_TAG }}' '${{ env.VERSION_TAG }}' -f
+          git tag "$MAJOR_VERSION_TAG" "$VERSION_TAG" -f
           git push --tags -f
