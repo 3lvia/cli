@@ -17,7 +17,7 @@ go install github.com/3lvia/cli/cmd/3lv@latest
 ```bash
 git clone git@github.com:3lvia/cli.git
 cd cli
-go install ./3lv/cli
+go install ./cmd/3lv
 ```
 
 ## Usage

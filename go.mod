@@ -1,6 +1,6 @@
 module github.com/3lvia/cli
 
-go 1.22.6
+go 1.22.3
 
 require github.com/urfave/cli/v2 v2.27.4
 
