@@ -47,12 +47,12 @@ jobs:
         run: |
           latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
           if [[ "$latest_version" == "$VERSION_TAG" ]]; then
-            echo "Version already released."
+            echo "Version already released, but will still upload the binary."
+            gh release upload "$VERSION_TAG" ./3lv-linux-amd64.tar.gz
             exit 0
           fi
 
           gh release create "$VERSION_TAG" --generate-notes
-          gh release upload "$VERSION_TAG" ./3lv-linux-amd64.tar.gz
         env:
           GH_TOKEN: ${{ github.token }}
 
