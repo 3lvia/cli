@@ -56,7 +56,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: '3lv-tarball'
+          name: '3lv-artifacts'
 
       - name: Create release if new version
         run: |
