@@ -31,8 +31,7 @@ jobs:
       - name: Build and generate checksum
         run: |
           tarball_name="$(./scripts/build.sh $ARTIFACTS_DIR).tar.gz"
-          cd "$ARTIFACTS_DIR"
-          md5sum "$tarball_name" > "$binary_name.md5"
+          md5sum "$tarball_name" > "$tarball_name.md5"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
