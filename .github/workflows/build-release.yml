@@ -29,6 +29,12 @@ jobs:
       - name: Build
         run: ./scripts/build.sh
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: '3lv-tarball'
+          path: './3lv-linux-amd64.tar.gz'
+
   release:
     name: Release
     needs: [build]
@@ -42,6 +48,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: '3lv-tarball'
 
       - name: Create release if new version
         run: |
