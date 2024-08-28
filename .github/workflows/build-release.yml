@@ -27,17 +27,7 @@ jobs:
           echo "MAJOR_VERSION_TAG=v$(echo $version | cut -d. -f1)" >> "$GITHUB_OUTPUT"
 
       - name: Build
-        uses: 3lvia/core-github-actions-templates/build@trunk
-        with:
-          name: 'cli'
-          checkout: 'false'
-          registry: 'ghcr'
-          project-file: 'go.mod'
-          go-main-package-dir: './cmd/3lv'
-          docker-cache-tag: ${{ github.event_name == 'push' && 'latest' }}
-          docker-additional-tags: ${{ steps.get-version.outputs.version_tag }}
-          ghcr-omit-repository-name: 'true'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: ./build.sh
 
   release:
     name: Release
@@ -62,6 +52,7 @@ jobs:
           fi
 
           gh release create "$VERSION_TAG" --generate-notes
+          gh release upload "$VERSION_TAG" ./3lv-linux-amd64.tar.gz
         env:
           GH_TOKEN: ${{ github.token }}
 

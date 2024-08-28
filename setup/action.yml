@@ -1,0 +1,20 @@
+name: 'Setup 3lv'
+description: 'Sets up the Elvia CLI on your GitHub Actions runner.'
+inputs:
+  version:
+    description: 'The version of 3lv to install.'
+    required: false
+    default: 'latest'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Clone 3lv repository
+      uses: actions/checkout@v4
+      with:
+        repository: '3lvia/cli'
+        ref: ${{ inputs.version }}
+
+    - name: 'Install 3lv CLI'
+      shell: bash
+      run: ./scripts/install.sh
