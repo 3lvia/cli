@@ -3,7 +3,8 @@
 set -eou pipefail
 
 main() {
-    local binary_path="3lv-linux-amd64"
+    local out_dir="${1:-.}"
+    local binary_path="$out_dir/3lv-linux-amd64"
     local compressed_package_path="$binary_path.tar.gz"
 
     export GO111MODULE=on
@@ -20,4 +21,4 @@ main() {
     echo "$binary_path"
 }
 
-main
+main "$@"

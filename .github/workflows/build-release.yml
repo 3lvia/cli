@@ -15,6 +15,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      ARTIFACTS_DIR: 'dist'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,14 +28,17 @@ jobs:
           echo "VERSION_TAG=v$version" >> "$GITHUB_OUTPUT"
           echo "MAJOR_VERSION_TAG=v$(echo $version | cut -d. -f1)" >> "$GITHUB_OUTPUT"
 
-      - name: Build
-        run: ./scripts/build.sh
+      - name: Build and generate checksum
+        run: |
+          tarball_name="$(./scripts/build.sh $ARTIFACTS_DIR).tar.gz"
+          cd "$ARTIFACTS_DIR"
+          md5sum "$tarball_name" > "$binary_name.md5"
 
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: '3lv-tarball'
-          path: './3lv-linux-amd64.tar.gz'
+          name: '3lv-artifacts'
+          path: ${{ env.ARTIFACTS_DIR }}
 
   release:
     name: Release
@@ -49,7 +54,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download build artifact
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: '3lv-tarball'
@@ -60,6 +65,7 @@ jobs:
           if [[ "$latest_version" == "$VERSION_TAG" ]]; then
             echo "Version already released, but will still upload the binary."
             gh release upload "$VERSION_TAG" ./3lv-linux-amd64.tar.gz
+            gh release upload "$VERSION_TAG" ./3lv-linux-amd64.tar.gz.md5
             exit 0
           fi
 
