@@ -30,9 +30,10 @@ jobs:
 
       - name: Build, compress and generate checksum
         run: |
-          binary_name=$(./scripts/build.sh $ARTIFACTS_DIR --compress)
+          binary_name=$(./scripts/build.sh --compress)
           tarball_name=$(basename "$binary_name.tar.gz")
-          cd "$ARTIFACTS_DIR"
+          mkdir -p "$ARTIFACTS_DIR"
+          mv "$tarball_name" "$ARTIFACTS_DIR/"
           md5sum "$tarball_name" > "$tarball_name.md5"
 
       - name: Upload artifacts

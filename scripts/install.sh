@@ -8,8 +8,7 @@ main() {
         binary_path="$1"
     fi
 
-    local binary_name
-    IFS=- read binary_name _ <<< "$binary_path"
+    local binary_name="3lv"
     mv "$binary_path" "$binary_name"
 
     sudo install -Dm755 -t /usr/bin "$binary_name"
