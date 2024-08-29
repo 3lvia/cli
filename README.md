@@ -9,15 +9,25 @@ Requires [Go](https://golang.org).
 ### Install from GitHub
 
 ```bash
-go install github.com/3lvia/cli/cmd/3lv@latest
+go install github.com/3lvia/cli@latest
 ```
 
 ### Install from source
 
+#### Script
+
+```bash
+./scripts/install.sh
+```
+
+#### Go
+
+This will cause the CLI to be installed with the name `cli` (thanks https://github.com/golang/go/issues/44469).
+
 ```bash
 git clone git@github.com:3lvia/cli.git
 cd cli
-go install ./cmd/3lv
+go install .
 ```
 
 ## Usage
