@@ -24,6 +24,6 @@ runs:
 
         tar -xzvf 3lv-linux-amd64.tar.gz
 
-        ./scripts/install.sh 3lv-linux-amd64
+        './${{ github.action_path }}/scripts/install.sh 3lv-linux-amd64'
       env:
         GH_TOKEN: ${{ github.token }}
