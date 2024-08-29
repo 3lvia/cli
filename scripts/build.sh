@@ -9,7 +9,7 @@ main() {
     env GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "$binary_path" ./cmd/3lv
     echo "$binary_path"
 
-    if [[ "$1" == "--compress" ]]; then
+    if [[ "${1:-}" == '--compress' ]]; then
         tar -czf \
             "$compressed_package_path" \
             "$binary_path" LICENSE VERSION README.md
