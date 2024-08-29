@@ -18,10 +18,12 @@ import (
 var templates embed.FS
 
 type GenerateDockerfileOptions struct {
-	ProjectFile        string
-	BuildContext       string
-	IncludeFiles       []string
-	IncludeDirectories []string
+	ProjectFile            string // required
+	ApplicationName        string // required
+	GoMainPackageDirectory string
+	BuildContext           string
+	IncludeFiles           []string
+	IncludeDirectories     []string
 }
 
 func generateDockerfile(options GenerateDockerfileOptions) (string, string, error) {
@@ -103,10 +105,11 @@ func generateDockerfileForDotNet(dir string, options GenerateDockerfileOptions) 
 }
 
 type GoDockerfileVariables struct {
-	ModuleDirectory    string // required
-	BuildContext       string // required
-	IncludeFiles       []string
-	IncludeDirectories []string
+	ModuleDirectory      string // required
+	BuildContext         string // required
+	MainPackageDirectory string // required
+	IncludeFiles         []string
+	IncludeDirectories   []string
 }
 
 func generateDockerfileForGo(dir string, options GenerateDockerfileOptions) (string, string, error) {
@@ -115,11 +118,20 @@ func generateDockerfileForGo(dir string, options GenerateDockerfileOptions) (str
 		options.BuildContext,
 	)
 
+	mainPackageDirectory := func() string {
+		if options.GoMainPackageDirectory == "" {
+			return "./cmd/" + options.ApplicationName
+		}
+
+		return options.GoMainPackageDirectory
+	}()
+
 	dockerfileVariables := GoDockerfileVariables{
-		ModuleDirectory:    moduleDirectory,
-		BuildContext:       buildContext,
-		IncludeFiles:       options.IncludeFiles,
-		IncludeDirectories: options.IncludeDirectories,
+		ModuleDirectory:      moduleDirectory,
+		BuildContext:         buildContext,
+		MainPackageDirectory: mainPackageDirectory,
+		IncludeFiles:         options.IncludeFiles,
+		IncludeDirectories:   options.IncludeDirectories,
 	}
 
 	const templateFile = "Dockerfile.go.tmpl"
