@@ -26,15 +26,18 @@ func Build(c *cli.Context) error {
 	buildContext := c.String("build-context")
 	includeFiles := c.StringSlice("include-files")
 	includeDirectories := c.StringSlice("include-directories")
+	goMainPackageDirectory := c.String("go-main-package-directory")
 	systemName := c.String("system-name")
 	registry := c.String("registry")
 	push := c.Bool("push")
 
 	generateOptions := GenerateDockerfileOptions{
-		ProjectFile:        projectFile,
-		BuildContext:       buildContext,
-		IncludeFiles:       includeFiles,
-		IncludeDirectories: includeDirectories,
+		ProjectFile:            projectFile,
+		ApplicationName:        applicationName,
+		GoMainPackageDirectory: goMainPackageDirectory,
+		BuildContext:           buildContext,
+		IncludeFiles:           includeFiles,
+		IncludeDirectories:     includeDirectories,
 	}
 
 	dockerfilePath, buildContext, err := generateDockerfile(generateOptions)

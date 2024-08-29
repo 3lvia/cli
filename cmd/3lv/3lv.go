@@ -41,6 +41,10 @@ func main() {
 						Usage:   "The directories to include in the build context",
 					},
 					&cli.StringFlag{
+						Name:  "go-main-package-directory",
+						Usage: "The main package directory to use when building a Go application",
+					},
+					&cli.StringFlag{
 						Name:    "system-name",
 						Aliases: []string{"s"},
 						Usage:   "The system name to use",
