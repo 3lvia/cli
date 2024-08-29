@@ -19,6 +19,8 @@ runs:
 
         curl -sSL "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz"
         curl -sSL "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz.md5"
+      env:
+        GH_TOKEN: ${{ github.token }}
 
     - name: Verify 3lv CLI checksum
       shell: bash
