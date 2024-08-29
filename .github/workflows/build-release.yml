@@ -4,8 +4,8 @@ on:
   push:
     branches: [trunk]
     paths-ignore:
-    - 'README.md'
-    - 'setup/action.yml'
+      - 'README.md'
+      - 'setup/action.yml'
 
 jobs:
   build:
