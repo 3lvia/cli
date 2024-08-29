@@ -176,6 +176,26 @@ type BuildAndPushImageOptions struct {
 	Push           bool     // required
 }
 
+func constructBuildCommandArguments(
+	dockerfilePath string,
+	buildContext string,
+	imageName string,
+	tags []string,
+) []string {
+	var tagArguments []string
+	for _, tag := range tags {
+		tagArguments = append(tagArguments, "-t")
+		tagArguments = append(tagArguments, imageName+":"+tag)
+	}
+
+	return append(append([]string{
+		"buildx",
+		"build",
+		"-f",
+		dockerfilePath,
+	}, tagArguments...), buildContext)
+}
+
 func buildAndPushImage(
 	systemName string,
 	applicationName string,
@@ -192,21 +212,15 @@ func buildAndPushImage(
 		return append(options.AdditionalTags, options.CacheTag)
 	}()
 
-	var tagArguments []string
-	for _, tag := range tags {
-		tagArguments = append(tagArguments, "-t")
-		tagArguments = append(tagArguments, imageName+":"+tag)
-	}
-
 	buildCmd := exec.Command(
 		"docker",
-		"buildx",
-		"build",
-		"-f",
-		options.DockerfilePath,
+		constructBuildCommandArguments(
+			options.DockerfilePath,
+			options.BuildContext,
+			imageName,
+			tags,
+		)...,
 	)
-	buildCmd.Args = append(buildCmd.Args, tagArguments...)
-	buildCmd.Args = append(buildCmd.Args, options.BuildContext)
 	buildCmd.Stdout = os.Stdout
 	buildCmd.Stderr = os.Stderr
 

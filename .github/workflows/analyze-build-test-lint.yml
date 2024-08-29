@@ -1,4 +1,4 @@
-name: Analyze, build and lint
+name: Analyze, build, test and lint
 
 on:
   pull_request:
@@ -23,8 +23,8 @@ jobs:
         with:
           language: 'go'
 
-  build:
-    name: Build
+  build-test:
+    name: Build & test
     runs-on: elvia-runner
     concurrency:
       group: '${{ github.workflow }}-${{ github.event_name }}-build'
@@ -38,6 +38,9 @@ jobs:
         with:
           cache-dependency-path: 'go.sum'
           go-version-file: 'go.mod'
+
+      - name: Run tests
+        run: go test -v ./...
 
       - name: Build
         run: ./scripts/build.sh
