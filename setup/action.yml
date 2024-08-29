@@ -17,8 +17,8 @@ runs:
           version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
         fi
 
-        curl -sSL "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz"
-        curl -sSL "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz.md5"
+        wget -q "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz"
+        wget -q "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz.md5"
       env:
         GH_TOKEN: ${{ github.token }}
 
