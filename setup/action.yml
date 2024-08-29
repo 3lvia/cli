@@ -9,7 +9,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Download 3lv CLI
+    - name: Setup the 3lv CLI
       shell: bash
       run: |
         version='${{ inputs.version }}'
@@ -19,13 +19,11 @@ runs:
 
         wget -q "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz"
         wget -q "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz.md5"
+
+        md5sum -c 3lv-linux-amd64.tar.gz.md5
+
+        tar -xzvf 3lv-linux-amd64.tar.gz
+
+        ./scripts/install.sh 3lv-linux-amd64.tar.gz
       env:
         GH_TOKEN: ${{ github.token }}
-
-    - name: Verify 3lv CLI checksum
-      shell: bash
-      run: md5sum -c 3lv-linux-amd64.tar.gz.md5
-
-    - name: Install 3lv CLI
-      shell: bash
-      run: ./scripts/install.sh 3lv-linux-amd64.tar.gz
