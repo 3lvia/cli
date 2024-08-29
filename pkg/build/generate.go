@@ -18,38 +18,49 @@ import (
 var templates embed.FS
 
 type GenerateDockerfileOptions struct {
-	ProjectFile            string // required
-	ApplicationName        string // required
 	GoMainPackageDirectory string
 	BuildContext           string
 	IncludeFiles           []string
 	IncludeDirectories     []string
 }
 
-func generateDockerfile(options GenerateDockerfileOptions) (string, string, error) {
-	dir, err := os.MkdirTemp("", "3lv-build")
+func generateDockerfile(
+	projectFile string,
+	applicationName string,
+	options GenerateDockerfileOptions,
+) (string, string, error) {
+	directory, err := os.MkdirTemp("", "3lv-build")
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to create temporary directory: %s", err)
 	}
 
-	if strings.HasSuffix(options.ProjectFile, ".csproj") {
-		dockerfile, buildContext, err := generateDockerfileForDotNet(dir, options)
+	if strings.HasSuffix(projectFile, ".csproj") {
+		dockerfile, buildContext, err := generateDockerfileForDotNet(
+			projectFile,
+			directory,
+			options,
+		)
 		if err != nil {
 			return "", "", fmt.Errorf("Failed to generate Dockerfile for .NET project: %s", err)
 		}
 
 		return dockerfile, buildContext, nil
-	} else if strings.HasSuffix(options.ProjectFile, ".mod") {
-		dockerfile, buildContext, err := generateDockerfileForGo(dir, options)
+	} else if strings.HasSuffix(projectFile, ".mod") {
+		dockerfile, buildContext, err := generateDockerfileForGo(
+			projectFile,
+			applicationName,
+			directory,
+			options,
+		)
 		if err != nil {
 			return "", "", fmt.Errorf("Failed to generate Dockerfile for Go project: %s", err)
 		}
 
 		return dockerfile, buildContext, nil
-	} else if strings.HasPrefix(options.ProjectFile, "Dockerfile") || strings.HasSuffix(options.ProjectFile, "Dockerfile") {
-		return options.ProjectFile, path.Dir(options.ProjectFile), nil
+	} else if strings.HasPrefix(projectFile, "Dockerfile") || strings.HasSuffix(projectFile, "Dockerfile") {
+		return projectFile, path.Dir(projectFile), nil
 	} else {
-		return "", "", fmt.Errorf("Unsupported project file: %s", options.ProjectFile)
+		return "", "", fmt.Errorf("Unsupported project file: %s", projectFile)
 	}
 }
 
@@ -62,23 +73,27 @@ type DockerfileVariablesDotnet struct {
 	IncludeDirectories []string
 }
 
-func generateDockerfileForDotNet(dir string, options GenerateDockerfileOptions) (string, string, error) {
+func generateDockerfileForDotNet(
+	projectFile string,
+	directory string,
+	options GenerateDockerfileOptions,
+) (string, string, error) {
 	csprojFileName, buildContext := getProjectFileAndBuildContext(
-		options.ProjectFile,
+		projectFile,
 		options.BuildContext,
 	)
 
-	assemblyName, err := findAssemblyName(options.ProjectFile, csprojFileName, false)
+	assemblyName, err := findAssemblyName(projectFile, csprojFileName, false)
 	if err != nil {
 		return "", "", err
 	}
 
-	baseImageTag, err := findBaseImageTag(options.ProjectFile)
+	baseImageTag, err := findBaseImageTag(projectFile)
 	if err != nil {
 		return "", "", err
 	}
 
-	runtimeBaseImage, err := findRuntimeBaseImage(options.ProjectFile)
+	runtimeBaseImage, err := findRuntimeBaseImage(projectFile)
 	if err != nil {
 		return "", "", err
 	}
@@ -86,7 +101,7 @@ func generateDockerfileForDotNet(dir string, options GenerateDockerfileOptions) 
 	const templateFile = "Dockerfile.dotnet.tmpl"
 
 	dockerfilePath, err := writeDockerfile(
-		dir,
+		directory,
 		templateFile,
 		DockerfileVariablesDotnet{
 			CsprojFile:         csprojFileName,
@@ -112,15 +127,20 @@ type GoDockerfileVariables struct {
 	IncludeDirectories   []string
 }
 
-func generateDockerfileForGo(dir string, options GenerateDockerfileOptions) (string, string, error) {
+func generateDockerfileForGo(
+	projectFile string,
+	applicationName string,
+	dir string,
+	options GenerateDockerfileOptions,
+) (string, string, error) {
 	moduleDirectory, buildContext := getModuleDirectoryAndBuildContext(
-		options.ProjectFile,
+		projectFile,
 		options.BuildContext,
 	)
 
 	mainPackageDirectory := func() string {
 		if options.GoMainPackageDirectory == "" {
-			return "./cmd/" + options.ApplicationName
+			return "./cmd/" + applicationName
 		}
 
 		return options.GoMainPackageDirectory
