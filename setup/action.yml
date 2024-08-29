@@ -12,6 +12,7 @@ runs:
     - name: Setup the 3lv CLI
       shell: bash
       run: |
+        # Setup the 3lv CLI
         version='${{ inputs.version }}'
         if [[ $version == 'latest' ]]; then
           version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
@@ -24,6 +25,6 @@ runs:
 
         tar -xzvf 3lv-linux-amd64.tar.gz
 
-        './${{ github.action_path }}/scripts/install.sh 3lv-linux-amd64'
+        ./../scripts/install.sh 3lv-linux-amd64
       env:
         GH_TOKEN: ${{ github.token }}
