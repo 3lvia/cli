@@ -10,6 +10,43 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var Command *cli.Command = &cli.Command{
+	Name:    "deploy",
+	Aliases: []string{"d"},
+	Usage:   "Deploy the project",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:    "system-name",
+			Aliases: []string{"s"},
+			Usage:   "The system name to use",
+		},
+		&cli.StringFlag{
+			Name:    "environment",
+			Aliases: []string{"e"},
+			Usage:   "The environment to deploy to",
+			Value:   "dev",
+		},
+		&cli.StringFlag{
+			Name:    "helm-values-file",
+			Aliases: []string{"v"},
+			Usage:   "The helm values file to use",
+		},
+		&cli.StringFlag{
+			Name:    "workload-type",
+			Aliases: []string{"w"},
+			Usage:   "The workload type to use",
+			Value:   "deployment",
+		},
+		&cli.StringFlag{
+			Name:    "runtime-cloud-provider",
+			Aliases: []string{"r"},
+			Usage:   "The runtime cloud provider to use",
+			Value:   "aks",
+		},
+	},
+	Action: Deploy,
+}
+
 func Deploy(c *cli.Context) error {
 	if c.NArg() <= 0 {
 		return cli.Exit("No input provided", 1)
