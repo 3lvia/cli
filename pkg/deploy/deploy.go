@@ -53,7 +53,9 @@ func Deploy(c *cli.Context) error {
 		}
 
 	} else if runtimeCloudProvider == "gke" {
-		// authenticateGKE
+		if err := authenticateGKE(); err != nil {
+			return cli.Exit(err, 1)
+		}
 	}
 
 	helmOptions := HelmDeployOptions{
@@ -78,7 +80,7 @@ type DeployToAKSOptions struct {
 }
 
 func authenticateAKS(options DeployToAKSOptions) error {
-	const azureTenantID = "2186a6ec-c227-4291-9806-d95340bf439d"
+	// const azureTenantID = "2186a6ec-c227-4291-9806-d95340bf439d"
 
 	aksSubscriptionID, err := func() (string, error) {
 		if options.AKSSubscriptionID == "" {
@@ -115,6 +117,10 @@ func authenticateAKS(options DeployToAKSOptions) error {
 	fmt.Printf("Authenticating to AKS cluster %s in resource group %s in subscription %s\n", aksClusterName, aksResourceGroupName, aksSubscriptionID)
 
 	return nil
+}
+
+func authenticateGKE() error {
+	return fmt.Errorf("Not implemented")
 }
 
 type HelmDeployOptions struct {

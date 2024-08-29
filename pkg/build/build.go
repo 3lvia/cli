@@ -101,10 +101,12 @@ func buildAndPushImage(options BuildAndPushImageOptions) error {
 	}
 
 	if options.Push {
-		err := loginToRegistry(options.Registry)
-		if err != nil {
-			return err
-		}
+		/*
+			err := loginToRegistry(options.Registry)
+			if err != nil {
+				return err
+			}
+		*/
 
 		pushCmd := exec.Command(
 			"docker",
@@ -128,6 +130,7 @@ func buildAndPushImage(options BuildAndPushImageOptions) error {
 	return nil
 }
 
+/*
 func loginToRegistry(registry string) error {
 	switch registry {
 	case "acr":
@@ -152,6 +155,7 @@ func loginToRegistry(registry string) error {
 		return fmt.Errorf("Unknown registry")
 	}
 }
+*/
 
 func getRegistry(registry string) string {
 	if registry == "" || registry == "acr" {
