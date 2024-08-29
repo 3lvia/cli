@@ -65,12 +65,10 @@ func generateDockerfile(
 }
 
 type DockerfileVariablesDotnet struct {
-	CsprojFile         string // required
-	AssemblyName       string // required
-	BaseImageTag       string // required
-	RuntimeBaseImage   string // required
-	IncludeFiles       []string
-	IncludeDirectories []string
+	CsprojFile       string // required
+	AssemblyName     string // required
+	BaseImageTag     string // required
+	RuntimeBaseImage string // required
 }
 
 func generateDockerfileForDotNet(
@@ -83,7 +81,11 @@ func generateDockerfileForDotNet(
 		options.BuildContext,
 	)
 
-	assemblyName, err := findAssemblyName(projectFile, csprojFileName, false)
+	assemblyName, err := findAssemblyName(
+		projectFile,
+		csprojFileName,
+		false,
+	)
 	if err != nil {
 		return "", "", err
 	}
@@ -104,12 +106,10 @@ func generateDockerfileForDotNet(
 		directory,
 		templateFile,
 		DockerfileVariablesDotnet{
-			CsprojFile:         csprojFileName,
-			AssemblyName:       assemblyName,
-			BaseImageTag:       baseImageTag,
-			RuntimeBaseImage:   runtimeBaseImage,
-			IncludeFiles:       options.IncludeFiles,
-			IncludeDirectories: options.IncludeDirectories,
+			CsprojFile:       csprojFileName,
+			AssemblyName:     assemblyName,
+			BaseImageTag:     baseImageTag,
+			RuntimeBaseImage: runtimeBaseImage,
 		},
 	)
 	if err != nil {
@@ -119,7 +119,7 @@ func generateDockerfileForDotNet(
 	return dockerfilePath, buildContext, nil
 }
 
-type GoDockerfileVariables struct {
+type DockerfileVariablesGo struct {
 	ModuleDirectory      string // required
 	BuildContext         string // required
 	MainPackageDirectory string // required
@@ -146,7 +146,7 @@ func generateDockerfileForGo(
 		return options.GoMainPackageDirectory
 	}()
 
-	dockerfileVariables := GoDockerfileVariables{
+	dockerfileVariables := DockerfileVariablesGo{
 		ModuleDirectory:      moduleDirectory,
 		BuildContext:         buildContext,
 		MainPackageDirectory: mainPackageDirectory,
