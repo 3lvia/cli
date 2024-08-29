@@ -26,9 +26,6 @@ RUN apk update && \
 
 WORKDIR /app
 
-COPY --from=build /app/out .{{ if .IncludeFiles }}
-COPY {{ range .IncludeFiles }}{{ $.ModuleDirectory }}/{{ . }} {{ end }} ./{{ end }}{{ range .IncludeDirectories }}COPY {{ $.ModuleDirectory }}{{ . }} ./{{ end }}
-
 RUN chown --recursive application-user .
 USER application-user
 
