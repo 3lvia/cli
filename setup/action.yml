@@ -9,12 +9,21 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Clone 3lv repository
-      uses: actions/checkout@v4
-      with:
-        repository: '3lvia/cli'
-        ref: ${{ inputs.version }}
-
-    - name: 'Install 3lv CLI'
+    - name: Download 3lv CLI
       shell: bash
-      run: ./scripts/install.sh
+      run: |
+        version='${{ inputs.version }}'
+        if [[ $version == 'latest' ]]; then
+          version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
+        fi
+
+        curl -sSL "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz"
+        curl -sSL "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz.md5"
+
+    - name: Verify 3lv CLI checksum
+      shell: bash
+      run: md5sum -c 3lv-linux-amd64.tar.gz.md5
+
+    - name: Install 3lv CLI
+      shell: bash
+      run: ./scripts/install.sh 3lv-linux-amd64.tar.gz

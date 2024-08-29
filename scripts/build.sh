@@ -12,13 +12,14 @@ main() {
     export GOOS=linux
     export GOARCH=amd64
 
-    go build -o $binary_path ./cmd/3lv
-
-    tar -czf \
-        "$compressed_package_path" \
-        "$binary_path" LICENSE VERSION README.md
-
+    go build -o "$binary_path" ./cmd/3lv
     echo "$binary_path"
+
+    if [[ "$2" == "--compress" ]]; then
+        tar -czf \
+            "$compressed_package_path" \
+            "$binary_path" LICENSE VERSION README.md
+    fi
 }
 
 main "$@"
