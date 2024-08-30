@@ -231,7 +231,7 @@ func buildAndPushImage(
 	}
 
 	err := scanImage(ScanImageOptions{
-		ImageName: imageName,
+		ImageName: imageName + ":" + tags[0],
 		Severity:  options.Severity,
 	})
 	if err != nil {
