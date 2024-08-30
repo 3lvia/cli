@@ -239,13 +239,6 @@ func buildAndPushImage(
 	}
 
 	if options.Push {
-		/*
-			err := loginToRegistry(options.Registry)
-			if err != nil {
-				return err
-			}
-		*/
-
 		pushCmd := exec.Command(
 			"docker",
 			"push",
@@ -263,33 +256,6 @@ func buildAndPushImage(
 	return nil
 }
 
-/*
-func loginToRegistry(registry string) error {
-	switch registry {
-	case "acr":
-		loginCmd := exec.Command(
-			"az",
-			"acr",
-			"login",
-			"--name",
-			"containerregistryelvia",
-		)
-		loginCmd.Stdout = os.Stdout
-		loginCmd.Stderr = os.Stderr
-
-		if err := loginCmd.Run(); err != nil {
-			return fmt.Errorf("Failed to login to Azure Container Registry: %w", err)
-		}
-
-		return nil
-	case "ghcr":
-		return fmt.Errorf("Not implemented")
-	default:
-		return fmt.Errorf("Unknown registry")
-	}
-}
-*/
-
 func getRegistry(registry string) string {
 	if registry == "" || registry == "acr" {
 		return "containerregistryelvia.azurecr.io"
@@ -297,28 +263,6 @@ func getRegistry(registry string) string {
 		return "ghcr.io/3lvia"
 	}
 
-	return registry
-}
-
-type ScanImageOptions struct {
-	ImageName string // required
-	Severity  string // required
-}
-
-func scanImage(options ScanImageOptions) error {
-	scanCmd := exec.Command(
-		"trivy",
-		"image",
-		"--severity",
-		options.Severity,
-		options.ImageName,
-	)
-	scanCmd.Stdout = os.Stdout
-	scanCmd.Stderr = os.Stderr
-
-	if err := scanCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to scan Docker image: %w", err)
-	}
-
-	return nil
+	// In our case, we should never reach this point, however, Go's type system can't comprehend literal union types
+	panic("Unknown registry")
 }
