@@ -14,11 +14,6 @@ jobs:
     outputs:
       version-tag: ${{ steps.get-version.outputs.version_tag }}
       major-version-tag: ${{ steps.get-version.outputs.major_version_tag }}
-    permissions:
-      contents: read
-      packages: write
-    env:
-      ARTIFACTS_DIR: 'dist'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,20 +25,14 @@ jobs:
           echo "VERSION_TAG=v$version" >> "$GITHUB_OUTPUT"
           echo "MAJOR_VERSION_TAG=v$(echo $version | cut -d. -f1)" >> "$GITHUB_OUTPUT"
 
-      - name: Build, compress and generate checksum
-        run: |
-          binary_name=$(./scripts/build.sh --compress)
-          tarball_name="$binary_name.tar.gz"
-          mkdir -p "$ARTIFACTS_DIR"
-          mv "$tarball_name" "$ARTIFACTS_DIR/"
-          cd "$ARTIFACTS_DIR"
-          md5sum "$tarball_name" > "$tarball_name.md5"
+      - name: Package CLI
+        run: make package
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: '3lv-artifacts'
-          path: ${{ env.ARTIFACTS_DIR }}
+          path: '/tmp/3lv/dist'
 
   release:
     name: Release

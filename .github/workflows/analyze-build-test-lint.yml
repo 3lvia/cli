@@ -40,10 +40,10 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: Run tests
-        run: go test -v ./...
+        run: make test
 
       - name: Build
-        run: ./scripts/build.sh
+        run: make build
 
   lint:
     name: Lint

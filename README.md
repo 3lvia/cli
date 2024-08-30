@@ -4,31 +4,24 @@ Command Line Interface tool for developing, building and deploying Elvia applica
 
 ## Installation
 
-Requires [Go](https://golang.org).
+### Linux
 
-### Install from GitHub
-
-```bash
-go install github.com/3lvia/cli@latest
-```
-
-### Install from source
-
-#### Script
+Requires [Go](https://golang.org) and [Make](https://www.gnu.org/software/make).
 
 ```bash
-./scripts/install.sh
+# debian/ubuntu/WSL
+sudo apt install golang make
+
+sudo make install
 ```
 
-#### Go
+### Windows
 
-This will cause the CLI to be installed with the name `cli` (thanks https://github.com/golang/go/issues/44469).
+Install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow the Linux instructions.
 
-```bash
-git clone git@github.com:3lvia/cli.git
-cd cli
-go install .
-```
+### macOS
+
+TODO
 
 ## Usage
 
