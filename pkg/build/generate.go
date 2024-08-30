@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -84,7 +83,6 @@ func generateDockerfileForDotNet(
 	assemblyName, err := findAssemblyName(
 		projectFile,
 		csprojFileName,
-		false,
 	)
 	if err != nil {
 		return "", "", err
@@ -208,7 +206,7 @@ type PropertyGroup struct {
 func getXMLFromFile(fileName string) (*CSharpProjectFile, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
-		log.Fatalf("Failed to open csproj file: %s", err)
+		return nil, fmt.Errorf("getXMLFromFile: Failed to open file: %s", err)
 	}
 
 	bytes, err := io.ReadAll(file)
@@ -225,16 +223,17 @@ func getXMLFromFile(fileName string) (*CSharpProjectFile, error) {
 	return &project, nil
 }
 
-func findAssemblyName(csprojFileRelativePath string, csprojFileName string, testing bool) (string, error) {
+func findAssemblyName(
+	csprojFileRelativePath string,
+	csprojFileName string,
+) (string, error) {
 	var assemblyName string
-	if !testing {
-		csprojXml, err := getXMLFromFile(csprojFileRelativePath)
-		if err != nil {
-			return "", err
-		}
-
-		assemblyName = csprojXml.PropertyGroup.AssemblyName
+	csprojXml, err := getXMLFromFile(csprojFileRelativePath)
+	if err != nil {
+		return "", err
 	}
+
+	assemblyName = csprojXml.PropertyGroup.AssemblyName
 
 	if len(assemblyName) == 0 {
 		basename := filepath.Base(csprojFileName)
@@ -243,7 +242,7 @@ func findAssemblyName(csprojFileRelativePath string, csprojFileName string, test
 		return withoutExtension + ".dll", nil
 	}
 
-	return assemblyName, nil
+	return assemblyName + ".dll", nil
 }
 
 func findBaseImageTag(csprojFileRelativePath string) (string, error) {

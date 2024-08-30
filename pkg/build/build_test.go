@@ -36,13 +36,12 @@ func TestGetRegistry3(t *testing.T) {
 }
 
 func TestGetRegistry4(t *testing.T) {
-	const expectedRegistry = "random"
-
-	actualRegistry := getRegistry(expectedRegistry)
-
-	if actualRegistry != expectedRegistry {
-		t.Errorf("Expected %s, got %s", expectedRegistry, actualRegistry)
-	}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic")
+		}
+	}()
+	getRegistry("unknown")
 }
 
 func TestConstructBuildCommandArguments1(t *testing.T) {
