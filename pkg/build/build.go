@@ -93,6 +93,13 @@ var Command *cli.Command = &cli.Command{
 			Value:   false,
 			EnvVars: []string{"3LV_PUSH"},
 		},
+		&cli.BoolFlag{
+			Name:    "generate-only",
+			Aliases: []string{"G"},
+			Usage:   "Generates a Dockerfile, but does not build the image",
+			Value:   false,
+			EnvVars: []string{"3LV_GENERATE_ONLY"},
+		},
 	},
 	Action: Build,
 }
@@ -127,6 +134,7 @@ func Build(c *cli.Context) error {
 	includeFiles := c.StringSlice("include-files")
 	includeDirectories := c.StringSlice("include-directories")
 	push := c.Bool("push")
+	generateOnly := c.Bool("generate-only")
 
 	generateOptions := GenerateDockerfileOptions{
 		GoMainPackageDirectory: goMainPackageDirectory,
@@ -142,6 +150,11 @@ func Build(c *cli.Context) error {
 	)
 	if err != nil {
 		return cli.Exit(err, 1)
+	}
+
+	if generateOnly {
+		log.Printf("Dockerfile generated at %s\n", dockerfilePath)
+		return nil
 	}
 
 	buildOptions := BuildAndPushImageOptions{
