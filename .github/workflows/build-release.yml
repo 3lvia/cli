@@ -61,6 +61,8 @@ jobs:
             exit 0
           fi
 
+          trap 'gh release delete "$VERSION_TAG" --yes --cleanup-tag' ERR
+
           gh release create "$VERSION_TAG" --generate-notes
           gh release upload "$VERSION_TAG" ./3lv-linux-amd64.tar.gz
           gh release upload "$VERSION_TAG" ./3lv-linux-amd64.tar.gz.md5
