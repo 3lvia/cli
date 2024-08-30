@@ -26,6 +26,8 @@ RUN apk update && \
 
 WORKDIR /app
 
+COPY --from=build /app/out .
+
 RUN chown --recursive application-user .
 USER application-user
 
