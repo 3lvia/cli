@@ -11,6 +11,13 @@ jobs:
     outputs:
       version-tag: ${{ steps.get-version.outputs.version_tag }}
       major-version-tag: ${{ steps.get-version.outputs.major_version_tag }}
+    strategy:
+      matrix:
+        os: [linux, macos, windows]
+        arch: [amd64]
+        inlcude:
+        - os: macos
+          arch: arm64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,12 +30,12 @@ jobs:
           echo "MAJOR_VERSION_TAG=v$(echo $version | cut -d. -f1)" >> "$GITHUB_OUTPUT"
 
       - name: Package CLI
-        run: make package
+        run: make package-${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: '3lv-artifacts'
+          name: '3lv-${{ matrix.os }}-${{ matrix.arch }}'
           path: '/tmp/3lv/dist'
 
   release:
@@ -61,8 +68,6 @@ jobs:
           trap 'gh release delete "$VERSION_TAG" --yes --cleanup-tag' ERR
 
           gh release create "$VERSION_TAG" --generate-notes
-          gh release upload "$VERSION_TAG" ./3lv-linux-amd64.tar.gz
-          gh release upload "$VERSION_TAG" ./3lv-linux-amd64.tar.gz.md5
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -74,3 +79,39 @@ jobs:
           git fetch --tags
           git tag "$MAJOR_VERSION_TAG" "$VERSION_TAG" -f
           git push --tags -f
+
+  upload-binaries:
+    name: Upload binaries
+    needs: [release]
+    runs-on: elvia-runner
+    if: ${{ github.event_name == 'push' }}
+    strategy:
+      matrix:
+        os: [linux, macos, windows]
+        arch: [amd64]
+        inlcude:
+        - os: macos
+          arch: arm64
+    env:
+      VERSION_TAG: ${{ needs.build.outputs.version-tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: '3lv-${{ matrix.os }}-${{ matrix.arch }}'
+
+      - name: Upload binaries if new version
+        run: |
+          latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
+          if [[ "$latest_version" == "$VERSION_TAG" ]]; then
+            echo "Version already released."
+            exit 0
+          fi
+
+          gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
+          gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
+        env:
+          GH_TOKEN: ${{ github.token }}
