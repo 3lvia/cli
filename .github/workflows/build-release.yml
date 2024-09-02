@@ -3,9 +3,6 @@ name: Build and release
 on:
   push:
     branches: [trunk]
-    paths-ignore:
-      - 'README.md'
-      - 'setup/action.yml'
 
 jobs:
   build:
