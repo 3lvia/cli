@@ -15,7 +15,7 @@ jobs:
       matrix:
         os: [linux, macos, windows]
         arch: [amd64]
-        inlcude:
+        include:
         - os: macos
           arch: arm64
     steps:
@@ -52,11 +52,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: '3lv-artifacts'
-
       - name: Create release if new version
         run: |
           latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
@@ -89,7 +84,7 @@ jobs:
       matrix:
         os: [linux, macos, windows]
         arch: [amd64]
-        inlcude:
+        include:
         - os: macos
           arch: arm64
     env:
