@@ -119,7 +119,7 @@ jobs:
             fi
 
             # Workaround for Windows being packaged in zip files, not tarballs
-            if [[ '${{ matrix.os }}' != 'windows' ]];
+            if [[ '${{ matrix.os }}' != 'windows' ]]; then
               gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
               gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
             else
