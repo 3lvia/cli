@@ -25,7 +25,6 @@ runs:
 
         tar -xzvf 3lv-linux-amd64.tar.gz
 
-        mv 3lv-linux-amd64 3lv
         sudo install -Dm755 -t /usr/bin 3lv
       env:
         GH_TOKEN: ${{ github.token }}
