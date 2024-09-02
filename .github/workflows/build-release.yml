@@ -65,8 +65,6 @@ jobs:
             exit 0
           fi
 
-          trap 'gh release delete "$VERSION_TAG" --yes --cleanup-tag' ERR
-
           gh release create "$VERSION_TAG" --generate-notes
           echo 'new_version=true' >> "$GITHUB_OUTPUT"
         env:
@@ -114,7 +112,12 @@ jobs:
             echo "No new version to upload."
             exit 0
           elif [[ "$NEW_VERSION" == 'true' ]]; then
-            echo "Uploading binaries for $VERSION_TAG"
+            # Workaround for macOS binaries being named differently from their architecture (darwin)
+            if [[ '${{ matrix.os }}' == 'macos' ]]; then
+              mv '3lv-darwin-${{ matrix.arch }}.tar.gz' '3lv-macos-${{ matrix.arch }}.tar.gz'
+              mv '3lv-darwin-${{ matrix.arch }}.tar.gz.md5' '3lv-macos-${{ matrix.arch }}.tar.gz.md5'
+            fi
+
             gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
             gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
           else
@@ -123,3 +126,7 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ github.token }}
+
+      - name: Cleanup if uploading binaries failed for linux amd64
+        if: ${{ failure() && matrix.os == 'linux' && matrix.arch == 'amd64' }}
+        run: gh release delete "$VERSION_TAG" --yes --cleanup-tag
