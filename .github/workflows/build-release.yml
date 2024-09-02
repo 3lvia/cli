@@ -16,8 +16,8 @@ jobs:
         os: [linux, macos, windows]
         arch: [amd64]
         include:
-        - os: macos
-          arch: arm64
+          - os: macos
+            arch: arm64
       fail-fast: false
     steps:
       - name: Checkout repository
@@ -39,13 +39,13 @@ jobs:
           name: '3lv-${{ matrix.os }}-${{ matrix.arch }}'
           path: '/tmp/3lv/dist'
 
-  release:
-    name: Release
+  pre-release:
+    name: Pre-release
     needs: [build]
     runs-on: elvia-runner
     if: ${{ github.event_name == 'push' }}
     outputs:
-      new-version: ${{ steps.create-release.outputs.new_version }}
+      new-version: ${{ steps.create-pre-release.outputs.new_version }}
     env:
       VERSION_TAG: ${{ needs.build.outputs.version-tag }}
       MAJOR_VERSION_TAG: ${{ needs.build.outputs.major-version-tag }}
@@ -55,8 +55,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create release if new version
-        id: create-release
+      - name: Create pre-release if new version
+        id: create-pre-release
         run: |
           latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
           if [[ "$latest_version" == "$VERSION_TAG" ]]; then
@@ -65,7 +65,7 @@ jobs:
             exit 0
           fi
 
-          gh release create "$VERSION_TAG" --generate-notes
+          gh release create "$VERSION_TAG" --generate-notes --prerelease
           echo 'new_version=true' >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
@@ -81,7 +81,7 @@ jobs:
 
   upload-binaries:
     name: Upload binaries
-    needs: [build, release]
+    needs: [build, pre-release]
     runs-on: elvia-runner
     if: ${{ github.event_name == 'push' }}
     strategy:
@@ -89,12 +89,12 @@ jobs:
         os: [linux, macos, windows]
         arch: [amd64]
         include:
-        - os: macos
-          arch: arm64
+          - os: macos
+            arch: arm64
       fail-fast: false
     env:
       VERSION_TAG: ${{ needs.build.outputs.version-tag }}
-      NEW_VERSION: ${{ needs.release.outputs.new-version }}
+      NEW_VERSION: ${{ needs.pre-release.outputs.new-version }}
     permissions:
       contents: write
     steps:
@@ -118,8 +118,14 @@ jobs:
               mv '3lv-darwin-${{ matrix.arch }}.tar.gz.md5' '3lv-macos-${{ matrix.arch }}.tar.gz.md5'
             fi
 
-            gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
-            gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
+            # Workaround for Windows being packaged in zip files, not tarballs
+            if [[ '${{ matrix.os }}' != 'windows ]];
+              gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
+              gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
+            else
+              gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.zip'
+              gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.zip.md5'
+            fi
           else
             echo "Unknown state."
             exit 1
@@ -127,6 +133,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Cleanup if uploading binaries failed for linux amd64
-        if: ${{ failure() && matrix.os == 'linux' && matrix.arch == 'amd64' }}
-        run: gh release delete "$VERSION_TAG" --yes --cleanup-tag
+  release:
+    name: Release
+    runs-on: elvia-runner
+    needs: [build, upload-binaries]
+    if: ${{ github.event_name == 'push' }}
+    env:
+      VERSION_TAG: ${{ needs.build.outputs.version-tag }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Release
+        run: gh release edit "$VERSION_TAG" --prerelease=false
+        env:
+          GH_TOKEN: ${{ github.token }}

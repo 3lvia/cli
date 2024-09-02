@@ -18,8 +18,7 @@ runs:
           version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
         fi
 
-        wget -q "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz"
-        wget -q "https://github.com/3lvia/cli/releases/download/$version/3lv-linux-amd64.tar.gz.md5"
+        gh release download -R 3lvia/cli "$version" --pattern '3lv-linux-amd64.tar.gz*'
 
         md5sum -c 3lv-linux-amd64.tar.gz.md5
 
