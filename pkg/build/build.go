@@ -130,9 +130,9 @@ func Build(c *cli.Context) error {
 	goMainPackageDirectory := c.String("go-main-package-directory")
 	cacheTag := c.String("cache-tag")
 	severity := c.String("severity")
-	additionalTags := c.StringSlice("additional-tags")
-	includeFiles := c.StringSlice("include-files")
-	includeDirectories := c.StringSlice("include-directories")
+	additionalTags := removeZeroValues(c.StringSlice("additional-tags"))
+	includeFiles := removeZeroValues(c.StringSlice("include-files"))
+	includeDirectories := removeZeroValues(c.StringSlice("include-directories"))
 	push := c.Bool("push")
 	generateOnly := c.Bool("generate-only")
 
@@ -278,4 +278,15 @@ func getRegistry(registry string) string {
 
 	// In our case, we should never reach this point, however, Go's type system can't comprehend literal union types
 	panic("Unknown registry")
+}
+
+func removeZeroValues(slice []string) []string {
+	var result []string
+	for _, value := range slice {
+		if value != "" {
+			result = append(result, value)
+		}
+	}
+
+	return result
 }
