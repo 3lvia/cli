@@ -2,15 +2,15 @@
 
 Command Line Interface tool for developing, building and deploying Elvia applications.
 
-## Installation
+# Installation
 
-See the releases page and download your platform's binary.
+See the [releases page](https://github.com/3lvia/cli/releases) and download your platform's binary.
 
 Supported platforms:
 
-- Linux (amd64, arm64)
-- macOS (amd64, arm64)
-- Windows (amd64)
+- **Linux**
+- **macOS** (Intel and M-series)
+- **Windows**
 
 ## Installation from source
 
@@ -39,7 +39,15 @@ make install-macos-arm64
 
 Install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow the Linux instructions.
 
-## Usage
+Optionally, you can build a Windows binary using the following command:
+
+```bash
+make build-windows-amd64
+```
+
+You can then move the binary to a directory in your PATH.
+
+# Usage
 
 ```bash
 3lv --help
