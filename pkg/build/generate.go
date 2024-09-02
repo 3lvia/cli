@@ -57,7 +57,11 @@ func generateDockerfile(
 
 		return dockerfile, buildContext, nil
 	} else if strings.HasPrefix(projectFile, "Dockerfile") || strings.HasSuffix(projectFile, "Dockerfile") || strings.Contains(projectFile, "Dockerfile") {
-		return projectFile, path.Dir(projectFile), nil
+		if options.BuildContext == "" {
+			return projectFile, path.Dir(projectFile), nil
+		} else {
+			return projectFile, options.BuildContext, nil
+		}
 	} else {
 		return "", "", fmt.Errorf(
 			"Unsupported project file: %s. If you want to use a Dockerfile directly, ensure the name of the Dockerfile contains the string 'Dockerfile'.",
