@@ -44,6 +44,8 @@ jobs:
     needs: [build]
     runs-on: elvia-runner
     if: ${{ github.event_name == 'push' }}
+    outputs:
+      new-version: ${{ steps.create-release.outputs.new-version }}
     env:
       VERSION_TAG: ${{ needs.build.outputs.version-tag }}
       MAJOR_VERSION_TAG: ${{ needs.build.outputs.major-version-tag }}
@@ -58,12 +60,14 @@ jobs:
           latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
           if [[ "$latest_version" == "$VERSION_TAG" ]]; then
             echo "Version already released."
+            echo 'new-version=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           trap 'gh release delete "$VERSION_TAG" --yes --cleanup-tag' ERR
 
           gh release create "$VERSION_TAG" --generate-notes
+          echo 'new-version=true' >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -91,6 +95,7 @@ jobs:
       fail-fast: false
     env:
       VERSION_TAG: ${{ needs.build.outputs.version-tag }}
+      NEW_VERSION: ${{ needs.release.outputs.new-version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -100,15 +105,18 @@ jobs:
         with:
           name: '3lv-${{ matrix.os }}-${{ matrix.arch }}'
 
-      - name: Upload binaries if new version
+      - name: Upload binaries
         run: |
-          latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
-          if [[ "$latest_version" == "$VERSION_TAG" ]]; then
-            echo "Version already released."
+          if [[ "$NEW_VERSION" == 'false' ]]; then
+            echo "No new version to upload."
             exit 0
+          elif [[ "$NEW_VERSION" == 'true' ]]; then
+            echo "Uploading binaries for $VERSION_TAG"
+            gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
+            gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
+          else
+            echo "Unknown state."
+            exit 1
           fi
-
-          gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
-          gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
         env:
           GH_TOKEN: ${{ github.token }}
