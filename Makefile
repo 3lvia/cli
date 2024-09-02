@@ -34,7 +34,7 @@ run: build
 package: build
 	mkdir -p ${package_dir}
 	tar -czf ${package_dir}/3lv-linux-amd64.tar.gz LICENSE README.md -C ${build_dir} 3lv
-	md5sum ${package_dir}/3lv-linux-amd64.tar.gz > ${package_dir}/3lv-linux-amd64.tar.gz.md5
+	cd ${package_dir} && md5sum 3lv-linux-amd64.tar.gz > 3lv-linux-amd64.tar.gz.md5
 
 ## install: Build and then install the binary to /usr/local/bin. Requires root.
 .PHONY: install
