@@ -14,6 +14,8 @@ import (
 var version embed.FS
 
 func main() {
+	log.SetFlags(0)
+
 	versionFile, err := version.ReadFile("VERSION")
 	if err != nil {
 		log.Fatal(err)
@@ -31,6 +33,6 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
+		log.Fatalf("\n\nERROR: %v", err)
 	}
 }
