@@ -127,6 +127,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Cleanup if uploading binaries failed
-        if: failure()
+      - name: Cleanup if uploading binaries failed for linux amd64
+        if: ${{ failure() && matrix.os == 'linux' && matrix.arch == 'amd64' }}
         run: gh release delete "$VERSION_TAG" --yes --cleanup-tag
