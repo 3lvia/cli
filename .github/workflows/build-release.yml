@@ -97,6 +97,8 @@ jobs:
     env:
       VERSION_TAG: ${{ needs.build.outputs.version-tag }}
       NEW_VERSION: ${{ needs.release.outputs.new-version }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
