@@ -48,6 +48,7 @@ build-macos-arm64: build
 .PHONY: build-windows-amd64
 build-windows-amd64: go_os=windows
 build-windows-amd64: go_arch=amd64
+build-windows-amd64: binary_name=3lv.exe
 build-windows-amd64: build
 
 ## run: Build and then run the binary.
@@ -82,9 +83,11 @@ package-macos-arm64: package
 
 ## package-windows-amd64: Build and then package the binary for Windows/amd64.
 .PHONY: package-windows-amd64
-package-windows-amd64: go_os=windows
-package-windows-amd64: go_arch=amd64
-package-windows-amd64: package
+package-windows-amd64: build-windows-amd64
+package-windows-amd64:
+	mkdir -p ${package_dir}
+	zip -j ${package_dir}/3lv-windows-amd64.zip LICENSE README.md ${build_dir}/3lv.exe
+	cd ${package_dir} && md5sum 3lv-windows-amd64.zip > 3lv-windows-amd64.zip.md5
 
 ## install: Build and then install the binary to /usr/local/bin. Requires root. Only works on Linux and macOS (tries to guess the OS and architecture).
 .PHONY: install
@@ -108,3 +111,8 @@ install-macos-amd64: install
 install-macos-arm64: go_os=darwin
 install-macos-amr64: go_arch=arm64
 install-macos-arm64: install
+
+## clean: Remove build and package directories.
+.PHONY: clean
+clean:
+	rm -rf ${build_dir} ${package_dir}
