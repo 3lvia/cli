@@ -14,9 +14,9 @@ jobs:
     strategy:
       matrix:
         os: [linux, macos, windows]
-        arch: [amd64, arm64]
-        exclude:
-        - os: windows
+        arch: [amd64]
+        inlcude:
+        - os: macos
           arch: arm64
     steps:
       - name: Checkout repository
@@ -88,9 +88,9 @@ jobs:
     strategy:
       matrix:
         os: [linux, macos, windows]
-        arch: [amd64, arm64]
-        exclude:
-        - os: windows
+        arch: [amd64]
+        inlcude:
+        - os: macos
           arch: arm64
     env:
       VERSION_TAG: ${{ needs.build.outputs.version-tag }}

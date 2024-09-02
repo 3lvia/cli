@@ -32,12 +32,6 @@ build-linux-amd64: go_os=linux
 build-linux-amd64: go_arch=amd64
 build-linux-amd64: build
 
-## build-linux-arm64: Build the binary for Linux/arm64.
-.PHONY: build-linux-arm64
-build-linux-arm64: go_os=linux
-build-linux-arm64: go_arch=arm64
-build-linux-arm64: build
-
 ## build-macos-amd64: Build the binary for macOS/amd64.
 .PHONY: build-macos-amd64
 build-macos-amd64: go_os=darwin
@@ -74,12 +68,6 @@ package-linux-amd64: go_os=linux
 package-linux-amd64: go_arch=amd64
 package-linux-amd64: package
 
-## package-linux-arm64: Build and then package the binary for Linux/arm64.
-.PHONY: package-linux-arm64
-package-linux-arm64: go_os=linux
-package-linux-arm64: go_arch=arm64
-package-linux-arm64: package
-
 ## package-macos-amd64: Build and then package the binary for macOS/amd64.
 .PHONY: package-macos-amd64
 package-macos-amd64: go_os=darwin
@@ -108,12 +96,6 @@ install: build
 install-linux-amd64: go_os=linux
 install-linux-amd64: go_arch=amd64
 install-linux-amd64: install
-
-## install-linux-arm64: Build and then install the binary for Linux/arm64 to /usr/local/bin. Requires root.
-.PHONY: install-linux-arm64
-install-linux-arm64: go_os=linux
-install-linux-arm64: go_arch=arm64
-install-linux-arm64: install
 
 ## install-macos-amd64: Build and then install the binary for macOS/amd64 to /usr/local/bin. Requires root.
 .PHONY: install-macos-amd64
