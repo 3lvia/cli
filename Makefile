@@ -78,7 +78,7 @@ package-macos-amd64: package
 ## package-macos-arm64: Build and then package the binary for macOS/arm64.
 .PHONY: package-macos-arm64
 package-macos-arm64: go_os=darwin
-package-macos-amr64: go_arch=arm64
+package-macos-arm64: go_arch=arm64
 package-macos-arm64: package
 
 ## package-windows-amd64: Build and then package the binary for Windows/amd64.
@@ -109,7 +109,7 @@ install-macos-amd64: install
 ## install-macos-arm64: Build and then install the binary for macOS/arm64 to /usr/local/bin. Requires root.
 .PHONY: install-macos-arm64
 install-macos-arm64: go_os=darwin
-install-macos-amr64: go_arch=arm64
+install-macos-arm64: go_arch=arm64
 install-macos-arm64: install
 
 ## clean: Remove build and package directories.
