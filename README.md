@@ -12,6 +12,8 @@ Requires [Go](https://golang.org) and [Make](https://www.gnu.org/software/make).
 # debian/ubuntu/WSL
 sudo apt install golang make
 
+git clone git@github.com:3lvia/cli
+cd cli
 sudo make install
 ```
 
