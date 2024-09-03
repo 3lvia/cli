@@ -248,6 +248,72 @@ func TestGenerateGoDockerfile1(t *testing.T) {
 	}
 }
 
+func TestGenerateDockerfileWithDockerfile1(t *testing.T) {
+	const projectFile = "Dockerfile.test" // doesn't need to exist
+	const expectedBuildContext = "."
+
+	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
+		projectFile,
+		"",
+		GenerateDockerfileOptions{},
+	)
+	if err != nil {
+		t.Errorf("Error generating Dockerfile: %v", err)
+	}
+
+	if projectFile != actualDockerfilePath {
+		t.Errorf("Dockerfile path mismatch: expected %s, got %s", projectFile, actualDockerfilePath)
+	}
+
+	if expectedBuildContext != actualBuildContext {
+		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, actualBuildContext)
+	}
+}
+
+func TestGenerateDockerfileWithDockerfile2(t *testing.T) {
+	const projectFile = "src/Project/Dockerfile.test" // doesn't need to exist
+	const expectedBuildContext = "src/Project"
+
+	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
+		projectFile,
+		"",
+		GenerateDockerfileOptions{},
+	)
+	if err != nil {
+		t.Errorf("Error generating Dockerfile: %v", err)
+	}
+
+	if projectFile != actualDockerfilePath {
+		t.Errorf("Dockerfile path mismatch: expected %s, got %s", projectFile, actualDockerfilePath)
+	}
+
+	if expectedBuildContext != actualBuildContext {
+		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, actualBuildContext)
+	}
+}
+
+func TestGenerateDockerfileWithDockerfile3(t *testing.T) {
+	const projectFile = "src/Project/Dockerfile.test" // doesn't need to exist
+	const expectedBuildContext = "src/Project"
+
+	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
+		projectFile,
+		expectedBuildContext,
+		GenerateDockerfileOptions{},
+	)
+	if err != nil {
+		t.Errorf("Error generating Dockerfile: %v", err)
+	}
+
+	if projectFile != actualDockerfilePath {
+		t.Errorf("Dockerfile path mismatch: expected %s, got %s", projectFile, actualDockerfilePath)
+	}
+
+	if expectedBuildContext != actualBuildContext {
+		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, actualBuildContext)
+	}
+}
+
 func TestDotIfEmpty1(t *testing.T) {
 	const expected = "value"
 	actual := dotIfEmpty("value")
