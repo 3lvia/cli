@@ -4,7 +4,7 @@ inputs:
   version:
     description: 'The version of 3lv to install.'
     required: false
-    default: 'latest'
+    default: 'v0.5.7' # TODO: set to 'latest' when v1 (stable) is released
 
 runs:
   using: 'composite'
@@ -18,12 +18,10 @@ runs:
           version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
         fi
 
-        gh release download -R 3lvia/cli "$version" --pattern '3lv-linux-amd64.tar.gz*'
-
-        md5sum -c 3lv-linux-amd64.tar.gz.md5
-
-        tar -xzvf 3lv-linux-amd64.tar.gz
-
+        gh release download -R 3lvia/cli "$version" --pattern "$BINARY_TARBALL*"
+        md5sum -c "$BINARY_TARBALL.md5"
+        tar -xzvf "$BINARY_TARBALL"
         sudo install -Dm755 -t /usr/bin 3lv
       env:
         GH_TOKEN: ${{ github.token }}
+        BINARY_TARBALL: '3lv-linux-amd64.tar.gz'
