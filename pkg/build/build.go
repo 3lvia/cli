@@ -211,6 +211,8 @@ func constructBuildCommandArguments(
 		"build",
 		"-f",
 		dockerfilePath,
+		"--cache-to",
+		"type=inline",
 		"--cache-from",
 		imageName + ":" + cacheTag,
 	}, tagArguments...), buildContext)
