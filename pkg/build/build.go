@@ -193,8 +193,17 @@ func constructBuildCommandArguments(
 	dockerfilePath string,
 	buildContext string,
 	imageName string,
-	tags []string,
+	cacheTag string,
+	additionalTags []string,
 ) []string {
+	tags := func() []string {
+		if len(additionalTags) == 0 {
+			return []string{cacheTag}
+		}
+
+		return append(additionalTags, cacheTag)
+	}()
+
 	var tagArguments []string
 	for _, tag := range tags {
 		tagArguments = append(tagArguments, "-t")
@@ -206,6 +215,8 @@ func constructBuildCommandArguments(
 		"build",
 		"-f",
 		dockerfilePath,
+		"--cache-from",
+		imageName + ":" + cacheTag,
 	}, tagArguments...), buildContext)
 }
 
@@ -217,21 +228,14 @@ func buildAndPushImage(
 	registry := getRegistry(options.Registry)
 	imageName := registry + "/" + systemName + "-" + applicationName
 
-	tags := func() []string {
-		if len(options.AdditionalTags) == 0 {
-			return []string{options.CacheTag}
-		}
-
-		return append(options.AdditionalTags, options.CacheTag)
-	}()
-
 	buildCmd := exec.Command(
 		"docker",
 		constructBuildCommandArguments(
 			options.DockerfilePath,
 			options.BuildContext,
 			imageName,
-			tags,
+			options.CacheTag,
+			options.AdditionalTags,
 		)...,
 	)
 	buildCmd.Stdout = os.Stdout
@@ -244,7 +248,7 @@ func buildAndPushImage(
 	}
 
 	err := scanImage(ScanImageOptions{
-		ImageName: imageName + ":" + tags[0],
+		ImageName: imageName + ":" + options.CacheTag,
 		Severity:  options.Severity,
 	})
 	if err != nil {
