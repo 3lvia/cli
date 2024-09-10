@@ -52,7 +52,7 @@ func TestConstructBuildCommandArguments1(t *testing.T) {
 
 	imageNameWithCacheTag := imageName + ":" + cacheTag
 
-	expectedArguments := "buildx build -f " + dockerfilePath + " --cache-from " + imageNameWithCacheTag + " -t " + imageNameWithCacheTag + " " + buildContext
+	expectedArguments := "buildx build -f " + dockerfilePath + " --cache-to type=inline --cache-from " + imageNameWithCacheTag + " -t " + imageNameWithCacheTag + " " + buildContext
 
 	actualArguments := constructBuildCommandArguments(
 		dockerfilePath,
@@ -75,7 +75,7 @@ func TestConstructBuildCommandArguments2(t *testing.T) {
 
 	imageNameWithCacheTag := imageName + ":" + cacheTag
 
-	expectedArguments := "buildx build -f " + dockerfilePath + " --cache-from " + imageNameWithCacheTag + " -t " + imageNameWithCacheTag + " " + buildContext
+	expectedArguments := "buildx build -f " + dockerfilePath + " --cache-to type=inline --cache-from " + imageNameWithCacheTag + " -t " + imageNameWithCacheTag + " " + buildContext
 
 	actualArguments := constructBuildCommandArguments(
 		dockerfilePath,
@@ -99,7 +99,7 @@ func TestConstructBuildCommandArguments3(t *testing.T) {
 	imageNameWithCacheTag := imageName + ":" + cacheTag
 	additionalTags := []string{"latest", "v42.0.1", "v420alpha"}
 
-	expectedArguments := "buildx build -f " + dockerfilePath + " --cache-from " + imageNameWithCacheTag + " -t " + imageName + ":" + additionalTags[0] + " -t " + imageName + ":" + additionalTags[1] + " -t " + imageName + ":" + additionalTags[2] + " -t " + imageNameWithCacheTag + " " + buildContext
+	expectedArguments := "buildx build -f " + dockerfilePath + " --cache-to type=inline --cache-from " + imageNameWithCacheTag + " -t " + imageName + ":" + additionalTags[0] + " -t " + imageName + ":" + additionalTags[1] + " -t " + imageName + ":" + additionalTags[2] + " -t " + imageNameWithCacheTag + " " + buildContext
 
 	actualArguments := constructBuildCommandArguments(
 		dockerfilePath,
