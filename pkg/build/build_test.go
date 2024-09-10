@@ -48,14 +48,18 @@ func TestConstructBuildCommandArguments1(t *testing.T) {
 	const dockerfilePath = "build/Dockerfile"
 	const buildContext = "src/app"
 	const imageName = "containerregistryelvia.azurecr.io/test-image"
+	const cacheTag = "latest"
 
-	expectedArguments := "buildx build -f " + dockerfilePath + " -t " + imageName + ":latest " + buildContext
+	imageNameWithCacheTag := imageName + ":" + cacheTag
+
+	expectedArguments := "buildx build -f " + dockerfilePath + " --cache-from " + imageNameWithCacheTag + " -t " + imageNameWithCacheTag + " " + buildContext
 
 	actualArguments := constructBuildCommandArguments(
 		dockerfilePath,
 		buildContext,
 		imageName,
-		[]string{"latest"},
+		cacheTag,
+		[]string{},
 	)
 
 	if strings.Join(actualArguments, " ") != expectedArguments {
@@ -67,14 +71,18 @@ func TestConstructBuildCommandArguments2(t *testing.T) {
 	const dockerfilePath = "Dockerfile"
 	const buildContext = "."
 	const imageName = "ghcr.io/test-image"
+	const cacheTag = "latest-cache"
 
-	expectedArguments := "buildx build -f " + dockerfilePath + " -t " + imageName + ":latest-cache " + buildContext
+	imageNameWithCacheTag := imageName + ":" + cacheTag
+
+	expectedArguments := "buildx build -f " + dockerfilePath + " --cache-from " + imageNameWithCacheTag + " -t " + imageNameWithCacheTag + " " + buildContext
 
 	actualArguments := constructBuildCommandArguments(
 		dockerfilePath,
 		buildContext,
 		imageName,
-		[]string{"latest-cache"},
+		cacheTag,
+		[]string{},
 	)
 
 	if strings.Join(actualArguments, " ") != expectedArguments {
@@ -86,14 +94,19 @@ func TestConstructBuildCommandArguments3(t *testing.T) {
 	const dockerfilePath = "Dockerfile"
 	const buildContext = "."
 	const imageName = "ghcr.io/test-image"
+	const cacheTag = "latest-cache"
 
-	expectedArguments := "buildx build -f " + dockerfilePath + " -t " + imageName + ":latest-cache" + " -t " + imageName + ":latest" + " -t " + imageName + ":v42.0.1" + " -t " + imageName + ":v420alpha " + buildContext
+	imageNameWithCacheTag := imageName + ":" + cacheTag
+	additionalTags := []string{"latest", "v42.0.1", "v420alpha"}
+
+	expectedArguments := "buildx build -f " + dockerfilePath + " --cache-from " + imageNameWithCacheTag + " -t " + imageName + ":" + additionalTags[0] + " -t " + imageName + ":" + additionalTags[1] + " -t " + imageName + ":" + additionalTags[2] + " -t " + imageNameWithCacheTag + " " + buildContext
 
 	actualArguments := constructBuildCommandArguments(
 		dockerfilePath,
 		buildContext,
 		imageName,
-		[]string{"latest-cache", "latest", "v42.0.1", "v420alpha"},
+		cacheTag,
+		additionalTags,
 	)
 
 	if strings.Join(actualArguments, " ") != expectedArguments {
