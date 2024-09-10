@@ -151,7 +151,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check if version tag is alpha or beta release
+        run: |
+
       - name: Release
-        run: gh release edit "$VERSION_TAG" --prerelease=false
+        run: |
+          if [[ "$VERSION_TAG" == *"-alpha"* || "$VERSION_TAG" == *"-beta"* ]]; then
+            echo "Skipping release of alpha or beta version."
+            exit 0
+          fi
+
+          gh release edit "$VERSION_TAG" --prerelease=false
         env:
           GH_TOKEN: ${{ github.token }}
