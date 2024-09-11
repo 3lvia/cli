@@ -7,6 +7,7 @@ import (
 
 	"github.com/3lvia/cli/pkg/build"
 	"github.com/3lvia/cli/pkg/deploy"
+	"github.com/3lvia/cli/pkg/scan"
 	"github.com/urfave/cli/v2"
 )
 
@@ -29,6 +30,7 @@ func main() {
 		Commands: []*cli.Command{
 			build.Command,
 			deploy.Command,
+			scan.Command,
 		},
 	}
 
