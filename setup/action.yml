@@ -4,7 +4,7 @@ inputs:
   version:
     description: 'The version of 3lv to install.'
     required: false
-    default: '0.5.7' # TODO: set to 'latest' when v1 (stable) is released
+    default: 'latest'
 
 runs:
   using: 'composite'
