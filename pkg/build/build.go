@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/3lvia/cli/pkg/scan"
 	"github.com/urfave/cli/v2"
 )
 
@@ -60,6 +61,18 @@ var Command *cli.Command = &cli.Command{
 			Value:   "CRITICAL,HIGH",
 			EnvVars: []string{"3LV_SEVERITY"},
 		},
+		&cli.StringFlag{
+			Name:  "scan-format",
+			Usage: "The format to use when scanning the image with Trivy: can be any of table, json, or sarif",
+			Value: "table",
+			Action: func(c *cli.Context, trivyFormat string) error {
+				if trivyFormat != "table" && trivyFormat != "json" && trivyFormat != "sarif" {
+					return cli.Exit("Invalid scan-format", 1)
+				}
+				return nil
+			},
+			EnvVars: []string{"3LV_SCAN_FORMAT"},
+		},
 		&cli.StringSliceFlag{
 			Name:    "additional-tags",
 			Aliases: []string{"t"},
@@ -92,6 +105,13 @@ var Command *cli.Command = &cli.Command{
 			Value:   false,
 			EnvVars: []string{"3LV_GENERATE_ONLY"},
 		},
+		&cli.BoolFlag{
+			Name:    "disable-scan-error",
+			Aliases: []string{"D"},
+			Usage:   "Disables Trivy scan returning a non-zero exit code if vulnerabilities are found",
+			Value:   false,
+			EnvVars: []string{"3LV_SCAN_DISABLE_ERROR"},
+		},
 	},
 	Action: Build,
 }
@@ -123,11 +143,13 @@ func Build(c *cli.Context) error {
 	goMainPackageDirectory := c.String("go-main-package-directory")
 	cacheTag := c.String("cache-tag")
 	severity := c.String("severity")
+	scanFormat := c.String("scan-format")
 	additionalTags := removeZeroValues(c.StringSlice("additional-tags"))
 	includeFiles := removeZeroValues(c.StringSlice("include-files"))
 	includeDirectories := removeZeroValues(c.StringSlice("include-directories"))
 	push := c.Bool("push")
 	generateOnly := c.Bool("generate-only")
+	disableScanError := c.Bool("disable-scan-error")
 
 	generateOptions := GenerateDockerfileOptions{
 		GoMainPackageDirectory: goMainPackageDirectory,
@@ -151,13 +173,15 @@ func Build(c *cli.Context) error {
 	}
 
 	buildOptions := BuildAndPushImageOptions{
-		DockerfilePath: dockerfilePath,
-		BuildContext:   buildContext,
-		CacheTag:       cacheTag,
-		Registry:       registry,
-		Severity:       severity,
-		AdditionalTags: additionalTags,
-		Push:           push,
+		DockerfilePath:   dockerfilePath,
+		BuildContext:     buildContext,
+		CacheTag:         cacheTag,
+		Registry:         registry,
+		Severity:         severity,
+		ScanFormat:       scanFormat,
+		AdditionalTags:   additionalTags,
+		Push:             push,
+		DisableScanError: disableScanError,
 	}
 
 	err = buildAndPushImage(
@@ -170,16 +194,6 @@ func Build(c *cli.Context) error {
 	}
 
 	return nil
-}
-
-type BuildAndPushImageOptions struct {
-	DockerfilePath string   // required
-	BuildContext   string   // required
-	CacheTag       string   // required
-	Registry       string   // required
-	Severity       string   // required
-	AdditionalTags []string // required
-	Push           bool     // required
 }
 
 func constructBuildCommandArguments(
@@ -203,17 +217,23 @@ func constructBuildCommandArguments(
 		tagArguments = append(tagArguments, imageName+":"+tag)
 	}
 
-	return append(append([]string{
-		"buildx",
-		"build",
-		"-f",
-		dockerfilePath,
-		"--load",
-		"--cache-to",
-		"type=inline",
-		"--cache-from",
-		imageName + ":" + cacheTag,
-	}, tagArguments...), buildContext)
+	return append(
+		append(
+			[]string{
+				"buildx",
+				"build",
+				"-f",
+				dockerfilePath,
+				"--load",
+				"--cache-to",
+				"type=inline",
+				"--cache-from",
+				imageName + ":" + cacheTag,
+			},
+			tagArguments...,
+		),
+		buildContext,
+	)
 }
 
 func getImageName(
@@ -225,6 +245,18 @@ func getImageName(
 		return strings.ToLower(fmt.Sprintf("%s/%s-%s", registry, systemName, applicationName))
 	}
 	return strings.ToLower(fmt.Sprintf("%s/%s/%s", registry, systemName, applicationName))
+}
+
+type BuildAndPushImageOptions struct {
+	DockerfilePath   string   // required
+	BuildContext     string   // required
+	CacheTag         string   // required
+	Registry         string   // required
+	Severity         string   // required
+	ScanFormat       string   // required
+	AdditionalTags   []string // required
+	Push             bool     // required
+	DisableScanError bool     // required
 }
 
 func buildAndPushImage(
@@ -253,10 +285,12 @@ func buildAndPushImage(
 		return fmt.Errorf("Failed to build Docker image: %w", err)
 	}
 
-	err := scanImage(ScanImageOptions{
-		ImageName: imageName + ":" + options.CacheTag,
-		Severity:  options.Severity,
-	})
+	err := scan.ScanImage(
+		imageName+":"+options.CacheTag,
+		options.Severity,
+		options.ScanFormat,
+		options.DisableScanError,
+	)
 	if err != nil {
 		return err
 	}
