@@ -74,31 +74,3 @@ func TestConstructBuildCommandArguments3(t *testing.T) {
 		t.Errorf("Expected %s, got %s", expectedArguments, actualArguments)
 	}
 }
-
-func TestGetImageName1(t *testing.T) {
-	const systemName = "test-system"
-	const applicationName = "test-image"
-	const registry = "ghcr.io"
-
-	expectedImageName := registry + "/" + systemName + "-" + applicationName
-
-	actualImageName := getImageName(systemName, applicationName, registry)
-
-	if actualImageName != expectedImageName {
-		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
-	}
-}
-
-func TestGetImageName2(t *testing.T) {
-	const systemName = ""
-	const applicationName = "test-image"
-	const registry = "ghcr.io"
-
-	expectedImageName := registry + "/" + applicationName
-
-	actualImageName := getImageName(systemName, applicationName, registry)
-
-	if actualImageName != expectedImageName {
-		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
-	}
-}

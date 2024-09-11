@@ -22,10 +22,11 @@ var Command *cli.Command = &cli.Command{
 			EnvVars:  []string{"3LV_PROJECT_FILE"},
 		},
 		&cli.StringFlag{
-			Name:    "system-name",
-			Aliases: []string{"s"},
-			Usage:   "The system name to use",
-			EnvVars: []string{"3LV_SYSTEM_NAME"},
+			Name:     "system-name",
+			Aliases:  []string{"s"},
+			Usage:    "The system name to use",
+			Required: true,
+			EnvVars:  []string{"3LV_SYSTEM_NAME"},
 		},
 		&cli.StringFlag{
 			Name:    "build-context",
@@ -110,8 +111,12 @@ func Build(c *cli.Context) error {
 		return cli.Exit("Project file not provided", 1)
 	}
 
-	// Optional args
 	systemName := c.String("system-name")
+	if systemName == "" {
+		return cli.Exit("System name not provided", 1)
+	}
+
+	// Optional args
 	buildContext := c.String("build-context")
 	registry := c.String("registry")
 	goMainPackageDirectory := c.String("go-main-package-directory")
@@ -209,23 +214,12 @@ func constructBuildCommandArguments(
 	}, tagArguments...), buildContext)
 }
 
-func getImageName(
-	systemName string,
-	applicationName string,
-	registry string,
-) string {
-	if systemName != "" {
-		return registry + "/" + systemName + "-" + applicationName
-	}
-	return registry + "/" + applicationName
-}
-
 func buildAndPushImage(
 	systemName string,
 	applicationName string,
 	options BuildAndPushImageOptions,
 ) error {
-	imageName := getImageName(systemName, applicationName, options.Registry)
+	imageName := options.Registry + "/" + systemName + "/" + applicationName
 
 	buildCmd := exec.Command(
 		"docker",
