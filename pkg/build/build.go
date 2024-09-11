@@ -208,6 +208,7 @@ func constructBuildCommandArguments(
 		"build",
 		"-f",
 		dockerfilePath,
+		"--load",
 		"--cache-to",
 		"type=inline",
 		"--cache-from",
