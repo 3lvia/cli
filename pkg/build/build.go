@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"slices"
 
 	"github.com/urfave/cli/v2"
 )
@@ -23,10 +22,11 @@ var Command *cli.Command = &cli.Command{
 			EnvVars:  []string{"3LV_PROJECT_FILE"},
 		},
 		&cli.StringFlag{
-			Name:    "system-name",
-			Aliases: []string{"s"},
-			Usage:   "The system name to use",
-			EnvVars: []string{"3LV_SYSTEM_NAME"},
+			Name:     "system-name",
+			Aliases:  []string{"s"},
+			Usage:    "The system name to use",
+			Required: true,
+			EnvVars:  []string{"3LV_SYSTEM_NAME"},
 		},
 		&cli.StringFlag{
 			Name:    "build-context",
@@ -37,16 +37,8 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "registry",
 			Aliases: []string{"r"},
-			Usage:   "The registry to use",
-			Value:   "acr",
-			Action: func(c *cli.Context, registry string) error {
-				allowedRegistries := []string{"acr", "ghcr"}
-				if !slices.Contains(allowedRegistries, registry) {
-					return fmt.Errorf("Unknown registry '%s'; allowed values are %v", registry, allowedRegistries)
-				}
-
-				return nil
-			},
+			Usage:   "The registry to use. Image name will be prefixed with this value.",
+			Value:   "containerregistryelvia.azurecr.io",
 			EnvVars: []string{"3LV_REGISTRY"},
 		},
 		&cli.StringFlag{
@@ -119,8 +111,12 @@ func Build(c *cli.Context) error {
 		return cli.Exit("Project file not provided", 1)
 	}
 
-	// Optional args
 	systemName := c.String("system-name")
+	if systemName == "" {
+		return cli.Exit("System name not provided", 1)
+	}
+
+	// Optional args
 	buildContext := c.String("build-context")
 	registry := c.String("registry")
 	goMainPackageDirectory := c.String("go-main-package-directory")
@@ -218,24 +214,12 @@ func constructBuildCommandArguments(
 	}, tagArguments...), buildContext)
 }
 
-func getImageName(
-	systemName string,
-	applicationName string,
-	registry string,
-) string {
-	if systemName != "" {
-		return registry + "/" + systemName + "-" + applicationName
-	}
-	return registry + "/" + applicationName
-}
-
 func buildAndPushImage(
 	systemName string,
 	applicationName string,
 	options BuildAndPushImageOptions,
 ) error {
-	registry := getRegistry(options.Registry)
-	imageName := getImageName(systemName, applicationName, registry)
+	imageName := options.Registry + "/" + systemName + "/" + applicationName
 
 	buildCmd := exec.Command(
 		"docker",
@@ -280,17 +264,6 @@ func buildAndPushImage(
 	}
 
 	return nil
-}
-
-func getRegistry(registry string) string {
-	if registry == "" || registry == "acr" {
-		return "containerregistryelvia.azurecr.io"
-	} else if registry == "ghcr" {
-		return "ghcr.io/3lvia"
-	}
-
-	// In our case, we should never reach this point, however, Go's type system can't comprehend literal union types
-	panic("Unknown registry")
 }
 
 func removeZeroValues(slice []string) []string {
