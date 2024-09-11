@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"slices"
 
 	"github.com/urfave/cli/v2"
 )
@@ -37,16 +36,8 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "registry",
 			Aliases: []string{"r"},
-			Usage:   "The registry to use",
-			Value:   "acr",
-			Action: func(c *cli.Context, registry string) error {
-				allowedRegistries := []string{"acr", "ghcr"}
-				if !slices.Contains(allowedRegistries, registry) {
-					return fmt.Errorf("Unknown registry '%s'; allowed values are %v", registry, allowedRegistries)
-				}
-
-				return nil
-			},
+			Usage:   "The registry to use. Image name will be prefixed with this value.",
+			Value:   "containerregistryelvia.azurecr.io",
 			EnvVars: []string{"3LV_REGISTRY"},
 		},
 		&cli.StringFlag{
@@ -234,8 +225,7 @@ func buildAndPushImage(
 	applicationName string,
 	options BuildAndPushImageOptions,
 ) error {
-	registry := getRegistry(options.Registry)
-	imageName := getImageName(systemName, applicationName, registry)
+	imageName := getImageName(systemName, applicationName, options.Registry)
 
 	buildCmd := exec.Command(
 		"docker",
@@ -280,17 +270,6 @@ func buildAndPushImage(
 	}
 
 	return nil
-}
-
-func getRegistry(registry string) string {
-	if registry == "" || registry == "acr" {
-		return "containerregistryelvia.azurecr.io"
-	} else if registry == "ghcr" {
-		return "ghcr.io/3lvia"
-	}
-
-	// In our case, we should never reach this point, however, Go's type system can't comprehend literal union types
-	panic("Unknown registry")
 }
 
 func removeZeroValues(slice []string) []string {

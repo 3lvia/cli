@@ -5,45 +5,6 @@ import (
 	"testing"
 )
 
-func TestGetRegistry1(t *testing.T) {
-	const expectedRegistry = "containerregistryelvia.azurecr.io"
-
-	actualRegistry := getRegistry("")
-
-	if actualRegistry != expectedRegistry {
-		t.Errorf("Expected %s, got %s", expectedRegistry, actualRegistry)
-	}
-}
-
-func TestGetRegistry2(t *testing.T) {
-	const expectedRegistry = "containerregistryelvia.azurecr.io"
-
-	actualRegistry := getRegistry("acr")
-
-	if actualRegistry != expectedRegistry {
-		t.Errorf("Expected %s, got %s", expectedRegistry, actualRegistry)
-	}
-}
-
-func TestGetRegistry3(t *testing.T) {
-	const expectedRegistry = "ghcr.io/3lvia"
-
-	actualRegistry := getRegistry("ghcr")
-
-	if actualRegistry != expectedRegistry {
-		t.Errorf("Expected %s, got %s", expectedRegistry, actualRegistry)
-	}
-}
-
-func TestGetRegistry4(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
-		}
-	}()
-	getRegistry("unknown")
-}
-
 func TestConstructBuildCommandArguments1(t *testing.T) {
 	const dockerfilePath = "build/Dockerfile"
 	const buildContext = "src/app"
