@@ -5,6 +5,62 @@ import (
 	"testing"
 )
 
+func TestGetImageName1(t *testing.T) {
+	const registry = "containerregistryelvia.azurecr.io"
+	const systemName = "core"
+	const imageName = "demo-api"
+
+	expectedImageName := registry + "/" + systemName + "-" + imageName
+
+	actualImageName := getImageName(registry, systemName, imageName)
+
+	if actualImageName != expectedImageName {
+		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
+	}
+}
+
+func TestGetImageName2(t *testing.T) {
+	const registry = "containerregistryelvia.azurecr.o"
+	const systemName = "core"
+	const imageName = "demo-api"
+
+	expectedImageName := registry + "/" + systemName + "/" + imageName
+
+	actualImageName := getImageName(registry, systemName, imageName)
+
+	if actualImageName != expectedImageName {
+		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
+	}
+}
+
+func TestGetImageName3(t *testing.T) {
+	const registry = "ghcr.io"
+	const systemName = "core"
+	const imageName = "demo-api"
+
+	expectedImageName := registry + "/" + systemName + "/" + imageName
+
+	actualImageName := getImageName(registry, systemName, imageName)
+
+	if actualImageName != expectedImageName {
+		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
+	}
+}
+
+func TestGetImageName4(t *testing.T) {
+	const registry = "quay.io"
+	const systemName = "core"
+	const imageName = "demo-api"
+
+	expectedImageName := registry + "/" + systemName + "/" + imageName
+
+	actualImageName := getImageName(registry, systemName, imageName)
+
+	if actualImageName != expectedImageName {
+		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
+	}
+}
+
 func TestConstructBuildCommandArguments1(t *testing.T) {
 	const dockerfilePath = "build/Dockerfile"
 	const buildContext = "src/app"
