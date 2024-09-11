@@ -221,9 +221,9 @@ func getImageName(
 	applicationName string,
 ) string {
 	if strings.Contains(registry, "azurecr.io") {
-		return fmt.Sprintf("%s/%s-%s", registry, systemName, applicationName)
+		return strings.ToLower(fmt.Sprintf("%s/%s-%s", registry, systemName, applicationName))
 	}
-	return fmt.Sprintf("%s/%s/%s", registry, systemName, applicationName)
+	return strings.ToLower(fmt.Sprintf("%s/%s/%s", registry, systemName, applicationName))
 }
 
 func buildAndPushImage(
