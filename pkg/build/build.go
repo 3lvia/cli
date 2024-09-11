@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 )
@@ -214,12 +215,23 @@ func constructBuildCommandArguments(
 	}, tagArguments...), buildContext)
 }
 
+func getImageName(
+	registry string,
+	systemName string,
+	applicationName string,
+) string {
+	if strings.Contains(registry, "azurecr.io") {
+		return fmt.Sprintf("%s/%s-%s", registry, systemName, applicationName)
+	}
+	return fmt.Sprintf("%s/%s/%s", registry, systemName, applicationName)
+}
+
 func buildAndPushImage(
 	systemName string,
 	applicationName string,
 	options BuildAndPushImageOptions,
 ) error {
-	imageName := options.Registry + "/" + systemName + "/" + applicationName
+	imageName := getImageName(options.Registry, systemName, applicationName)
 
 	buildCmd := exec.Command(
 		"docker",
