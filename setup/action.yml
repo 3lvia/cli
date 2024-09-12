@@ -20,8 +20,8 @@ runs:
         fi
 
         gh release download -R 3lvia/cli "$version" --pattern "$BINARY_TARBALL*"
-        md5sum -c "$BINARY_TARBALL.md5"
-        tar -xzvf "$BINARY_TARBALL"
+        md5sum -c --quiet "$BINARY_TARBALL.md5"
+        tar -xzf "$BINARY_TARBALL"
         sudo install -Dm755 -t /usr/bin 3lv
       env:
         GH_TOKEN: ${{ github.token }}

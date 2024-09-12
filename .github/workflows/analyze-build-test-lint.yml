@@ -39,11 +39,11 @@ jobs:
           cache-dependency-path: 'go.sum'
           go-version-file: 'go.mod'
 
-      - name: Run tests
-        run: make test
-
       - name: Build
         run: make build
+
+      - name: Run tests
+        run: make test
 
   lint:
     name: Lint

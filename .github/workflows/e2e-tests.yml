@@ -1,0 +1,41 @@
+name: End-to-End Tests
+
+on:
+  pull_request:
+    branches: [trunk]
+    paths-ignore:
+      - 'README.md'
+
+jobs:
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: elvia-runner
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          cache-dependency-path: 'go.sum'
+          go-version-file: 'go.mod'
+
+      - name: Install CLI
+        uses: ./setup
+
+      - name: Test build command
+        run: |
+          3lv build \
+            -f go.mod \
+            -s core \
+            --go-main-package-directory . \
+            -r ghcr.io/3lvia \
+            --additional-tags latest,v1, \
+            cli
+
+      - name: Test scan command
+        run: |
+          3lv scan \
+            -S CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN \
+            -F sarif \
+            ghcr.io/3lvia/core/cli:v1
