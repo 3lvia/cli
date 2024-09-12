@@ -51,6 +51,8 @@ func TestConstructScanImageArguments2(t *testing.T) {
 		format,
 		"--timeout",
 		"15m0s",
+		"--output",
+		"trivy.json",
 		imageName,
 	}
 
@@ -85,7 +87,42 @@ func TestConstructScanImageArguments3(t *testing.T) {
 		"--timeout",
 		"15m0s",
 		"--output",
-		"trivy.sarif",
+		"trivy." + format,
+		imageName,
+	}
+
+	actualCommand := constructScanImageArguments(
+		imageName,
+		severity,
+		format,
+		disableError,
+	)
+
+	for i, arg := range expectedCommand {
+		if arg != actualCommand[i] {
+			t.Errorf("Expected %s, got %s", arg, actualCommand[i])
+		}
+	}
+}
+
+func TestConstructScanImageArguments4(t *testing.T) {
+	const imageName = "test-image:latest"
+	const severity = "CRITICAL,HIGH,MEDIUM,LOW"
+	const format = "markdown"
+	const disableError = true
+
+	expectedCommand := []string{
+		"image",
+		"--severity",
+		severity,
+		"--exit-code",
+		"0",
+		"--format",
+		"json",
+		"--timeout",
+		"15m0s",
+		"--output",
+		"trivy.json",
 		imageName,
 	}
 
