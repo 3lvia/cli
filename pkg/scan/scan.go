@@ -1,7 +1,7 @@
 package scan
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"os/exec"
 
@@ -23,8 +23,15 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "format",
 			Aliases: []string{"F"},
-			Usage:   "The format to use when outputting the scan results: can be table, json or sarif.",
+			Usage:   "The format to use when outputting the scan results: can be table, json, sarif or markdown.",
 			Value:   "table",
+			Action: func(c *cli.Context, format string) error {
+				if format != "table" && format != "json" && format != "sarif" && format != "markdown" {
+					return cli.Exit("Invalid format provided", 1)
+				}
+
+				return nil
+			},
 			EnvVars: []string{"3LV_FORMAT"},
 		},
 		&cli.BoolFlag{
@@ -54,7 +61,8 @@ func Scan(c *cli.Context) error {
 	format := c.String("format")
 	disableError := c.Bool("disable-error")
 
-	if err := ScanImage(imageName, severity, format, disableError); err != nil {
+	err := ScanImage(imageName, severity, format, disableError)
+	if err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -74,6 +82,14 @@ func constructScanImageArguments(
 		return "1"
 	}()
 
+	// Markdown output is created by parsing json output, not natively by Trivy
+	trivyFormat := func() string {
+		if format == "markdown" {
+			return "json"
+		}
+		return format
+	}()
+
 	cmd := []string{
 		"image",
 		"--severity",
@@ -81,16 +97,17 @@ func constructScanImageArguments(
 		"--exit-code",
 		exitCode,
 		"--format",
-		format,
+		trivyFormat,
 		"--timeout",
 		"15m0s",
 	}
-	if format == "sarif" {
+
+	if trivyFormat == "json" || trivyFormat == "sarif" {
 		return append(
 			append(
 				cmd,
 				"--output",
-				"trivy.sarif",
+				"trivy."+trivyFormat,
 			),
 			imageName,
 		)
@@ -118,8 +135,24 @@ func ScanImage(
 	scanCmd.Stdout = os.Stdout
 	scanCmd.Stderr = os.Stderr
 
-	if err := scanCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to scan Docker image: %w", err)
+	log.Printf(scanCmd.String())
+
+	_ = scanCmd.Run()
+
+	if format == "markdown" {
+		result, err := parseJSONOutput()
+		if err != nil {
+			return err
+		}
+		markdown, err := toMarkdown(result)
+		if err != nil {
+			return err
+		}
+
+		err = os.WriteFile("trivy.md", markdown, 0644)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
