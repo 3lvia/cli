@@ -4,7 +4,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"slices"
 
+	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -20,19 +22,21 @@ var Command *cli.Command = &cli.Command{
 			Value:   "CRITICAL,HIGH",
 			EnvVars: []string{"3LV_SEVERITY"},
 		},
-		&cli.StringFlag{
-			Name:    "format",
+		&cli.StringSliceFlag{
+			Name:    "formats",
 			Aliases: []string{"F"},
-			Usage:   "The format to use when outputting the scan results: can be table, json, sarif or markdown.",
-			Value:   "table",
-			Action: func(c *cli.Context, format string) error {
-				if format != "table" && format != "json" && format != "sarif" && format != "markdown" {
-					return cli.Exit("Invalid format provided", 1)
+			Usage:   "The formats to use when outputting the scan results: can be table, json, sarif or markdown.",
+			Value:   cli.NewStringSlice("table"),
+			Action: func(c *cli.Context, formats []string) error {
+				for _, format := range formats {
+					if format != "table" && format != "json" && format != "sarif" && format != "markdown" {
+						return cli.Exit("Invalid format provided", 1)
+					}
 				}
 
 				return nil
 			},
-			EnvVars: []string{"3LV_FORMAT"},
+			EnvVars: []string{"3LV_FORMATS"},
 		},
 		&cli.BoolFlag{
 			Name:    "disable-error",
@@ -58,10 +62,10 @@ func Scan(c *cli.Context) error {
 
 	// Optional args
 	severity := c.String("severity")
-	format := c.String("format")
+	formats := utils.RemoveZeroValues(c.StringSlice("formats"))
 	disableError := c.Bool("disable-error")
 
-	err := ScanImage(imageName, severity, format, disableError)
+	err := ScanImage(imageName, severity, formats, disableError)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -72,7 +76,7 @@ func Scan(c *cli.Context) error {
 func constructScanImageArguments(
 	imageName string,
 	severity string,
-	format string,
+	formats []string,
 	disableError bool,
 ) []string {
 	exitCode := func() string {
@@ -82,36 +86,19 @@ func constructScanImageArguments(
 		return "1"
 	}()
 
-	// Markdown output is created by parsing json output, not natively by Trivy
-	trivyFormat := func() string {
-		if format == "markdown" {
-			return "json"
-		}
-		return format
-	}()
-
 	cmd := []string{
 		"image",
 		"--severity",
 		severity,
 		"--exit-code",
 		exitCode,
-		"--format",
-		trivyFormat,
 		"--timeout",
 		"15m0s",
 	}
 
-	if trivyFormat == "json" || trivyFormat == "sarif" {
-		return append(
-			append(
-				cmd,
-				"--output",
-				"trivy."+trivyFormat,
-			),
-			imageName,
-		)
-	}
+	// We can convert to any format from json
+	cmd = append(cmd, "--format", "json")
+	cmd = append(cmd, "--output", "trivy.json")
 
 	return append(cmd, imageName)
 }
@@ -119,16 +106,15 @@ func constructScanImageArguments(
 func ScanImage(
 	imageName string,
 	severity string,
-	format string,
+	formats []string,
 	disableError bool,
 ) error {
-
 	scanCmd := exec.Command(
 		"trivy",
 		constructScanImageArguments(
 			imageName,
 			severity,
-			format,
+			formats,
 			disableError,
 		)...,
 	)
@@ -139,7 +125,51 @@ func ScanImage(
 
 	_ = scanCmd.Run()
 
-	if format == "markdown" {
+	if slices.Contains(formats, "table") {
+		log.Println("Converting results to table format")
+
+		convertCmd := exec.Command(
+			"trivy",
+			"convert",
+			"--format",
+			"table",
+			"trivy.json",
+		)
+		convertCmd.Stdout = os.Stdout
+		convertCmd.Stderr = os.Stderr
+
+		log.Printf(convertCmd.String())
+
+		if err := convertCmd.Run(); err != nil {
+			return err
+		}
+	}
+
+	if slices.Contains(formats, "sarif") {
+		log.Println("Converting results to SARIF format")
+
+		convertCmd := exec.Command(
+			"trivy",
+			"convert",
+			"--format",
+			"sarif",
+			"--output",
+			"trivy.sarif",
+			"trivy.json",
+		)
+		convertCmd.Stdout = os.Stdout
+		convertCmd.Stderr = os.Stderr
+
+		log.Printf(convertCmd.String())
+
+		if err := convertCmd.Run(); err != nil {
+			return err
+		}
+	}
+
+	if slices.Contains(formats, "markdown") {
+		log.Println("Converting results to Markdown format")
+
 		result, err := parseJSONOutput()
 		if err != nil {
 			return err
@@ -153,6 +183,15 @@ func ScanImage(
 		if err != nil {
 			return err
 		}
+	}
+
+	if !slices.Contains(formats, "json") {
+		err := os.Remove("trivy.json")
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("Keeping pre-existing JSON output")
 	}
 
 	return nil
