@@ -23,6 +23,7 @@ runs:
         md5sum -c --quiet "$BINARY_TARBALL.md5"
         tar -xzf "$BINARY_TARBALL"
         sudo install -Dm755 -t /usr/bin 3lv
+        3lv --version
       env:
         GH_TOKEN: ${{ github.token }}
         BINARY_TARBALL: '3lv-linux-amd64.tar.gz'
