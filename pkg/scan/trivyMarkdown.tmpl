@@ -1,0 +1,21 @@
+# :warning: Vulnerabilities detected in {{ .ArtifactName }} :warning:
+{{ range (index .Results 0).Vulnerabilities -}}
+## {{ .Title }} – {{ .Severity }}
+
+**ID**: {{ .VulnerabilityID }}
+
+**Package Name**: {{ .PkgName }}
+
+**Installed Version**: {{ .InstalledVersion }}
+
+{{ .Description }}
+
+{{ if .References -}}
+**References**:
+{{ range $i, $e := .References -}}
+{{ if lt $i 5 }}
+- [{{ . }}]({{ . }})
+{{ end }}
+{{- end }}
+{{ end }}
+{{- end }}

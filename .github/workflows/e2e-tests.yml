@@ -20,22 +20,11 @@ jobs:
           cache-dependency-path: 'go.sum'
           go-version-file: 'go.mod'
 
-      - name: Install CLI
-        uses: ./setup
+      - name: Install CLI from source
+        run: make install
 
-      - name: Test build command
-        run: |
-          3lv build \
-            -f go.mod \
-            -s core \
-            --go-main-package-directory . \
-            -r ghcr.io/3lvia \
-            --additional-tags latest,v1, \
-            cli
+      - name: Run tests for build command
+        run: ./tests/build.sh
 
-      - name: Test scan command
-        run: |
-          3lv scan \
-            -S CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN \
-            -F sarif \
-            ghcr.io/3lvia/core/cli:v1
+      - name: Run tests scan command
+        run: ./tests/scan.sh

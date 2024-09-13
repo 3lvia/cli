@@ -1,10 +1,12 @@
 package scan
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"slices"
 
+	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -20,12 +22,21 @@ var Command *cli.Command = &cli.Command{
 			Value:   "CRITICAL,HIGH",
 			EnvVars: []string{"3LV_SEVERITY"},
 		},
-		&cli.StringFlag{
-			Name:    "format",
+		&cli.StringSliceFlag{
+			Name:    "formats",
 			Aliases: []string{"F"},
-			Usage:   "The format to use when outputting the scan results: can be table, json or sarif.",
-			Value:   "table",
-			EnvVars: []string{"3LV_FORMAT"},
+			Usage:   "The formats to use when outputting the scan results: can be table, json, sarif or markdown.",
+			Value:   cli.NewStringSlice("table"),
+			Action: func(c *cli.Context, formats []string) error {
+				for _, format := range formats {
+					if format != "table" && format != "json" && format != "sarif" && format != "markdown" {
+						return cli.Exit("Invalid format provided", 1)
+					}
+				}
+
+				return nil
+			},
+			EnvVars: []string{"3LV_FORMATS"},
 		},
 		&cli.BoolFlag{
 			Name:    "disable-error",
@@ -51,10 +62,11 @@ func Scan(c *cli.Context) error {
 
 	// Optional args
 	severity := c.String("severity")
-	format := c.String("format")
+	formats := utils.RemoveZeroValues(c.StringSlice("formats"))
 	disableError := c.Bool("disable-error")
 
-	if err := ScanImage(imageName, severity, format, disableError); err != nil {
+	err := ScanImage(imageName, severity, formats, disableError)
+	if err != nil {
 		return cli.Exit(err, 1)
 	}
 
@@ -64,7 +76,6 @@ func Scan(c *cli.Context) error {
 func constructScanImageArguments(
 	imageName string,
 	severity string,
-	format string,
 	disableError bool,
 ) []string {
 	exitCode := func() string {
@@ -74,52 +85,110 @@ func constructScanImageArguments(
 		return "1"
 	}()
 
-	cmd := []string{
+	return []string{
 		"image",
 		"--severity",
 		severity,
 		"--exit-code",
 		exitCode,
-		"--format",
-		format,
 		"--timeout",
 		"15m0s",
+		"--format",
+		"json",
+		"--output",
+		"trivy.json",
+		imageName,
 	}
-	if format == "sarif" {
-		return append(
-			append(
-				cmd,
-				"--output",
-				"trivy.sarif",
-			),
-			imageName,
-		)
-	}
-
-	return append(cmd, imageName)
 }
 
 func ScanImage(
 	imageName string,
 	severity string,
-	format string,
+	formats []string,
 	disableError bool,
 ) error {
-
 	scanCmd := exec.Command(
 		"trivy",
 		constructScanImageArguments(
 			imageName,
 			severity,
-			format,
 			disableError,
 		)...,
 	)
 	scanCmd.Stdout = os.Stdout
 	scanCmd.Stderr = os.Stderr
 
-	if err := scanCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to scan Docker image: %w", err)
+	log.Print(scanCmd.String())
+
+	_ = scanCmd.Run()
+
+	if slices.Contains(formats, "table") {
+		log.Println("Converting results to table format")
+
+		convertCmd := exec.Command(
+			"trivy",
+			"convert",
+			"--format",
+			"table",
+			"trivy.json",
+		)
+		convertCmd.Stdout = os.Stdout
+		convertCmd.Stderr = os.Stderr
+
+		log.Print(convertCmd.String())
+
+		if err := convertCmd.Run(); err != nil {
+			return err
+		}
+	}
+
+	if slices.Contains(formats, "sarif") {
+		log.Println("Converting results to SARIF format")
+
+		convertCmd := exec.Command(
+			"trivy",
+			"convert",
+			"--format",
+			"sarif",
+			"--output",
+			"trivy.sarif",
+			"trivy.json",
+		)
+		convertCmd.Stdout = os.Stdout
+		convertCmd.Stderr = os.Stderr
+
+		log.Print(convertCmd.String())
+
+		if err := convertCmd.Run(); err != nil {
+			return err
+		}
+	}
+
+	if slices.Contains(formats, "markdown") {
+		log.Println("Converting results to Markdown format")
+
+		result, err := parseJSONOutput()
+		if err != nil {
+			return err
+		}
+		markdown, err := toMarkdown(result)
+		if err != nil {
+			return err
+		}
+
+		err = os.WriteFile("trivy.md", markdown, 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !slices.Contains(formats, "json") {
+		err := os.Remove("trivy.json")
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("Keeping pre-existing JSON output")
 	}
 
 	return nil

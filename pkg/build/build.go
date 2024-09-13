@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/3lvia/cli/pkg/scan"
+	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -61,18 +62,6 @@ var Command *cli.Command = &cli.Command{
 			Value:   "CRITICAL,HIGH",
 			EnvVars: []string{"3LV_SEVERITY"},
 		},
-		&cli.StringFlag{
-			Name:  "scan-format",
-			Usage: "The format to use when scanning the image with Trivy: can be any of table, json, or sarif",
-			Value: "table",
-			Action: func(c *cli.Context, trivyFormat string) error {
-				if trivyFormat != "table" && trivyFormat != "json" && trivyFormat != "sarif" {
-					return cli.Exit("Invalid scan-format", 1)
-				}
-				return nil
-			},
-			EnvVars: []string{"3LV_SCAN_FORMAT"},
-		},
 		&cli.StringSliceFlag{
 			Name:    "additional-tags",
 			Aliases: []string{"t"},
@@ -90,6 +79,22 @@ var Command *cli.Command = &cli.Command{
 			Aliases: []string{"I"},
 			Usage:   "The directories to include in the build context",
 			EnvVars: []string{"3LV_INCLUDE_DIRECTORIES"},
+		},
+		&cli.StringSliceFlag{
+			Name:    "scan-formats",
+			Aliases: []string{"F"},
+			Usage:   "The formats to use when outputting the scan results: can be table, json, sarif or markdown.",
+			Value:   cli.NewStringSlice("table"),
+			Action: func(c *cli.Context, formats []string) error {
+				for _, format := range formats {
+					if format != "table" && format != "json" && format != "sarif" && format != "markdown" {
+						return cli.Exit("Invalid format provided", 1)
+					}
+				}
+
+				return nil
+			},
+			EnvVars: []string{"3LV_SCAN_FORMATS"},
 		},
 		&cli.BoolFlag{
 			Name:    "push",
@@ -143,10 +148,10 @@ func Build(c *cli.Context) error {
 	goMainPackageDirectory := c.String("go-main-package-directory")
 	cacheTag := c.String("cache-tag")
 	severity := c.String("severity")
-	scanFormat := c.String("scan-format")
-	additionalTags := removeZeroValues(c.StringSlice("additional-tags"))
-	includeFiles := removeZeroValues(c.StringSlice("include-files"))
-	includeDirectories := removeZeroValues(c.StringSlice("include-directories"))
+	additionalTags := utils.RemoveZeroValues(c.StringSlice("additional-tags"))
+	includeFiles := utils.RemoveZeroValues(c.StringSlice("include-files"))
+	includeDirectories := utils.RemoveZeroValues(c.StringSlice("include-directories"))
+	scanFormats := utils.RemoveZeroValues(c.StringSlice("scan-formats"))
 	push := c.Bool("push")
 	generateOnly := c.Bool("generate-only")
 	disableScanError := c.Bool("disable-scan-error")
@@ -178,7 +183,7 @@ func Build(c *cli.Context) error {
 		CacheTag:         cacheTag,
 		Registry:         registry,
 		Severity:         severity,
-		ScanFormat:       scanFormat,
+		ScanFormats:      scanFormats,
 		AdditionalTags:   additionalTags,
 		Push:             push,
 		DisableScanError: disableScanError,
@@ -253,7 +258,7 @@ type BuildAndPushImageOptions struct {
 	CacheTag         string   // required
 	Registry         string   // required
 	Severity         string   // required
-	ScanFormat       string   // required
+	ScanFormats      []string // required
 	AdditionalTags   []string // required
 	Push             bool     // required
 	DisableScanError bool     // required
@@ -288,7 +293,7 @@ func buildAndPushImage(
 	err := scan.ScanImage(
 		imageName+":"+options.CacheTag,
 		options.Severity,
-		options.ScanFormat,
+		options.ScanFormats,
 		options.DisableScanError,
 	)
 	if err != nil {
@@ -311,15 +316,4 @@ func buildAndPushImage(
 	}
 
 	return nil
-}
-
-func removeZeroValues(slice []string) []string {
-	var result []string
-	for _, value := range slice {
-		if value != "" {
-			result = append(result, value)
-		}
-	}
-
-	return result
 }
