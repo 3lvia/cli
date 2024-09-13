@@ -1,3 +1,3 @@
-FROM debian:10
+FROM debian:12
 
 ENTRYPOINT ["echo", "Hello, World!"]
