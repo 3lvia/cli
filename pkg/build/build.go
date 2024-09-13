@@ -151,7 +151,7 @@ func Build(c *cli.Context) error {
 	additionalTags := utils.RemoveZeroValues(c.StringSlice("additional-tags"))
 	includeFiles := utils.RemoveZeroValues(c.StringSlice("include-files"))
 	includeDirectories := utils.RemoveZeroValues(c.StringSlice("include-directories"))
-	scanFormats := utils.RemoveZeroValues(c.StringSlice("scan-format"))
+	scanFormats := utils.RemoveZeroValues(c.StringSlice("scan-formats"))
 	push := c.Bool("push")
 	generateOnly := c.Bool("generate-only")
 	disableScanError := c.Bool("disable-scan-error")

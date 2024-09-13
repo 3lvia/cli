@@ -76,7 +76,6 @@ func Scan(c *cli.Context) error {
 func constructScanImageArguments(
 	imageName string,
 	severity string,
-	formats []string,
 	disableError bool,
 ) []string {
 	exitCode := func() string {
@@ -86,7 +85,7 @@ func constructScanImageArguments(
 		return "1"
 	}()
 
-	cmd := []string{
+	return []string{
 		"image",
 		"--severity",
 		severity,
@@ -94,13 +93,12 @@ func constructScanImageArguments(
 		exitCode,
 		"--timeout",
 		"15m0s",
+		"--format",
+		"json",
+		"--output",
+		"trivy.json",
+		imageName,
 	}
-
-	// We can convert to any format from json
-	cmd = append(cmd, "--format", "json")
-	cmd = append(cmd, "--output", "trivy.json")
-
-	return append(cmd, imageName)
 }
 
 func ScanImage(
@@ -114,14 +112,13 @@ func ScanImage(
 		constructScanImageArguments(
 			imageName,
 			severity,
-			formats,
 			disableError,
 		)...,
 	)
 	scanCmd.Stdout = os.Stdout
 	scanCmd.Stderr = os.Stderr
 
-	log.Printf(scanCmd.String())
+	log.Print(scanCmd.String())
 
 	_ = scanCmd.Run()
 
@@ -138,7 +135,7 @@ func ScanImage(
 		convertCmd.Stdout = os.Stdout
 		convertCmd.Stderr = os.Stderr
 
-		log.Printf(convertCmd.String())
+		log.Print(convertCmd.String())
 
 		if err := convertCmd.Run(); err != nil {
 			return err
@@ -160,7 +157,7 @@ func ScanImage(
 		convertCmd.Stdout = os.Stdout
 		convertCmd.Stderr = os.Stderr
 
-		log.Printf(convertCmd.String())
+		log.Print(convertCmd.String())
 
 		if err := convertCmd.Run(); err != nil {
 			return err

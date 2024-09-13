@@ -4,6 +4,6 @@
     -s core \
     -f go.mod \
     -r ghcr.io/3lvia \
-    --aditional-tags latest,v0,alpha, \
-    --go-main-package-dir . \
+    --additional-tags latest,v0,alpha, \
+    --go-main-package-directory . \
     cli

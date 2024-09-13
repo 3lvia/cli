@@ -5,7 +5,6 @@ import "testing"
 func TestConstructScanImageArguments1(t *testing.T) {
 	const imageName = "test-image:latest"
 	const severity = "CRITICAL,HIGH"
-	const format = "table"
 	const disableError = false
 
 	expectedCommand := []string{
@@ -14,17 +13,18 @@ func TestConstructScanImageArguments1(t *testing.T) {
 		severity,
 		"--exit-code",
 		"1",
-		"--format",
-		format,
 		"--timeout",
 		"15m0s",
+		"--format",
+		"json",
+		"--output",
+		"trivy.json",
 		imageName,
 	}
 
 	actualCommand := constructScanImageArguments(
 		imageName,
 		severity,
-		format,
 		disableError,
 	)
 
@@ -38,7 +38,6 @@ func TestConstructScanImageArguments1(t *testing.T) {
 func TestConstructScanImageArguments2(t *testing.T) {
 	const imageName = "test-image:latest"
 	const severity = "CRITICAL,HIGH,MEDIUM"
-	const format = "json"
 	const disableError = true
 
 	expectedCommand := []string{
@@ -47,10 +46,10 @@ func TestConstructScanImageArguments2(t *testing.T) {
 		severity,
 		"--exit-code",
 		"0",
-		"--format",
-		format,
 		"--timeout",
 		"15m0s",
+		"--format",
+		"json",
 		"--output",
 		"trivy.json",
 		imageName,
@@ -59,7 +58,6 @@ func TestConstructScanImageArguments2(t *testing.T) {
 	actualCommand := constructScanImageArguments(
 		imageName,
 		severity,
-		format,
 		disableError,
 	)
 
@@ -73,7 +71,6 @@ func TestConstructScanImageArguments2(t *testing.T) {
 func TestConstructScanImageArguments3(t *testing.T) {
 	const imageName = "test-image:latest"
 	const severity = "CRITICAL"
-	const format = "sarif"
 	const disableError = true
 
 	expectedCommand := []string{
@@ -82,19 +79,18 @@ func TestConstructScanImageArguments3(t *testing.T) {
 		severity,
 		"--exit-code",
 		"0",
-		"--format",
-		format,
 		"--timeout",
 		"15m0s",
+		"--format",
+		"json",
 		"--output",
-		"trivy." + format,
+		"trivy.json",
 		imageName,
 	}
 
 	actualCommand := constructScanImageArguments(
 		imageName,
 		severity,
-		format,
 		disableError,
 	)
 
@@ -108,7 +104,6 @@ func TestConstructScanImageArguments3(t *testing.T) {
 func TestConstructScanImageArguments4(t *testing.T) {
 	const imageName = "test-image:latest"
 	const severity = "CRITICAL,HIGH,MEDIUM,LOW"
-	const format = "markdown"
 	const disableError = true
 
 	expectedCommand := []string{
@@ -117,10 +112,10 @@ func TestConstructScanImageArguments4(t *testing.T) {
 		severity,
 		"--exit-code",
 		"0",
-		"--format",
-		"json",
 		"--timeout",
 		"15m0s",
+		"--format",
+		"json",
 		"--output",
 		"trivy.json",
 		imageName,
@@ -129,7 +124,6 @@ func TestConstructScanImageArguments4(t *testing.T) {
 	actualCommand := constructScanImageArguments(
 		imageName,
 		severity,
-		format,
 		disableError,
 	)
 

@@ -20,8 +20,8 @@ jobs:
           cache-dependency-path: 'go.sum'
           go-version-file: 'go.mod'
 
-      - name: Install CLI
-        uses: ./setup
+      - name: Install CLI from source
+        run: make install
 
       - name: Run tests for build command
         run: ./tests/build.sh
