@@ -24,7 +24,7 @@ jobs:
         run: make install
 
       - name: Run tests for build command
-        run: ./tests/build.sh
+        run: ./tests/build/run_tests.sh
 
-      - name: Run tests scan command
-        run: ./tests/scan.sh
+      - name: Run tests for scan command
+        run: ./tests/scan/run_tests.sh

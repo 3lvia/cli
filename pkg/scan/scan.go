@@ -120,7 +120,7 @@ func ScanImage(
 
 	log.Print(scanCmd.String())
 
-	_ = scanCmd.Run()
+	scanErr := scanCmd.Run()
 
 	if slices.Contains(formats, "table") {
 		log.Println("Converting results to table format")
@@ -191,5 +191,5 @@ func ScanImage(
 		log.Println("Keeping pre-existing JSON output")
 	}
 
-	return nil
+	return scanErr
 }
