@@ -1,6 +1,10 @@
 # :warning: Vulnerabilities detected in {{ .ArtifactName }} :warning:
-{{ range (index .Results 0).Vulnerabilities -}}
-## {{ .Title }} – {{ .Severity }}
+
+{{ range .Results }}{{ if .Vulnerabilities -}}
+## Found in: `{{ .Target }}`
+
+{{ range .Vulnerabilities -}}
+### {{ .Title }} – {{ .Severity }}
 
 **ID**: {{ .VulnerabilityID }}
 
@@ -18,4 +22,6 @@
 {{ end }}
 {{- end }}
 {{ end }}
+{{- end }}
+{{- end }}
 {{- end }}
