@@ -1,6 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
   "ignorePaths": [
     "pkg/build/_test/*.csproj",
     "pkg/build/_test/Dockerfile*",
