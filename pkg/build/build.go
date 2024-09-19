@@ -111,11 +111,18 @@ var Command *cli.Command = &cli.Command{
 			EnvVars: []string{"3LV_GENERATE_ONLY"},
 		},
 		&cli.BoolFlag{
-			Name:    "disable-scan-error",
+			Name:    "scan-disable-error",
 			Aliases: []string{"D"},
 			Usage:   "Disables Trivy scan returning a non-zero exit code if vulnerabilities are found",
 			Value:   false,
 			EnvVars: []string{"3LV_SCAN_DISABLE_ERROR"},
+		},
+		&cli.BoolFlag{
+			Name:    "scan-skip-db-update",
+			Aliases: []string{"U"},
+			Usage:   "Skip updating the Trivy database.",
+			Value:   false,
+			EnvVars: []string{"3LV_SCAN_SKIP_DB_UPDATE"},
 		},
 	},
 	Action: Build,
@@ -152,9 +159,10 @@ func Build(c *cli.Context) error {
 	includeFiles := utils.RemoveZeroValues(c.StringSlice("include-files"))
 	includeDirectories := utils.RemoveZeroValues(c.StringSlice("include-directories"))
 	scanFormats := utils.RemoveZeroValues(c.StringSlice("scan-formats"))
+	scanSkipDBUpdate := c.Bool("scan-skip-db-update")
 	push := c.Bool("push")
 	generateOnly := c.Bool("generate-only")
-	disableScanError := c.Bool("disable-scan-error")
+	scanDisableError := c.Bool("scan-disable-error")
 
 	generateOptions := GenerateDockerfileOptions{
 		GoMainPackageDirectory: goMainPackageDirectory,
@@ -186,7 +194,8 @@ func Build(c *cli.Context) error {
 		ScanFormats:      scanFormats,
 		AdditionalTags:   additionalTags,
 		Push:             push,
-		DisableScanError: disableScanError,
+		ScanSkipDBUpdate: scanSkipDBUpdate,
+		ScanDisableError: scanDisableError,
 	}
 
 	err = buildAndPushImage(
@@ -261,7 +270,8 @@ type BuildAndPushImageOptions struct {
 	ScanFormats      []string // required
 	AdditionalTags   []string // required
 	Push             bool     // required
-	DisableScanError bool     // required
+	ScanDisableError bool     // required
+	ScanSkipDBUpdate bool     // required
 }
 
 func buildAndPushImage(
@@ -294,7 +304,8 @@ func buildAndPushImage(
 		imageName+":"+options.CacheTag,
 		options.Severity,
 		options.ScanFormats,
-		options.DisableScanError,
+		options.ScanDisableError,
+		options.ScanSkipDBUpdate,
 	)
 	if err != nil {
 		return err

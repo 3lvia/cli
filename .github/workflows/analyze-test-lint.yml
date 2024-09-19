@@ -24,7 +24,7 @@ jobs:
     name: Test
     runs-on: elvia-runner
     concurrency:
-      group: '${{ github.workflow }}-${{ github.event_name }}-build'
+      group: '${{ github.workflow }}-${{ github.event_name }}-test'
       cancel-in-progress: true
     steps:
       - name: Checkout repository

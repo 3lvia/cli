@@ -45,6 +45,12 @@ var Command *cli.Command = &cli.Command{
 			Value:   false,
 			EnvVars: []string{"3LV_DISABLE_ERROR"},
 		},
+		&cli.BoolFlag{
+			Name:    "skip-db-update",
+			Usage:   "Skip update Trivy vulnerability database",
+			Value:   false,
+			EnvVars: []string{"3LV_SKIP_DB_UPDATE"},
+		},
 	},
 	Action: Scan,
 }
@@ -64,8 +70,9 @@ func Scan(c *cli.Context) error {
 	severity := c.String("severity")
 	formats := utils.RemoveZeroValues(c.StringSlice("formats"))
 	disableError := c.Bool("disable-error")
+	skipDBUpdate := c.Bool("skip-db-update")
 
-	err := ScanImage(imageName, severity, formats, disableError)
+	err := ScanImage(imageName, severity, formats, disableError, skipDBUpdate)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -77,6 +84,7 @@ func constructScanImageArguments(
 	imageName string,
 	severity string,
 	disableError bool,
+	skipDBUpdate bool,
 ) []string {
 	exitCode := func() string {
 		if disableError {
@@ -85,7 +93,7 @@ func constructScanImageArguments(
 		return "1"
 	}()
 
-	return []string{
+	args := []string{
 		"image",
 		"--severity",
 		severity,
@@ -97,8 +105,15 @@ func constructScanImageArguments(
 		"json",
 		"--output",
 		"trivy.json",
-		imageName,
 	}
+
+	if skipDBUpdate {
+		args = append(args, "--skip-db-update")
+	}
+
+	args = append(args, imageName)
+
+	return args
 }
 
 func ScanImage(
@@ -106,6 +121,7 @@ func ScanImage(
 	severity string,
 	formats []string,
 	disableError bool,
+	skipDBUpdate bool,
 ) error {
 	scanCmd := exec.Command(
 		"trivy",
@@ -113,6 +129,7 @@ func ScanImage(
 			imageName,
 			severity,
 			disableError,
+			skipDBUpdate,
 		)...,
 	)
 	scanCmd.Stdout = os.Stdout
