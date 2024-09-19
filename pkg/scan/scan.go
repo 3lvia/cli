@@ -1,6 +1,8 @@
 package scan
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -138,6 +140,15 @@ func ScanImage(
 	log.Print(scanCmd.String())
 
 	scanErr := scanCmd.Run()
+
+	if _, err := os.Stat("trivy.json"); errors.Is(err, os.ErrNotExist) {
+		if disableError {
+			log.Println("Trivy did not produce any output")
+			return nil
+		}
+
+		return fmt.Errorf("Trivy did not produce any output")
+	}
 
 	if slices.Contains(formats, "table") {
 		log.Println("Converting results to table format")
