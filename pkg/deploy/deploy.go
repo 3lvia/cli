@@ -70,8 +70,14 @@ var Command *cli.Command = &cli.Command{
 			Value:   "aks",
 			Action: func(c *cli.Context, runtimeCloudProvider string) error {
 				allowedRuntimeCloudProviders := []string{"aks", "gke"}
-				if !slices.Contains(allowedRuntimeCloudProviders, runtimeCloudProvider) {
-					return cli.Exit(fmt.Sprintf("Invalid runtime cloud provider provided: must be one of %v", allowedRuntimeCloudProviders), 1)
+				if !slices.Contains(allowedRuntimeCloudProviders, strings.ToLower(runtimeCloudProvider)) {
+					return cli.Exit(
+						fmt.Sprintf(
+							"Invalid runtime cloud provider '%s' provided: must be one of %v (ignoring case)",
+							runtimeCloudProvider,
+							allowedRuntimeCloudProviders),
+						1,
+					)
 				}
 
 				return nil
