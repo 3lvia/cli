@@ -2,8 +2,6 @@ package deploy
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"os/exec"
 	"path"
 	"slices"
@@ -98,6 +96,11 @@ var Command *cli.Command = &cli.Command{
 			Aliases: []string{"A"},
 			Usage:   "Skips authentication against the runtime cloud provider",
 		},
+		&cli.BoolFlag{
+			Name:    "dry-run",
+			Aliases: []string{"D"},
+			Usage:   "Simulate the deployment without actually deploying.",
+		},
 		&cli.StringFlag{
 			Name:   "aks-tenant-id",
 			Usage:  "The AKS tenant ID to use",
@@ -165,6 +168,7 @@ func Deploy(c *cli.Context) error {
 	workloadType := strings.ToLower(c.String("workload-type"))
 	runtimeCloudProvider := strings.ToLower(c.String("runtime-cloud-provider"))
 	skipAuthentication := c.Bool("skip-authentication")
+	dryRun := c.Bool("dry-run")
 
 	if !skipAuthentication {
 		if runtimeCloudProvider == "aks" {
@@ -190,309 +194,43 @@ func Deploy(c *cli.Context) error {
 		}
 	}
 
-	helmOptions := HelmDeployOptions{
-		ApplicationName: applicationName,
-		SystemName:      systemName,
-		HelmValuesFile:  helmValuesFile,
-		Environment:     environment,
-		WorkloadType:    workloadType,
-		ImageTag:        imageTag,
-		RepositoryName:  repositoryName,
-		CommitHash:      commitHash,
-	}
-	if err := helmDeploy(helmOptions); err != nil {
-		return cli.Exit(err, 1)
-	}
-
-	return nil
-}
-
-func azLoginTenant(tenantID string) error {
-	azLoginCmd := exec.Command(
-		"az",
-		"login",
-		"--tenant",
-		tenantID,
-	)
-	azLoginCmd.Stdout = os.Stdout
-	azLoginCmd.Stderr = os.Stderr
-
-	log.Print(azLoginCmd.String())
-
-	if err := azLoginCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to authenticate to Azure: %w", err)
-	}
-
-	return nil
-}
-
-type AuthenticateAKSOptions struct {
-	AKSTenantID          string
-	AKSSubscriptionID    string
-	AKSClusterName       string
-	AKSResourceGroupName string
-}
-
-func authenticateAKS(environment string, options AuthenticateAKSOptions) error {
-	aksTenantID := func() string {
-		if options.AKSTenantID == "" {
-			return "2186a6ec-c227-4291-9806-d95340bf439d"
-		}
-		return options.AKSTenantID
-	}()
-
-	azAccountShowCmd := exec.Command(
-		"az",
-		"account",
-		"show",
-		"--query",
-		"tenantId",
-		"--output",
-		"tsv",
-	)
-	log.Print(azAccountShowCmd.String())
-
-	azAccountShowCmdOutput, err := azAccountShowCmd.Output()
-	if err != nil {
-		err := azLoginTenant(aksTenantID)
-		if err != nil {
-			return err
-		}
-	}
-
-	if azAccountShowCmdOutput != nil {
-		azAccountShowCmdOutputString := strings.TrimSpace(string(azAccountShowCmdOutput))
-		if azAccountShowCmdOutputString != aksTenantID {
-			err := azLoginTenant(aksTenantID)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	aksSubscriptionID, err := func() (string, error) {
-		if options.AKSSubscriptionID == "" {
-			switch environment {
-			case "dev", "test":
-				return "ceb9518c-528f-4c91-9b5a-c051d383e7a8", nil
-			case "prod":
-				return "9edbf217-b7c1-4f6a-ae76-d046cf932ff0", nil
-			default:
-				// cannot happen, but have to do this since Go's type system is garbage
-				return "", fmt.Errorf("Invalid environment provided")
-			}
-		}
-		return options.AKSSubscriptionID, nil
-	}()
-	if err != nil {
-		return err
-	}
-
-	aksClusterName := func() string {
-		if options.AKSClusterName == "" {
-			return "akscluster" + environment
-		}
-		return options.AKSClusterName
-	}()
-
-	contextName := "atlascluster" + environment
-
-	aksResourceGroupName := func() string {
-		if options.AKSResourceGroupName == "" {
-			return "RUNTIMESERVICE-RG" + environment
-		}
-		return options.AKSResourceGroupName
-	}()
-
-	azGetCredentialsCmd := exec.Command(
-		"az",
-		"aks",
-		"get-credentials",
-		"--resource-group",
-		aksResourceGroupName,
-		"--name",
-		aksClusterName,
-		"--context",
-		contextName,
-		"--subscription",
-		aksSubscriptionID,
-	)
-	azGetCredentialsCmd.Stdout = os.Stdout
-	azGetCredentialsCmd.Stderr = os.Stderr
-
-	log.Print(azGetCredentialsCmd.String())
-
-	if err := azGetCredentialsCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to authenticate to AKS: %w", err)
-	}
-
-	setContextCmd := exec.Command(
-		"kubectl",
-		"config",
-		"use-context",
-		contextName,
-	)
-	setContextCmd.Stdout = os.Stdout
-	setContextCmd.Stderr = os.Stderr
-
-	log.Print(setContextCmd.String())
-
-	if err := setContextCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to set kubectl context: %w", err)
-	}
-
-	return nil
-}
-
-type AuthenticateGKEOptions struct {
-	GKEProjectID       string
-	GKEClusterName     string
-	GKEClusterLocation string
-}
-
-func authenticateGKE(environment string, options AuthenticateGKEOptions) error {
-	gkeProjectID := func() string {
-		if options.GKEProjectID == "" {
-			return "elvia-runtimeservice-" + environment
-		}
-
-		return options.GKEProjectID
-	}()
-
-	gkeClusterName := func() string {
-		if options.GKEClusterName == "" {
-			return "runtimeservice-gke-" + environment
-		}
-
-		return options.GKEClusterName
-	}()
-
-	gkeClusterLocation := func() string {
-		if options.GKEClusterLocation == "" {
-			return "europe-west1"
-		}
-
-		return options.GKEClusterLocation
-	}()
-
-	gcloudGetCredentialsCmd := exec.Command(
-		"gcloud",
-		"container",
-		"clusters",
-		"get-credentials",
-		gkeClusterName,
-		"--region",
-		gkeClusterLocation,
-		"--project",
-		gkeProjectID,
-	)
-	gcloudGetCredentialsCmd.Stdout = os.Stdout
-	gcloudGetCredentialsCmd.Stderr = os.Stderr
-
-	if err := gcloudGetCredentialsCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to authenticate to GKE: %w", err)
-	}
-
-	return nil
-}
-
-type HelmDeployOptions struct {
-	ApplicationName string // required
-	SystemName      string // required
-	HelmValuesFile  string // required
-	Environment     string // required
-	WorkloadType    string // required
-	ImageTag        string // required
-	RepositoryName  string // required
-	CommitHash      string // required
-}
-
-func helmDeploy(options HelmDeployOptions) error {
 	const (
 		chartsNamespace     = "elvia-charts"
 		chartsRepositoryURL = "https://raw.githubusercontent.com/3lvia/kubernetes-charts/master"
 	)
 
-	helmRepoAddCmd := exec.Command(
-		"helm",
-		"repo",
-		"add",
-		chartsNamespace,
-		chartsRepositoryURL,
-	)
-	helmRepoAddCmd.Stdout = os.Stdout
-	helmRepoAddCmd.Stderr = os.Stderr
-
-	if err := helmRepoAddCmd.Run(); err != nil {
+	if err := helmRepoAdd(chartsNamespace, chartsRepositoryURL); err != nil {
 		return fmt.Errorf("Failed to add Helm repository: %w", err)
 	}
 
-	helmRepoUpdateCmd := exec.Command(
-		"helm",
-		"repo",
-		"update",
-	)
-	helmRepoUpdateCmd.Stdout = os.Stdout
-	helmRepoUpdateCmd.Stderr = os.Stderr
-
-	if err := helmRepoUpdateCmd.Run(); err != nil {
+	if err := helmRepoUpdate(); err != nil {
 		return fmt.Errorf("Failed to update Helm repository: %w", err)
 	}
 
-	helmDeployCmd := exec.Command(
-		"helm",
-		"upgrade",
-		"--debug",
-		"--install",
-		"-n",
-		options.SystemName,
-		"-f",
-		options.HelmValuesFile,
-		options.ApplicationName,
-		"elvia-charts/elvia-"+options.WorkloadType,
-		"--set",
-		"environment="+options.Environment,
-		"--set",
-		"image.tag="+options.ImageTag,
-		"--set",
-		"labels.repositoryName="+options.RepositoryName,
-		"--set",
-		"labels.commitHash="+options.CommitHash,
-	)
-	fmt.Println(helmDeployCmd.String())
-	helmDeployCmd.Stdout = os.Stdout
-	helmDeployCmd.Stderr = os.Stderr
-
-	if err := helmDeployCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to deploy Helm chart: %w", err)
+	if err := helmDeploy(
+		applicationName,
+		systemName,
+		helmValuesFile,
+		environment,
+		workloadType,
+		imageTag,
+		repositoryName,
+		commitHash,
+		dryRun,
+	); err != nil {
+		return cli.Exit(err, 1)
 	}
 
-	rolloutStatusCmd := exec.Command(
-		"kubectl",
-		"rollout",
-		"status",
-		"-n",
-		options.SystemName,
-		options.WorkloadType+"/"+options.ApplicationName,
-	)
-	rolloutStatusCmd.Stdout = os.Stdout
-	rolloutStatusCmd.Stderr = os.Stderr
-
-	if err := rolloutStatusCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to check rollout status: %w", err)
+	if err := kubectlRolloutStatus(
+		applicationName,
+		systemName,
+		workloadType,
+	); err != nil {
+		return cli.Exit(err, 1)
 	}
 
-	pipe := "kubectl get events -n " + options.SystemName + " --sort-by .lastTimestamp | grep " + options.ApplicationName
-	eventsCmd := exec.Command(
-		"bash",
-		"-c",
-		pipe,
-	)
-	eventsCmd.Stdout = os.Stdout
-	eventsCmd.Stderr = os.Stderr
-
-	if err := eventsCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to get events: %w", err)
+	if err := kubectlGetEvents(applicationName, systemName); err != nil {
+		return cli.Exit(err, 1)
 	}
 
 	return nil
