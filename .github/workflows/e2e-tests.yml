@@ -27,4 +27,9 @@ jobs:
         run: ./tests/build/run_tests.sh
 
       - name: Run tests for scan command
-        run: ./tests/scan/run_tests.sh
+        run:
+          ./tests/scan/run_tests.sh
+
+          #      TODO: re-enable deploy tests
+#     - name: Run tests for deploy command
+#       run: ./tests/deploy/run_tests.sh
