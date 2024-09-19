@@ -102,7 +102,6 @@ jobs:
       fail-fast: false
     env:
       VERSION_TAG: ${{ needs.build.outputs.version-tag }}
-      NEW_VERSION: ${{ needs.pre-release.outputs.new-version }}
     permissions:
       contents: write
     steps:
@@ -114,29 +113,22 @@ jobs:
         with:
           name: '3lv-${{ matrix.os }}-${{ matrix.arch }}'
 
-      - name: Upload binaries
+      - name: Upload binaries if new version
+        if: ${{ needs.pre-release.outputs.new-version == 'true' }}
         run: |
-          if [[ "$NEW_VERSION" == 'false' ]]; then
-            echo "No new version to upload."
-            exit 0
-          elif [[ "$NEW_VERSION" == 'true' ]]; then
-            # Workaround for macOS binaries being named differently from their architecture (darwin)
-            if [[ '${{ matrix.os }}' == 'macos' ]]; then
-              mv '3lv-darwin-${{ matrix.arch }}.tar.gz' '3lv-macos-${{ matrix.arch }}.tar.gz'
-              mv '3lv-darwin-${{ matrix.arch }}.tar.gz.md5' '3lv-macos-${{ matrix.arch }}.tar.gz.md5'
-            fi
+          # Workaround for macOS binaries being named differently from their architecture (darwin)
+          if [[ '${{ matrix.os }}' == 'macos' ]]; then
+            mv '3lv-darwin-${{ matrix.arch }}.tar.gz' '3lv-macos-${{ matrix.arch }}.tar.gz'
+            mv '3lv-darwin-${{ matrix.arch }}.tar.gz.md5' '3lv-macos-${{ matrix.arch }}.tar.gz.md5'
+          fi
 
-            # Workaround for Windows being packaged in zip files, not tarballs
-            if [[ '${{ matrix.os }}' != 'windows' ]]; then
-              gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
-              gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
-            else
-              gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.zip'
-              gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.zip.md5'
-            fi
+          # Workaround for Windows being packaged in zip files, not tarballs
+          if [[ '${{ matrix.os }}' != 'windows' ]]; then
+            gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
+            gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
           else
-            echo "Unknown state."
-            exit 1
+            gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.zip'
+            gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.zip.md5'
           fi
         env:
           GH_TOKEN: ${{ github.token }}
@@ -146,24 +138,14 @@ jobs:
     runs-on: elvia-runner
     needs: [build, upload-binaries]
     if: ${{ github.event_name == 'push' }}
-    env:
-      VERSION_TAG: ${{ needs.build.outputs.version-tag }}
     permissions:
       contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check if version tag is alpha or beta release
-        run: |
-
-      - name: Release
-        run: |
-          if [[ "$VERSION_TAG" == *"-alpha"* || "$VERSION_TAG" == *"-beta"* ]]; then
-            echo "Skipping release of alpha or beta version."
-            exit 0
-          fi
-
-          gh release edit "$VERSION_TAG" --prerelease=false
+      - name: Release if new version and not alpha or beta
+        if: ${{ needs.pre-release.outputs.new-version == 'true' && !contains(needs.build.outputs.version-tag, '-alpha') && !contains(needs.build.outputs.version-tag, '-beta') }}
+        run: gh release edit "$VERSION_TAG" --prerelease=false
         env:
           GH_TOKEN: ${{ github.token }}
