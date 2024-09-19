@@ -254,6 +254,15 @@ test_all_outputs_scan() {
     fi
 }
 
+test_disable_error_scan() {
+    if ! 3lv scan \
+        --severity CRITICAL,HIGH \
+        --disable-error debian:10; then
+        echo "Scan should never fail"
+        exit 1
+    fi
+}
+
 cleanup_files() {
     if [[ -f trivy.json ]]; then
         echo 'Removing trivy.json'
@@ -286,6 +295,7 @@ main() {
     test_json_sarif_table_scan
     test_sarif_table_markdown_scan
     test_all_outputs_scan
+    test_disable_error_scan
 
     cleanup_files
 

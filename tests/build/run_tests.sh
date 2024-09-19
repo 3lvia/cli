@@ -26,9 +26,22 @@ test_build_dockerfile() {
     fi
 }
 
+test_disable_scan_error() {
+    if ! 3lv build \
+        -s core \
+        -f tests/build/Dockerfile \
+        -r ghcr.io/3lvia \
+        --scan-disable-error \
+        vulnerable-service; then
+        echo "Should not fail due to vulnerabilities in base image"
+        exit 1
+    fi
+}
+
 main() {
     test_build_cli
     test_build_dockerfile
+    test_disable_scan_error
 
     echo 'All tests passed!'
 }
