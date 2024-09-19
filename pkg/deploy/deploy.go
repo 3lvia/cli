@@ -170,27 +170,25 @@ func Deploy(c *cli.Context) error {
 	skipAuthentication := c.Bool("skip-authentication")
 	dryRun := c.Bool("dry-run")
 
-	if !skipAuthentication {
-		if runtimeCloudProvider == "aks" {
-			authOptions := AuthenticateAKSOptions{
-				AKSTenantID:          c.String("aks-tenant-id"),
-				AKSSubscriptionID:    c.String("aks-subscription-id"),
-				AKSClusterName:       c.String("aks-cluster-name"),
-				AKSResourceGroupName: c.String("aks-resource-group-name"),
-			}
-			if err := authenticateAKS(environment, authOptions); err != nil {
-				return cli.Exit(err, 1)
-			}
+	if runtimeCloudProvider == "aks" {
+		setupOptions := SetupAKSOptions{
+			AKSTenantID:          c.String("aks-tenant-id"),
+			AKSSubscriptionID:    c.String("aks-subscription-id"),
+			AKSClusterName:       c.String("aks-cluster-name"),
+			AKSResourceGroupName: c.String("aks-resource-group-name"),
+		}
+		if err := setupAKS(environment, skipAuthentication, setupOptions); err != nil {
+			return cli.Exit(err, 1)
+		}
 
-		} else if runtimeCloudProvider == "gke" {
-			authOptions := AuthenticateGKEOptions{
-				GKEProjectID:       c.String("gke-project-id"),
-				GKEClusterName:     c.String("gke-cluster-name"),
-				GKEClusterLocation: c.String("gke-cluster-zone"),
-			}
-			if err := authenticateGKE(environment, authOptions); err != nil {
-				return cli.Exit(err, 1)
-			}
+	} else if runtimeCloudProvider == "gke" {
+		authOptions := SetupGKEOptions{
+			GKEProjectID:       c.String("gke-project-id"),
+			GKEClusterName:     c.String("gke-cluster-name"),
+			GKEClusterLocation: c.String("gke-cluster-zone"),
+		}
+		if err := setupGKE(environment, authOptions); err != nil {
+			return cli.Exit(err, 1)
 		}
 	}
 
