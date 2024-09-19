@@ -263,6 +263,23 @@ test_disable_error_scan() {
     fi
 }
 
+test_invalid_image() {
+    if 3lv scan \
+        asdasdasd; then
+        echo "Scan should have failed due to invalid image"
+        exit 1
+    fi
+}
+
+test_scan_invalid_image_disable_error() {
+    if 3lv scan \
+        --disable-error \
+        asdasdasd; then
+        echo "Scan should never fail, even with invalid image"
+        exit 1
+    fi
+}
+
 cleanup_files() {
     if [[ -f trivy.json ]]; then
         echo 'Removing trivy.json'
