@@ -149,3 +149,4 @@ jobs:
         run: gh release edit "$VERSION_TAG" --prerelease=false
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION_TAG: ${{ needs.build.outputs.version-tag }}
