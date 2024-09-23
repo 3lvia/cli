@@ -22,6 +22,8 @@ func TestConstructScanImageArguments1(t *testing.T) {
 		"trivy.json",
 		"--db-repository",
 		"ghcr.io/3lvia/trivy-db",
+		"--java-db-repository",
+		"ghcr.io/3lvia/trivy-java-db",
 		imageName,
 	}
 
@@ -59,6 +61,8 @@ func TestConstructScanImageArguments2(t *testing.T) {
 		"trivy.json",
 		"--db-repository",
 		"ghcr.io/3lvia/trivy-db",
+		"--java-db-repository",
+		"ghcr.io/3lvia/trivy-java-db",
 		imageName,
 	}
 
@@ -96,6 +100,8 @@ func TestConstructScanImageArguments3(t *testing.T) {
 		"trivy.json",
 		"--db-repository",
 		"ghcr.io/3lvia/trivy-db",
+		"--java-db-repository",
+		"ghcr.io/3lvia/trivy-java-db",
 		"--skip-db-update",
 		imageName,
 	}
@@ -134,6 +140,8 @@ func TestConstructScanImageArguments4(t *testing.T) {
 		"trivy.json",
 		"--db-repository",
 		"ghcr.io/3lvia/trivy-db",
+		"--java-db-repository",
+		"ghcr.io/3lvia/trivy-java-db",
 		imageName,
 	}
 
@@ -171,6 +179,8 @@ func TestConstructScanImageArguments5(t *testing.T) {
 		"trivy.json",
 		"--db-repository",
 		"ghcr.io/3lvia/trivy-db",
+		"--java-db-repository",
+		"ghcr.io/3lvia/trivy-java-db",
 		"--skip-db-update",
 		imageName,
 	}
