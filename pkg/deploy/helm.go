@@ -7,6 +7,14 @@ import (
 	"os/exec"
 )
 
+func checkHelmInstalled() error {
+	if err := exec.Command("helm", "version").Run(); err != nil {
+		return fmt.Errorf("Helm is not installed: %w", err)
+	}
+
+	return nil
+}
+
 func helmRepoAdd(chartsNamespace string, chartsRepositoryURL string) error {
 	helmRepoAddCmd := exec.Command(
 		"helm",
