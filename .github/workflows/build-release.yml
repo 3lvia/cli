@@ -136,7 +136,7 @@ jobs:
   release:
     name: Release
     runs-on: elvia-runner
-    needs: [build, upload-binaries]
+    needs: [pre-release, build, upload-binaries]
     if: ${{ github.event_name == 'push' }}
     permissions:
       contents: write
