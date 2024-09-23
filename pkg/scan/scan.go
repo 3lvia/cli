@@ -107,6 +107,8 @@ func constructScanImageArguments(
 		"json",
 		"--output",
 		"trivy.json",
+		"--db-repository",
+		"ghcr.io/3lvia/trivy-db",
 	}
 
 	if skipDBUpdate {
