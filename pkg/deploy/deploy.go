@@ -170,6 +170,14 @@ func Deploy(c *cli.Context) error {
 	skipAuthentication := c.Bool("skip-authentication")
 	dryRun := c.Bool("dry-run")
 
+	if err := checkKubectlInstalled(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if err := checkHelmInstalled(); err != nil {
+		return cli.Exit(err, 1)
+	}
+
 	if runtimeCloudProvider == "aks" {
 		setupOptions := SetupAKSOptions{
 			AKSTenantID:          c.String("aks-tenant-id"),
@@ -266,4 +274,13 @@ func resolveRepositoryName(possibleRepositoryName string) (string, error) {
 	}
 
 	return path.Base(strings.TrimSpace(string(gitTopLevel))), nil
+}
+
+func checkKubectlInstalled() error {
+	if err := exec.Command("kubectl", "version").Run(); err != nil {
+		return fmt.Errorf("kubectl is not installed")
+	}
+
+	return nil
+
 }

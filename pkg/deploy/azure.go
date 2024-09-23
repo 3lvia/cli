@@ -8,25 +8,6 @@ import (
 	"strings"
 )
 
-func azLoginTenant(tenantID string) error {
-	azLoginCmd := exec.Command(
-		"az",
-		"login",
-		"--tenant",
-		tenantID,
-	)
-	azLoginCmd.Stdout = os.Stdout
-	azLoginCmd.Stderr = os.Stderr
-
-	log.Print(azLoginCmd.String())
-
-	if err := azLoginCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to authenticate to Azure: %w", err)
-	}
-
-	return nil
-}
-
 type SetupAKSOptions struct {
 	AKSTenantID          string
 	AKSSubscriptionID    string
@@ -46,6 +27,10 @@ func setupAKS(
 		); err != nil {
 			return fmt.Errorf("Failed to authenticate to AKS: %w", err)
 		}
+	}
+
+	if err := checkKubeloginInstalled(); err != nil {
+		return err
 	}
 
 	aksSubscriptionID, err := func() (string, error) {
@@ -94,6 +79,33 @@ func setupAKS(
 	return nil
 }
 
+func azLoginTenant(tenantID string) error {
+	azLoginCmd := exec.Command(
+		"az",
+		"login",
+		"--tenant",
+		tenantID,
+	)
+	azLoginCmd.Stdout = os.Stdout
+	azLoginCmd.Stderr = os.Stderr
+
+	log.Print(azLoginCmd.String())
+
+	if err := azLoginCmd.Run(); err != nil {
+		return fmt.Errorf("Failed to authenticate to Azure: %w", err)
+	}
+
+	return nil
+}
+
+func checkKubeloginInstalled() error {
+	if err := exec.Command("kubelogin", "--version").Run(); err != nil {
+		return fmt.Errorf("kubelogin is not installed")
+	}
+
+	return nil
+}
+
 type AuthenticateAKSOptions struct {
 	AKSTenantID string
 }
@@ -137,6 +149,7 @@ func authenticateAKS(
 			}
 		}
 	}
+
 	return nil
 }
 
