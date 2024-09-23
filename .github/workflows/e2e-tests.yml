@@ -20,6 +20,13 @@ jobs:
           cache-dependency-path: 'go.sum'
           go-version-file: 'go.mod'
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: 'ghcr.io'
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
       - name: Install CLI from source
         run: make install
 

@@ -2,17 +2,60 @@ package deploy
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 )
 
-type AuthenticateGKEOptions struct {
+type SetupGKEOptions struct {
 	GKEProjectID       string
 	GKEClusterName     string
 	GKEClusterLocation string
 }
 
-func authenticateGKE(environment string, options AuthenticateGKEOptions) error {
+func setupGKE(
+	environment string,
+	options SetupGKEOptions,
+) error {
+	if err := authenticateGKE(); err != nil {
+		return fmt.Errorf("Failed to authenticate to GKE: %w", err)
+	}
+
+	if err := getGKECredentials(environment, GetGKECredentialsOptions(options)); err != nil {
+		return fmt.Errorf("Failed to get GKE credentials: %w", err)
+	}
+
+	return nil
+}
+
+func authenticateGKE() error {
+	gcloudLoginCmd := exec.Command(
+		"gcloud",
+		"auth",
+		"login",
+	)
+	gcloudLoginCmd.Stdout = os.Stdout
+	gcloudLoginCmd.Stderr = os.Stderr
+
+	log.Print(gcloudLoginCmd.String())
+
+	if err := gcloudLoginCmd.Run(); err != nil {
+		return fmt.Errorf("Failed to authenticate to GKE: %w", err)
+	}
+
+	return nil
+}
+
+type GetGKECredentialsOptions struct {
+	GKEProjectID       string
+	GKEClusterName     string
+	GKEClusterLocation string
+}
+
+func getGKECredentials(
+	environment string,
+	options GetGKECredentialsOptions,
+) error {
 	gkeProjectID := func() string {
 		if options.GKEProjectID == "" {
 			return "elvia-runtimeservice-" + environment
