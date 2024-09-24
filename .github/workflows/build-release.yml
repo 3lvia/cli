@@ -146,7 +146,7 @@ jobs:
 
       - name: Release if new version and not alpha or beta
         if: ${{ needs.pre-release.outputs.new-version == 'true' && !contains(needs.build.outputs.version-tag, '-alpha') && !contains(needs.build.outputs.version-tag, '-beta') }}
-        run: gh release edit "$VERSION_TAG" --prerelease=false
+        run: gh release edit "$VERSION_TAG" --prerelease=false --latest
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION_TAG: ${{ needs.build.outputs.version-tag }}
