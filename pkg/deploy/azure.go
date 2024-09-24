@@ -174,6 +174,7 @@ func getAKSCredentials(
 		contextName,
 		"--subscription",
 		aksSubscriptionID,
+		"--overwrite-existing",
 	)
 	azGetCredentialsCmd.Stdout = os.Stdout
 	azGetCredentialsCmd.Stderr = os.Stderr
