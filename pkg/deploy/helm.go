@@ -69,14 +69,10 @@ func helmDeploy(
 		helmValuesFile,
 		applicationName,
 		"elvia-charts/elvia-"+workloadType,
-		"--set",
-		"environment='"+environment+"'",
-		"--set",
-		"image.tag='"+imageTag+"'",
-		"--set",
-		"labels.repositoryName='"+repositoryName+"'",
-		"--set",
-		"labels.commitHash='"+commitHash+"'",
+		"--set='environment="+environment+"'",
+		"--set='image.tag="+imageTag+"'",
+		"--set='labels.repositoryName="+repositoryName+"'",
+		"--set='labels.commitHash="+commitHash+"'",
 	)
 	helmDeployCmd.Stdout = os.Stdout
 	helmDeployCmd.Stderr = os.Stderr
