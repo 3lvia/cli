@@ -2,6 +2,8 @@ package deploy
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"os/exec"
 	"path"
 	"slices"
@@ -277,8 +279,20 @@ func resolveRepositoryName(possibleRepositoryName string) (string, error) {
 }
 
 func checkKubectlInstalled() error {
-	if err := exec.Command("kubectl", "version").Run(); err != nil {
-		return fmt.Errorf("kubectl is not installed")
+	cmd := exec.Command(
+		"kubectl",
+		"version",
+		"--client",
+		"true",
+	)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	log.Print(cmd.String())
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("kubectl is not installed: %w", err)
 	}
 
 	return nil
