@@ -67,15 +67,15 @@ func setupAKS(
 		return options.AKSResourceGroupName
 	}()
 
-	if !skipAuthentication {
-		if err := getAKSCredentials(
-			aksResourceGroupName,
-			aksClusterName,
-			aksSubscriptionID,
-			contextName,
-		); err != nil {
-			return fmt.Errorf("Failed to get AKS credentials: %w", err)
-		}
+	runKubeloginConvert := skipAuthentication
+	if err := getAKSCredentials(
+		aksResourceGroupName,
+		aksClusterName,
+		aksSubscriptionID,
+		contextName,
+		runKubeloginConvert,
+	); err != nil {
+		return fmt.Errorf("Failed to get AKS credentials: %w", err)
 	}
 
 	return nil
@@ -160,6 +160,7 @@ func getAKSCredentials(
 	aksClusterName string,
 	aksSubscriptionID string,
 	contextName string,
+	runKubeloginConvert bool,
 ) error {
 	azGetCredentialsCmd := exec.Command(
 		"az",
@@ -181,6 +182,23 @@ func getAKSCredentials(
 
 	if err := azGetCredentialsCmd.Run(); err != nil {
 		return fmt.Errorf("Failed to get AKS credentials: %w", err)
+	}
+
+	if runKubeloginConvert {
+		kubeloginConvertCmd := exec.Command(
+			"kubelogin",
+			"convert-kubeconfig",
+			"-l",
+			"azurecli",
+		)
+		kubeloginConvertCmd.Stdout = os.Stdout
+		kubeloginConvertCmd.Stderr = os.Stderr
+
+		log.Print(kubeloginConvertCmd.String())
+
+		if err := kubeloginConvertCmd.Run(); err != nil {
+			return fmt.Errorf("Failed to convert AKS credentials: %w", err)
+		}
 	}
 
 	return nil
