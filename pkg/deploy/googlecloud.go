@@ -15,10 +15,13 @@ type SetupGKEOptions struct {
 
 func setupGKE(
 	environment string,
+	skipAuthentication bool,
 	options SetupGKEOptions,
 ) error {
-	if err := authenticateGKE(); err != nil {
-		return fmt.Errorf("Failed to authenticate to GKE: %w", err)
+	if !skipAuthentication {
+		if err := authenticateGKE(); err != nil {
+			return fmt.Errorf("Failed to authenticate to GKE: %w", err)
+		}
 	}
 
 	if err := getGKECredentials(environment, GetGKECredentialsOptions(options)); err != nil {

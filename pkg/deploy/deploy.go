@@ -197,7 +197,7 @@ func Deploy(c *cli.Context) error {
 			GKEClusterName:     c.String("gke-cluster-name"),
 			GKEClusterLocation: c.String("gke-cluster-zone"),
 		}
-		if err := setupGKE(environment, authOptions); err != nil {
+		if err := setupGKE(environment, skipAuthentication, authOptions); err != nil {
 			return cli.Exit(err, 1)
 		}
 	}
