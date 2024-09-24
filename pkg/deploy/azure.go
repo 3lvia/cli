@@ -67,13 +67,15 @@ func setupAKS(
 		return options.AKSResourceGroupName
 	}()
 
-	if err := getAKSCredentials(
-		aksResourceGroupName,
-		aksClusterName,
-		aksSubscriptionID,
-		contextName,
-	); err != nil {
-		return fmt.Errorf("Failed to get AKS credentials: %w", err)
+	if !skipAuthentication {
+		if err := getAKSCredentials(
+			aksResourceGroupName,
+			aksClusterName,
+			aksSubscriptionID,
+			contextName,
+		); err != nil {
+			return fmt.Errorf("Failed to get AKS credentials: %w", err)
+		}
 	}
 
 	return nil
@@ -178,7 +180,7 @@ func getAKSCredentials(
 	log.Print(azGetCredentialsCmd.String())
 
 	if err := azGetCredentialsCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to authenticate to AKS: %w", err)
+		return fmt.Errorf("Failed to get AKS credentials: %w", err)
 	}
 
 	return nil
