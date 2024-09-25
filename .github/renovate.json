@@ -1,8 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "ignorePaths": [
-    "pkg/build/_test/*.csproj",
-    "pkg/build/_test/Dockerfile*",
-    "tests/build/Dockerfile*"
-  ]
+  "extends": ["config:base"],
+  "stabilityDays": 3,
+  "prCreation": "not-pending",
+  "ignorePaths": ["pkg/build/_test/Dockerfile*", "tests/build/Dockerfile*"],
+  "nuget": {
+    "ignorePaths": ["pkg/build/_test/*.csproj"]
+  }
 }
