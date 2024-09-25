@@ -298,3 +298,57 @@ func checkKubectlInstalled() error {
 	return nil
 
 }
+
+func kubectlRolloutStatus(
+	applicationName string,
+	systemName string,
+	workloadType string,
+) error {
+	rolloutStatusCmd := exec.Command(
+		"kubectl",
+		"rollout",
+		"status",
+		"-n",
+		systemName,
+		workloadType+"/"+applicationName,
+	)
+	rolloutStatusCmd.Stdout = os.Stdout
+	rolloutStatusCmd.Stderr = os.Stderr
+
+	log.Print(rolloutStatusCmd.String())
+
+	if err := rolloutStatusCmd.Run(); err != nil {
+		return fmt.Errorf("Failed to check rollout status: %w", err)
+	}
+
+	return nil
+}
+
+func kubectlGetEvents(
+	applicationName string,
+	systemName string,
+) error {
+	eventsCmd := exec.Command(
+		"kubectl",
+		"get",
+		"events",
+		"-n",
+		systemName,
+		"--sort-by",
+		".lastTimestamp",
+	)
+
+	output, err := eventsCmd.Output()
+	if err != nil {
+		return fmt.Errorf("Failed to get events: %w", err)
+	}
+
+	events := strings.Split(string(output), "\n")
+	for _, event := range events {
+		if strings.Contains(event, applicationName) {
+			log.Print(event)
+		}
+	}
+
+	return nil
+}
