@@ -12,6 +12,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const commandName = "scan"
+
 var Command *cli.Command = &cli.Command{
 	Name:    "scan",
 	Aliases: []string{"s"},
@@ -59,13 +61,14 @@ var Command *cli.Command = &cli.Command{
 
 func Scan(c *cli.Context) error {
 	if c.NArg() <= 0 {
-		return cli.Exit("No input provided", 1)
+		return cli.ShowCommandHelp(c, commandName)
 	}
 
 	// Required args
 	imageName := c.Args().First()
 	if imageName == "" {
-		return cli.Exit("Image name not provided", 1)
+		log.Println("Image name not provided")
+		return cli.ShowCommandHelp(c, commandName)
 	}
 
 	// Optional args

@@ -12,6 +12,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const commandName = "deploy"
+
 var Command *cli.Command = &cli.Command{
 	Name:    "deploy",
 	Aliases: []string{"d"},
@@ -144,12 +146,13 @@ var Command *cli.Command = &cli.Command{
 
 func Deploy(c *cli.Context) error {
 	if c.NArg() <= 0 {
-		return cli.Exit("No input provided", 1)
+		return cli.ShowCommandHelp(c, commandName)
 	}
 
 	applicationName := c.Args().First()
 	if applicationName == "" {
-		return cli.Exit("Application name not provided", 1)
+		log.Println("Application name not provided")
+		return cli.ShowCommandHelp(c, commandName)
 	}
 
 	systemName := c.String("system-name")
@@ -296,7 +299,6 @@ func checkKubectlInstalled() error {
 	}
 
 	return nil
-
 }
 
 func kubectlRolloutStatus(

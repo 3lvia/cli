@@ -12,8 +12,10 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const commandName = "build"
+
 var Command *cli.Command = &cli.Command{
-	Name:    "build",
+	Name:    commandName,
 	Aliases: []string{"b"},
 	Usage:   "Build the project",
 	Flags: []cli.Flag{
@@ -130,23 +132,26 @@ var Command *cli.Command = &cli.Command{
 
 func Build(c *cli.Context) error {
 	if c.NArg() <= 0 {
-		return cli.Exit("No input provided", 1)
+		return cli.ShowCommandHelp(c, commandName)
 	}
 
 	// Required args
 	applicationName := c.Args().First()
 	if applicationName == "" {
-		return cli.Exit("Application name not provided", 1)
+		log.Println("Application name not provided")
+		return cli.ShowCommandHelp(c, commandName)
 	}
 
 	projectFile := c.String("project-file")
 	if projectFile == "" {
-		return cli.Exit("Project file not provided", 1)
+		log.Println("Project file not provided")
+		return cli.ShowCommandHelp(c, commandName)
 	}
 
 	systemName := c.String("system-name")
 	if systemName == "" {
-		return cli.Exit("System name not provided", 1)
+		log.Println("System name not provided")
+		return cli.ShowCommandHelp(c, commandName)
 	}
 
 	// Optional args
