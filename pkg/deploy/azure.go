@@ -22,7 +22,6 @@ func setupAKS(
 ) error {
 	if !skipAuthentication {
 		if err := authenticateAKS(
-			environment,
 			AuthenticateAKSOptions{AKSTenantID: options.AKSTenantID},
 		); err != nil {
 			return fmt.Errorf("Failed to authenticate to AKS: %w", err)
@@ -36,7 +35,7 @@ func setupAKS(
 	aksSubscriptionID, err := func() (string, error) {
 		if options.AKSSubscriptionID == "" {
 			switch environment {
-			case "dev", "test":
+			case "sandbox", "dev", "test":
 				return "ceb9518c-528f-4c91-9b5a-c051d383e7a8", nil
 			case "prod":
 				return "9edbf217-b7c1-4f6a-ae76-d046cf932ff0", nil
@@ -113,7 +112,6 @@ type AuthenticateAKSOptions struct {
 }
 
 func authenticateAKS(
-	environment string,
 	options AuthenticateAKSOptions,
 ) error {
 	aksTenantID := func() string {

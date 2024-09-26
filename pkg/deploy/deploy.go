@@ -43,7 +43,7 @@ var Command *cli.Command = &cli.Command{
 			Usage:   "The environment to deploy to",
 			Value:   "dev",
 			Action: func(c *cli.Context, environment string) error {
-				allowedEnvironments := []string{"dev", "test", "prod"}
+				allowedEnvironments := []string{"sandbox", "dev", "test", "prod"}
 				if !slices.Contains(allowedEnvironments, environment) {
 					return cli.Exit(fmt.Sprintf("Invalid environment provided: must be one of %v", allowedEnvironments), 1)
 				}
