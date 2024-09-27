@@ -126,19 +126,22 @@ var Command *cli.Command = &cli.Command{
 			Hidden: true,
 		},
 		&cli.StringFlag{
-			Name:   "gke-project-id",
-			Usage:  "The GKE project ID to use",
-			Hidden: true,
+			Name:    "gke-project-id",
+			Usage:   "The GKE project ID to use",
+			Hidden:  true,
+			EnvVars: []string{"3LV_GKE_PROJECT_ID"},
 		},
 		&cli.StringFlag{
-			Name:   "gke-cluster-name",
-			Usage:  "The GKE cluster name to use",
-			Hidden: true,
+			Name:    "gke-cluster-name",
+			Usage:   "The GKE cluster name to use",
+			Hidden:  true,
+			EnvVars: []string{"3LV_GKE_CLUSTER_NAME"},
 		},
 		&cli.StringFlag{
-			Name:   "gke-cluster-zone",
-			Usage:  "The GKE cluster zone to use",
-			Hidden: true,
+			Name:    "gke-cluster-location",
+			Usage:   "The GKE cluster location to use",
+			Hidden:  true,
+			EnvVars: []string{"3LV_GKE_CLUSTER_LOCATION"},
 		},
 	},
 	Action: Deploy,
@@ -198,7 +201,7 @@ func Deploy(c *cli.Context) error {
 		authOptions := SetupGKEOptions{
 			GKEProjectID:       c.String("gke-project-id"),
 			GKEClusterName:     c.String("gke-cluster-name"),
-			GKEClusterLocation: c.String("gke-cluster-zone"),
+			GKEClusterLocation: c.String("gke-cluster-location"),
 		}
 		if err := setupGKE(environment, skipAuthentication, authOptions); err != nil {
 			return cli.Exit(err, 1)
