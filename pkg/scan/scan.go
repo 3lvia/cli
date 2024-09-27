@@ -206,9 +206,13 @@ func ScanImage(
 		if err != nil {
 			return err
 		}
+
 		markdown, err := toMarkdown(result)
 		if err != nil {
 			return err
+		}
+		if len(markdown) == 0 {
+			log.Println("Markdown output is empty, will write to empty file")
 		}
 
 		err = os.WriteFile("trivy.md", markdown, 0644)
