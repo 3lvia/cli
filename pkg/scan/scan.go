@@ -114,6 +114,7 @@ func constructScanImageArguments(
 		"ghcr.io/3lvia/trivy-db",
 		"--java-db-repository",
 		"ghcr.io/3lvia/trivy-java-db",
+		"--ignore-unfixed",
 	}
 
 	if skipDBUpdate {
