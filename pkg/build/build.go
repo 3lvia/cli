@@ -317,12 +317,12 @@ func buildAndPushImage(
 		pushCmd := exec.Command(
 			"docker",
 			"push",
-			imageName,
-			"-t",
 			imageName+":"+options.CacheTag,
 		)
 		pushCmd.Stdout = os.Stdout
 		pushCmd.Stderr = os.Stderr
+
+		log.Println(pushCmd.String())
 
 		if err := pushCmd.Run(); err != nil {
 			return fmt.Errorf(
@@ -346,6 +346,8 @@ func buildAndPushImage(
 		)
 		pushCmd.Stdout = os.Stdout
 		pushCmd.Stderr = os.Stderr
+
+		log.Println(pushCmd.String())
 
 		if err := pushCmd.Run(); err != nil {
 			return fmt.Errorf("Failed to push Docker image: %w", err)
