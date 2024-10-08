@@ -305,15 +305,36 @@ func buildAndPushImage(
 		return fmt.Errorf("Failed to build Docker image: %w", err)
 	}
 
-	err := scan.ScanImage(
+	scanErr := scan.ScanImage(
 		imageName+":"+options.CacheTag,
 		options.Severity,
 		options.ScanFormats,
 		options.ScanDisableError,
 		options.ScanSkipDBUpdate,
 	)
-	if err != nil {
-		return err
+
+	if options.Push && scanErr != nil {
+		pushCmd := exec.Command(
+			"docker",
+			"push",
+			imageName,
+			"-t",
+			imageName+":"+options.CacheTag,
+		)
+		pushCmd.Stdout = os.Stdout
+		pushCmd.Stderr = os.Stderr
+
+		if err := pushCmd.Run(); err != nil {
+			return fmt.Errorf(
+				"Failed to push Docker image cache to tag %s after scan reported vulnerabilities: %w",
+				options.CacheTag,
+				err,
+			)
+		}
+	}
+
+	if scanErr != nil {
+		return scanErr
 	}
 
 	if options.Push {
