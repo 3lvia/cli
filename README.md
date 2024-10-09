@@ -49,7 +49,7 @@ gh auth token | docker login ghcr.io --username your-github-username --password-
 3lv --help
 ```
 
-## ℹ️ Examples
+## 📖 Examples
 
 ### Build
 
