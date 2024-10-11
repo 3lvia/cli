@@ -16,11 +16,13 @@ Supported platforms:
 
 To use the 3lv CLI, you need to have these dependencies installed:
 
-- [Docker](https://docs.docker.com/engine/install) (used for building)
-- [Helm](https://helm.sh/docs/intro/install) (used for deploying)
-- [Trivy](https://aquasecurity.github.io/trivy) (used for scanning)
-- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) (used for pushing to Azure Container Registry)
-- [GitHub CLI](https://cli.github.com) (used for pushing to GitHub Container Registry)
+- [Docker](https://docs.docker.com/engine/install): used for building
+- [Helm](https://helm.sh/docs/intro/install): used for deploying
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl): used for deploying
+- [Trivy](https://aquasecurity.github.io/trivy): used for scanning Docker images
+- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli): used for pushing to Azure Container Registry and deploying to Azure Kubernetes Service
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install): used for deploying to Google Kubernetes Engine
+- [GitHub CLI](https://cli.github.com): used for pushing to GitHub Container Registry
 
 ### Pusing to registries
 
