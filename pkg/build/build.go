@@ -3,10 +3,10 @@ package build
 import (
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/scan"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
@@ -141,39 +141,22 @@ func Build(c *cli.Context) error {
 		log.Println("Application name not provided")
 		return cli.ShowCommandHelp(c, commandName)
 	}
-
 	projectFile := c.String("project-file")
 	if projectFile == "" {
 		log.Println("Project file not provided")
 		return cli.ShowCommandHelp(c, commandName)
 	}
-
 	systemName := c.String("system-name")
 	if systemName == "" {
 		log.Println("System name not provided")
 		return cli.ShowCommandHelp(c, commandName)
 	}
 
-	// Optional args
-	buildContext := c.String("build-context")
-	registry := c.String("registry")
-	goMainPackageDirectory := c.String("go-main-package-directory")
-	cacheTag := c.String("cache-tag")
-	severity := c.String("severity")
-	additionalTags := utils.RemoveZeroValues(c.StringSlice("additional-tags"))
-	includeFiles := utils.RemoveZeroValues(c.StringSlice("include-files"))
-	includeDirectories := utils.RemoveZeroValues(c.StringSlice("include-directories"))
-	scanFormats := utils.RemoveZeroValues(c.StringSlice("scan-formats"))
-	scanSkipDBUpdate := c.Bool("scan-skip-db-update")
-	push := c.Bool("push")
-	generateOnly := c.Bool("generate-only")
-	scanDisableError := c.Bool("scan-disable-error")
-
 	generateOptions := GenerateDockerfileOptions{
-		GoMainPackageDirectory: goMainPackageDirectory,
-		BuildContext:           buildContext,
-		IncludeFiles:           includeFiles,
-		IncludeDirectories:     includeDirectories,
+		GoMainPackageDirectory: c.String("go-main-package-directory"),
+		BuildContext:           c.String("build-context"),
+		IncludeFiles:           utils.RemoveZeroValues(c.StringSlice("include-files")),
+		IncludeDirectories:     utils.RemoveZeroValues(c.StringSlice("include-directories")),
 	}
 
 	dockerfilePath, buildContext, err := generateDockerfile(
@@ -185,43 +168,108 @@ func Build(c *cli.Context) error {
 		return cli.Exit(err, 1)
 	}
 
-	if generateOnly {
+	if c.Bool("generate-only") {
 		log.Printf("Dockerfile generated at %s\n", dockerfilePath)
 		return nil
 	}
 
-	buildOptions := BuildAndPushImageOptions{
-		DockerfilePath:   dockerfilePath,
-		BuildContext:     buildContext,
-		CacheTag:         cacheTag,
-		Registry:         registry,
-		Severity:         severity,
-		ScanFormats:      scanFormats,
-		AdditionalTags:   additionalTags,
-		Push:             push,
-		ScanSkipDBUpdate: scanSkipDBUpdate,
-		ScanDisableError: scanDisableError,
-	}
+	cacheTag := c.String("cache-tag")
+	registry := c.String("registry")
 
-	err = buildAndPushImage(
+	imageName, err := getImageName(
+		registry,
 		systemName,
 		applicationName,
-		buildOptions,
 	)
-	if err != nil {
-		return cli.Exit(err, 1)
+
+	buildImageCommandOutput := buildImageCommand(
+		dockerfilePath,
+		buildContext,
+		imageName,
+		cacheTag,
+		utils.RemoveZeroValues(c.StringSlice("additional-tags")),
+		nil,
+	)
+	if command.IsError(buildImageCommandOutput) {
+		return cli.Exit(buildImageCommandOutput.Error, 1)
+	}
+
+	scanErr := scan.ScanImage(
+		imageName+":"+cacheTag,
+		c.String("severity"),
+		utils.RemoveZeroValues(c.StringSlice("scan-formats")),
+		c.Bool("scan-disable-error"),
+		c.Bool("scan-skip-db-update"),
+	)
+
+	push := c.Bool("push")
+
+	if push && scanErr != nil {
+		pushImageOutput := pushImageCommand(
+			imageName,
+			cacheTag,
+			true,
+			nil,
+		)
+
+		if command.IsError(pushImageOutput) {
+			return fmt.Errorf(
+				"Failed to push Docker image cache to tag %s after scan reported vulnerabilities: %w",
+				cacheTag,
+				err,
+			)
+		}
+	}
+
+	if scanErr != nil {
+		return scanErr
+	}
+
+	if push {
+		pushImageOutput := pushImageCommand(
+			imageName,
+			cacheTag,
+			false,
+			nil,
+		)
+
+		if command.IsError(pushImageOutput) {
+			return fmt.Errorf("Failed to push Docker image: %w", err)
+		}
 	}
 
 	return nil
 }
 
-func constructBuildCommandArguments(
+func getImageName(
+	registry string,
+	systemName string,
+	applicationName string,
+) (string, error) {
+	if registry == "" {
+		return "", fmt.Errorf("getImageName: Registry not provided")
+	}
+	if systemName == "" {
+		return "", fmt.Errorf("getImageName: System name not provided")
+	}
+	if applicationName == "" {
+		return "", fmt.Errorf("getImageName: Application name not provided")
+	}
+
+	if strings.Contains(registry, "azurecr.io") || strings.Contains(registry, "gcr.io") {
+		return strings.ToLower(fmt.Sprintf("%s/%s-%s", registry, systemName, applicationName)), nil
+	}
+	return strings.ToLower(fmt.Sprintf("%s/%s/%s", registry, systemName, applicationName)), nil
+}
+
+func buildImageCommand(
 	dockerfilePath string,
 	buildContext string,
 	imageName string,
 	cacheTag string,
 	additionalTags []string,
-) []string {
+	options *command.RunOptions,
+) command.Output {
 	tags := func() []string {
 		if len(additionalTags) == 0 {
 			return []string{cacheTag}
@@ -236,123 +284,49 @@ func constructBuildCommandArguments(
 		tagArguments = append(tagArguments, imageName+":"+tag)
 	}
 
-	return append(
-		append(
-			[]string{
-				"buildx",
-				"build",
-				"-f",
-				dockerfilePath,
-				"--load",
-				"--cache-to",
-				"type=inline",
-				"--cache-from",
-				imageName + ":" + cacheTag,
-			},
-			tagArguments...,
-		),
-		buildContext,
-	)
-}
-
-func getImageName(
-	registry string,
-	systemName string,
-	applicationName string,
-) string {
-	if strings.Contains(registry, "azurecr.io") {
-		return strings.ToLower(fmt.Sprintf("%s/%s-%s", registry, systemName, applicationName))
-	}
-	return strings.ToLower(fmt.Sprintf("%s/%s/%s", registry, systemName, applicationName))
-}
-
-type BuildAndPushImageOptions struct {
-	DockerfilePath   string   // required
-	BuildContext     string   // required
-	CacheTag         string   // required
-	Registry         string   // required
-	Severity         string   // required
-	ScanFormats      []string // required
-	AdditionalTags   []string // required
-	Push             bool     // required
-	ScanDisableError bool     // required
-	ScanSkipDBUpdate bool     // required
-}
-
-func buildAndPushImage(
-	systemName string,
-	applicationName string,
-	options BuildAndPushImageOptions,
-) error {
-	imageName := getImageName(options.Registry, systemName, applicationName)
-
 	buildCmd := exec.Command(
 		"docker",
-		constructBuildCommandArguments(
-			options.DockerfilePath,
-			options.BuildContext,
-			imageName,
-			options.CacheTag,
-			options.AdditionalTags,
-		)...,
-	)
-	buildCmd.Stdout = os.Stdout
-	buildCmd.Stderr = os.Stderr
-
-	log.Println(buildCmd.String())
-
-	if err := buildCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to build Docker image: %w", err)
-	}
-
-	scanErr := scan.ScanImage(
-		imageName+":"+options.CacheTag,
-		options.Severity,
-		options.ScanFormats,
-		options.ScanDisableError,
-		options.ScanSkipDBUpdate,
+		"buildx",
+		"build",
+		"-f",
+		dockerfilePath,
+		"--load",
+		"--cache-to",
+		"type=inline",
+		"--cache-from",
+		imageName+":"+cacheTag,
 	)
 
-	if options.Push && scanErr != nil {
-		pushCmd := exec.Command(
+	buildCmd.Args = append(buildCmd.Args, tagArguments...)
+	buildCmd.Args = append(buildCmd.Args, buildContext)
+
+	return command.Run(*buildCmd, options)
+}
+
+func pushImageCommand(
+	imageName string,
+	cacheTag string,
+	allTags bool,
+	options *command.RunOptions,
+) command.Output {
+	if allTags {
+		return command.Run(
+			*exec.Command(
+				"docker",
+				"push",
+				imageName,
+				"--all-tags",
+			),
+			options,
+		)
+	}
+
+	return command.Run(
+		*exec.Command(
 			"docker",
 			"push",
-			imageName+":"+options.CacheTag,
-		)
-		pushCmd.Stdout = os.Stdout
-		pushCmd.Stderr = os.Stderr
-
-		log.Println(pushCmd.String())
-
-		if err := pushCmd.Run(); err != nil {
-			return fmt.Errorf(
-				"Failed to push Docker image cache to tag %s after scan reported vulnerabilities: %w",
-				options.CacheTag,
-				err,
-			)
-		}
-	}
-
-	if scanErr != nil {
-		return scanErr
-	}
-
-	if options.Push {
-		pushCmd := exec.Command(
-			"docker",
-			"push",
-			imageName,
-			"--all-tags",
-		)
-		pushCmd.Stdout = os.Stdout
-		pushCmd.Stderr = os.Stderr
-
-		log.Println(pushCmd.String())
-
-		if err := pushCmd.Run(); err != nil {
-			return fmt.Errorf("Failed to push Docker image: %w", err)
-		}
-	}
-
-	return nil
+			imageName+":"+cacheTag,
+		),
+		options,
+	)
 }

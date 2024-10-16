@@ -2,10 +2,10 @@ package deploy
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/3lvia/cli/pkg/command"
 )
 
 type SetupAKSOptions struct {
@@ -13,6 +13,7 @@ type SetupAKSOptions struct {
 	AKSSubscriptionID    string
 	AKSClusterName       string
 	AKSResourceGroupName string
+	FederatedToken       string
 }
 
 func setupAKS(
@@ -22,14 +23,18 @@ func setupAKS(
 ) error {
 	if !skipAuthentication {
 		if err := authenticateAKS(
-			AuthenticateAKSOptions{AKSTenantID: options.AKSTenantID},
+			AuthenticateAKSOptions{
+				AKSTenantID:    options.AKSTenantID,
+				FederatedToken: options.FederatedToken,
+			},
 		); err != nil {
 			return fmt.Errorf("Failed to authenticate to AKS: %w", err)
 		}
 	}
 
-	if err := checkKubeloginInstalled(); err != nil {
-		return err
+	checkKubeLoginInstalledOutput := checkKubeloginInstalledCommand(nil)
+	if command.IsError(checkKubeLoginInstalledOutput) {
+		return checkKubeLoginInstalledOutput.Error
 	}
 
 	aksSubscriptionID, err := func() (string, error) {
@@ -80,35 +85,9 @@ func setupAKS(
 	return nil
 }
 
-func azLoginTenant(tenantID string) error {
-	azLoginCmd := exec.Command(
-		"az",
-		"login",
-		"--tenant",
-		tenantID,
-	)
-	azLoginCmd.Stdout = os.Stdout
-	azLoginCmd.Stderr = os.Stderr
-
-	log.Print(azLoginCmd.String())
-
-	if err := azLoginCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to authenticate to Azure: %w", err)
-	}
-
-	return nil
-}
-
-func checkKubeloginInstalled() error {
-	if err := exec.Command("kubelogin", "--version").Run(); err != nil {
-		return fmt.Errorf("kubelogin is not installed")
-	}
-
-	return nil
-}
-
 type AuthenticateAKSOptions struct {
-	AKSTenantID string
+	AKSTenantID    string
+	FederatedToken string
 }
 
 func authenticateAKS(
@@ -121,31 +100,26 @@ func authenticateAKS(
 		return options.AKSTenantID
 	}()
 
-	azAccountShowCmd := exec.Command(
-		"az",
-		"account",
-		"show",
-		"--query",
-		"tenantId",
-		"--output",
-		"tsv",
-	)
-	log.Print(azAccountShowCmd.String())
-
-	azAccountShowCmdOutput, err := azAccountShowCmd.Output()
-	if err != nil {
-		err := azLoginTenant(aksTenantID)
-		if err != nil {
-			return err
+	azAccountShowCommandOutput := azAccountShowCommand(nil)
+	if command.IsError(azAccountShowCommandOutput) {
+		azLoginTenantCommandOutput := azLoginTenantCommand(
+			aksTenantID,
+			AzLoginTenantCommandOptions{FederatedToken: options.FederatedToken},
+		)
+		if command.IsError(azLoginTenantCommandOutput) {
+			return fmt.Errorf("Failed to authenticate to AKS: %w", azLoginTenantCommandOutput.Error)
 		}
 	}
 
-	if azAccountShowCmdOutput != nil {
-		azAccountShowCmdOutputString := strings.TrimSpace(string(azAccountShowCmdOutput))
+	if tenantID := azAccountShowCommandOutput.Output; tenantID != "" {
+		azAccountShowCmdOutputString := strings.TrimSpace(string(tenantID))
 		if azAccountShowCmdOutputString != aksTenantID {
-			err := azLoginTenant(aksTenantID)
-			if err != nil {
-				return err
+			azLoginTenantCommandOutput := azLoginTenantCommand(
+				aksTenantID,
+				AzLoginTenantCommandOptions{FederatedToken: options.FederatedToken},
+			)
+			if command.IsError(azLoginTenantCommandOutput) {
+				return fmt.Errorf("Failed to authenticate to AKS: %w", azLoginTenantCommandOutput.Error)
 			}
 		}
 	}
@@ -160,45 +134,118 @@ func getAKSCredentials(
 	contextName string,
 	runKubeloginConvert bool,
 ) error {
-	azGetCredentialsCmd := exec.Command(
-		"az",
-		"aks",
-		"get-credentials",
-		"--resource-group",
+	azGetCredentialsOutput := azGetCredentialsCommand(
 		aksResourceGroupName,
-		"--name",
 		aksClusterName,
-		"--context",
-		contextName,
-		"--subscription",
 		aksSubscriptionID,
-		"--overwrite-existing",
+		contextName,
+		nil,
 	)
-	azGetCredentialsCmd.Stdout = os.Stdout
-	azGetCredentialsCmd.Stderr = os.Stderr
-
-	log.Print(azGetCredentialsCmd.String())
-
-	if err := azGetCredentialsCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to get AKS credentials: %w", err)
+	if command.IsError(azGetCredentialsOutput) {
+		return fmt.Errorf("Failed to get AKS credentials: %w", azGetCredentialsOutput.Error)
 	}
 
 	if runKubeloginConvert {
-		kubeloginConvertCmd := exec.Command(
-			"kubelogin",
-			"convert-kubeconfig",
-			"-l",
-			"azurecli",
-		)
-		kubeloginConvertCmd.Stdout = os.Stdout
-		kubeloginConvertCmd.Stderr = os.Stderr
-
-		log.Print(kubeloginConvertCmd.String())
-
-		if err := kubeloginConvertCmd.Run(); err != nil {
-			return fmt.Errorf("Failed to convert AKS credentials: %w", err)
+		kubeloginConvertOutput := kubeloginConvertCommand(nil)
+		if command.IsError(kubeloginConvertOutput) {
+			return fmt.Errorf("Failed to convert AKS credentials: %w", kubeloginConvertOutput.Error)
 		}
 	}
 
 	return nil
+}
+
+func azGetCredentialsCommand(
+	aksResourceGroupName string,
+	aksClusterName string,
+	aksSubscriptionID string,
+	contextName string,
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"az",
+			"aks",
+			"get-credentials",
+			"--resource-group",
+			aksResourceGroupName,
+			"--name",
+			aksClusterName,
+			"--context",
+			contextName,
+			"--subscription",
+			aksSubscriptionID,
+			"--overwrite-existing",
+		),
+		runOptions,
+	)
+}
+
+func kubeloginConvertCommand(
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"kubelogin",
+			"convert-kubeconfig",
+			"-l",
+			"azurecli",
+		),
+		runOptions,
+	)
+}
+
+func checkKubeloginInstalledCommand(
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command("kubelogin", "--version"),
+		runOptions,
+	)
+}
+
+func azAccountShowCommand(runOptions *command.RunOptions) command.Output {
+	return command.Run(
+		*exec.Command(
+			"az",
+			"account",
+			"show",
+			"--query",
+			"tenantId",
+			"--output",
+			"tsv",
+		),
+		runOptions,
+	)
+}
+
+type AzLoginTenantCommandOptions struct {
+	FederatedToken string
+	RunOptions     *command.RunOptions
+}
+
+func azLoginTenantCommand(
+	tenantID string,
+	options AzLoginTenantCommandOptions,
+) command.Output {
+	cmd := exec.Command(
+		"az",
+		"login",
+		"--tenant",
+		tenantID,
+	)
+
+	if options.FederatedToken != "" {
+		cmd.Args = append(cmd.Args, "--federated-token")
+		cmd.Args = append(cmd.Args, options.FederatedToken)
+	}
+
+	result := command.Run(*cmd, options.RunOptions)
+	if command.IsError(result) {
+		return command.Error(
+			fmt.Errorf("Failed to login to Azure tenant %s", tenantID),
+		)
+	}
+
+	return result
 }

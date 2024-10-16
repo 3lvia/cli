@@ -3,12 +3,12 @@ package deploy
 import (
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"path"
 	"slices"
 	"strings"
 
+	"github.com/3lvia/cli/pkg/command"
 	"github.com/urfave/cli/v2"
 )
 
@@ -178,12 +178,14 @@ func Deploy(c *cli.Context) error {
 	skipAuthentication := c.Bool("skip-authentication")
 	dryRun := c.Bool("dry-run")
 
-	if err := checkKubectlInstalled(); err != nil {
-		return cli.Exit(err, 1)
+	checkKubectlInstalledOutput := checkKubectlInstalledCommand(nil)
+	if command.IsError(checkKubectlInstalledOutput) {
+		return cli.Exit(fmt.Errorf("kubectl is not installed: %w", checkKubectlInstalledOutput.Error), 1)
 	}
 
-	if err := checkHelmInstalled(); err != nil {
-		return cli.Exit(err, 1)
+	checkHelmInstalledOutput := checkHelmInstalledCommand(nil)
+	if command.IsError(checkHelmInstalledOutput) {
+		return cli.Exit(fmt.Errorf("helm is not installed: %w", checkHelmInstalledOutput.Error), 1)
 	}
 
 	if runtimeCloudProvider == "aks" {
@@ -208,20 +210,17 @@ func Deploy(c *cli.Context) error {
 		}
 	}
 
-	const (
-		chartsNamespace     = "elvia-charts"
-		chartsRepositoryURL = "https://raw.githubusercontent.com/3lvia/kubernetes-charts/master"
-	)
-
-	if err := helmRepoAdd(chartsNamespace, chartsRepositoryURL); err != nil {
-		return fmt.Errorf("Failed to add Helm repository: %w", err)
+	helmRepoAddOutput := helmRepoAddCommand(nil)
+	if command.IsError(helmRepoAddOutput) {
+		return cli.Exit(fmt.Errorf("Failed to add Helm repository: %w", helmRepoAddOutput.Error), 1)
 	}
 
-	if err := helmRepoUpdate(); err != nil {
-		return fmt.Errorf("Failed to update Helm repository: %w", err)
+	helmRepoUpdateOutput := helmRepoUpdateCommand(nil)
+	if command.IsError(helmRepoUpdateOutput) {
+		return cli.Exit(fmt.Errorf("Failed to update Helm repository: %w", helmRepoUpdateOutput.Error), 1)
 	}
 
-	if err := helmDeploy(
+	helmDeployOutput := helmDeployCommand(
 		applicationName,
 		systemName,
 		helmValuesFile,
@@ -231,20 +230,35 @@ func Deploy(c *cli.Context) error {
 		repositoryName,
 		commitHash,
 		dryRun,
-	); err != nil {
-		return cli.Exit(err, 1)
+		nil,
+	)
+	if command.IsError(helmDeployOutput) {
+		return cli.Exit(fmt.Errorf("Failed to deploy Helm chart: %w", helmDeployOutput.Error), 1)
 	}
 
-	if err := kubectlRolloutStatus(
+	kubectlRolloutStatusOutput := kubectlRolloutStatusCommand(
 		applicationName,
 		systemName,
 		workloadType,
-	); err != nil {
-		return cli.Exit(err, 1)
+		nil,
+	)
+	if command.IsError(kubectlRolloutStatusOutput) {
+		return cli.Exit(kubectlRolloutStatusOutput.Error, 1)
 	}
 
-	if err := kubectlGetEvents(applicationName, systemName); err != nil {
-		return cli.Exit(err, 1)
+	kubectlGetEventsOutput := kubectlGetEventsCommand(
+		systemName,
+		nil,
+	)
+	if command.IsError(kubectlGetEventsOutput) {
+		return cli.Exit(kubectlGetEventsOutput.Error, 1)
+	}
+
+	events := strings.Split(kubectlGetEventsOutput.Output, "\n")
+	for _, event := range events {
+		if strings.Contains(event, applicationName) {
+			log.Print(event)
+		}
 	}
 
 	return nil
@@ -284,76 +298,53 @@ func resolveRepositoryName(possibleRepositoryName string) (string, error) {
 	return path.Base(strings.TrimSpace(string(gitTopLevel))), nil
 }
 
-func checkKubectlInstalled() error {
-	cmd := exec.Command(
-		"kubectl",
-		"version",
-		"--client",
-		"true",
+func checkKubectlInstalledCommand(
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"kubectl",
+			"version",
+			"--client",
+			"true",
+		),
+		runOptions,
 	)
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	log.Print(cmd.String())
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("kubectl is not installed: %w", err)
-	}
-
-	return nil
 }
 
-func kubectlRolloutStatus(
+func kubectlRolloutStatusCommand(
 	applicationName string,
 	systemName string,
 	workloadType string,
-) error {
-	rolloutStatusCmd := exec.Command(
-		"kubectl",
-		"rollout",
-		"status",
-		"-n",
-		systemName,
-		workloadType+"/"+applicationName,
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"kubectl",
+			"rollout",
+			"status",
+			"-n",
+			systemName,
+			workloadType+"/"+applicationName,
+		),
+		runOptions,
 	)
-	rolloutStatusCmd.Stdout = os.Stdout
-	rolloutStatusCmd.Stderr = os.Stderr
-
-	log.Print(rolloutStatusCmd.String())
-
-	if err := rolloutStatusCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to check rollout status: %w", err)
-	}
-
-	return nil
 }
 
-func kubectlGetEvents(
-	applicationName string,
+func kubectlGetEventsCommand(
 	systemName string,
-) error {
-	eventsCmd := exec.Command(
-		"kubectl",
-		"get",
-		"events",
-		"-n",
-		systemName,
-		"--sort-by",
-		".lastTimestamp",
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"kubectl",
+			"get",
+			"events",
+			"-n",
+			systemName,
+			"--sort-by",
+			".lastTimestamp",
+		),
+		runOptions,
 	)
-
-	output, err := eventsCmd.Output()
-	if err != nil {
-		return fmt.Errorf("Failed to get events: %w", err)
-	}
-
-	events := strings.Split(string(output), "\n")
-	for _, event := range events {
-		if strings.Contains(event, applicationName) {
-			log.Print(event)
-		}
-	}
-
-	return nil
 }

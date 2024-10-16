@@ -3,6 +3,8 @@ package build
 import (
 	"strings"
 	"testing"
+
+	"github.com/3lvia/cli/pkg/command"
 )
 
 func TestGetImageName1(t *testing.T) {
@@ -12,7 +14,10 @@ func TestGetImageName1(t *testing.T) {
 
 	expectedImageName := registry + "/" + systemName + "-" + imageName
 
-	actualImageName := getImageName(registry, systemName, imageName)
+	actualImageName, err := getImageName(registry, systemName, imageName)
+	if err != nil {
+		t.Errorf("Expected no error, got %s", err)
+	}
 
 	if actualImageName != expectedImageName {
 		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
@@ -26,7 +31,10 @@ func TestGetImageName2(t *testing.T) {
 
 	expectedImageName := registry + "/" + systemName + "/" + imageName
 
-	actualImageName := getImageName(registry, systemName, imageName)
+	actualImageName, err := getImageName(registry, systemName, imageName)
+	if err != nil {
+		t.Errorf("Expected no error, got %s", err)
+	}
 
 	if actualImageName != expectedImageName {
 		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
@@ -40,7 +48,10 @@ func TestGetImageName3(t *testing.T) {
 
 	expectedImageName := registry + "/" + systemName + "/" + imageName
 
-	actualImageName := getImageName(registry, systemName, imageName)
+	actualImageName, err := getImageName(registry, systemName, imageName)
+	if err != nil {
+		t.Errorf("Expected no error, got %s", err)
+	}
 
 	if actualImageName != expectedImageName {
 		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
@@ -54,14 +65,17 @@ func TestGetImageName4(t *testing.T) {
 
 	expectedImageName := registry + "/" + systemName + "/" + imageName
 
-	actualImageName := getImageName(registry, systemName, imageName)
+	actualImageName, err := getImageName(registry, systemName, imageName)
+	if err != nil {
+		t.Errorf("Expected no error, got %s", err)
+	}
 
 	if actualImageName != expectedImageName {
 		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
 	}
 }
 
-func TestConstructBuildCommandArguments1(t *testing.T) {
+func TestBuildCommand1(t *testing.T) {
 	const dockerfilePath = "build/Dockerfile"
 	const buildContext = "src/app"
 	const imageName = "containerregistryelvia.azurecr.io/test-image"
@@ -69,22 +83,42 @@ func TestConstructBuildCommandArguments1(t *testing.T) {
 
 	imageNameWithCacheTag := imageName + ":" + cacheTag
 
-	expectedArguments := "buildx build -f " + dockerfilePath + " --load --cache-to type=inline --cache-from " + imageNameWithCacheTag + " -t " + imageNameWithCacheTag + " " + buildContext
+	expectedCommandString := strings.Join(
+		[]string{
+			"docker",
+			"buildx",
+			"build",
+			"-f",
+			dockerfilePath,
+			"--load",
+			"--cache-to",
+			"type=inline",
+			"--cache-from",
+			imageNameWithCacheTag,
+			"-t",
+			imageNameWithCacheTag,
+			buildContext,
+		},
+		" ",
+	)
 
-	actualArguments := constructBuildCommandArguments(
+	actualCommand := buildImageCommand(
 		dockerfilePath,
 		buildContext,
 		imageName,
 		cacheTag,
 		[]string{},
+		&command.RunOptions{DryRun: true},
 	)
 
-	if strings.Join(actualArguments, " ") != expectedArguments {
-		t.Errorf("Expected %s, got %s", expectedArguments, actualArguments)
-	}
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
 }
 
-func TestConstructBuildCommandArguments2(t *testing.T) {
+func TestBuildCommand2(t *testing.T) {
 	const dockerfilePath = "Dockerfile"
 	const buildContext = "."
 	const imageName = "ghcr.io/test-image"
@@ -92,22 +126,42 @@ func TestConstructBuildCommandArguments2(t *testing.T) {
 
 	imageNameWithCacheTag := imageName + ":" + cacheTag
 
-	expectedArguments := "buildx build -f " + dockerfilePath + " --load --cache-to type=inline --cache-from " + imageNameWithCacheTag + " -t " + imageNameWithCacheTag + " " + buildContext
+	expectedCommandString := strings.Join(
+		[]string{
+			"docker",
+			"buildx",
+			"build",
+			"-f",
+			dockerfilePath,
+			"--load",
+			"--cache-to",
+			"type=inline",
+			"--cache-from",
+			imageNameWithCacheTag,
+			"-t",
+			imageNameWithCacheTag,
+			buildContext,
+		},
+		" ",
+	)
 
-	actualArguments := constructBuildCommandArguments(
+	actualCommand := buildImageCommand(
 		dockerfilePath,
 		buildContext,
 		imageName,
 		cacheTag,
 		[]string{},
+		&command.RunOptions{DryRun: true},
 	)
 
-	if strings.Join(actualArguments, " ") != expectedArguments {
-		t.Errorf("Expected %s, got %s", expectedArguments, actualArguments)
-	}
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
 }
 
-func TestConstructBuildCommandArguments3(t *testing.T) {
+func TestBuildCommand3(t *testing.T) {
 	const dockerfilePath = "Dockerfile"
 	const buildContext = "."
 	const imageName = "ghcr.io/test-image"
@@ -116,17 +170,43 @@ func TestConstructBuildCommandArguments3(t *testing.T) {
 	imageNameWithCacheTag := imageName + ":" + cacheTag
 	additionalTags := []string{"latest", "v42.0.1", "v420alpha"}
 
-	expectedArguments := "buildx build -f " + dockerfilePath + " --load --cache-to type=inline --cache-from " + imageNameWithCacheTag + " -t " + imageName + ":" + additionalTags[0] + " -t " + imageName + ":" + additionalTags[1] + " -t " + imageName + ":" + additionalTags[2] + " -t " + imageNameWithCacheTag + " " + buildContext
+	expectedCommandString := strings.Join(
+		[]string{
+			"docker",
+			"buildx",
+			"build",
+			"-f",
+			dockerfilePath,
+			"--load",
+			"--cache-to",
+			"type=inline",
+			"--cache-from",
+			imageNameWithCacheTag,
+			"-t",
+			imageName + ":" + additionalTags[0],
+			"-t",
+			imageName + ":" + additionalTags[1],
+			"-t",
+			imageName + ":" + additionalTags[2],
+			"-t",
+			imageNameWithCacheTag,
+			buildContext,
+		},
+		" ",
+	)
 
-	actualArguments := constructBuildCommandArguments(
+	actualCommand := buildImageCommand(
 		dockerfilePath,
 		buildContext,
 		imageName,
 		cacheTag,
 		additionalTags,
+		&command.RunOptions{DryRun: true},
 	)
 
-	if strings.Join(actualArguments, " ") != expectedArguments {
-		t.Errorf("Expected %s, got %s", expectedArguments, actualArguments)
-	}
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
 }
