@@ -2,9 +2,9 @@ package deploy
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"os/exec"
+
+	"github.com/3lvia/cli/pkg/command"
 )
 
 type SetupGKEOptions struct {
@@ -19,46 +19,60 @@ func setupGKE(
 	options SetupGKEOptions,
 ) error {
 	if !skipAuthentication {
-		if err := authenticateGKE(); err != nil {
-			return fmt.Errorf("Failed to authenticate to GKE: %w", err)
+		gcloudAuthLoginOutput := gcloudAuthLoginCommand(nil)
+		if command.IsError(gcloudAuthLoginOutput) {
+			return fmt.Errorf("Failed to authenticate to GKE: %w", gcloudAuthLoginOutput.Error)
 		}
 	}
 
-	if err := getGKECredentials(environment, GetGKECredentialsOptions(options)); err != nil {
-		return fmt.Errorf("Failed to get GKE credentials: %w", err)
-	}
-
-	return nil
-}
-
-func authenticateGKE() error {
-	gcloudLoginCmd := exec.Command(
-		"gcloud",
-		"auth",
-		"login",
+	gcloudGetCredentialsOutput := gcloudGetCredentialsCommand(
+		environment,
+		GcloudGetCredentialsCommandOptions{
+			GKEProjectID:       options.GKEProjectID,
+			GKEClusterName:     options.GKEClusterName,
+			GKEClusterLocation: options.GKEClusterLocation,
+			RunOptions:         nil,
+		},
 	)
-	gcloudLoginCmd.Stdout = os.Stdout
-	gcloudLoginCmd.Stderr = os.Stderr
 
-	log.Print(gcloudLoginCmd.String())
-
-	if err := gcloudLoginCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to authenticate to GKE: %w", err)
+	if command.IsError(gcloudGetCredentialsOutput) {
+		return fmt.Errorf("Failed to get GKE credentials: %w", gcloudGetCredentialsOutput.Error)
 	}
 
 	return nil
 }
 
-type GetGKECredentialsOptions struct {
+func gcloudAuthLoginCommand(
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"gcloud",
+			"auth",
+			"login",
+		),
+		runOptions,
+	)
+}
+
+type GcloudGetCredentialsCommandOptions struct {
 	GKEProjectID       string
 	GKEClusterName     string
 	GKEClusterLocation string
+	RunOptions         *command.RunOptions
 }
 
-func getGKECredentials(
+func gcloudGetCredentialsCommand(
 	environment string,
-	options GetGKECredentialsOptions,
-) error {
+	options GcloudGetCredentialsCommandOptions,
+) command.Output {
+	if environment == "" &&
+		(options.GKEProjectID == "" ||
+			options.GKEClusterName == "" ||
+			options.GKEClusterLocation == "") {
+		return command.ErrorString("environment must be set if any of the GKE options are not set")
+	}
+
 	gkeProjectID := func() string {
 		if options.GKEProjectID == "" {
 			return "elvia-runtimeservice-" + environment
@@ -83,23 +97,18 @@ func getGKECredentials(
 		return options.GKEClusterLocation
 	}()
 
-	gcloudGetCredentialsCmd := exec.Command(
-		"gcloud",
-		"container",
-		"clusters",
-		"get-credentials",
-		gkeClusterName,
-		"--region",
-		gkeClusterLocation,
-		"--project",
-		gkeProjectID,
+	return command.Run(
+		*exec.Command(
+			"gcloud",
+			"container",
+			"clusters",
+			"get-credentials",
+			gkeClusterName,
+			"--region",
+			gkeClusterLocation,
+			"--project",
+			gkeProjectID,
+		),
+		options.RunOptions,
 	)
-	gcloudGetCredentialsCmd.Stdout = os.Stdout
-	gcloudGetCredentialsCmd.Stderr = os.Stderr
-
-	if err := gcloudGetCredentialsCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to authenticate to GKE: %w", err)
-	}
-
-	return nil
 }

@@ -2,52 +2,54 @@ package deploy
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"os/exec"
+
+	"github.com/3lvia/cli/pkg/command"
 )
 
-func checkHelmInstalled() error {
-	if err := exec.Command("helm", "version").Run(); err != nil {
-		return fmt.Errorf("Helm is not installed: %w", err)
-	}
+const (
+	chartsNamespace     = "elvia-charts"
+	chartsRepositoryURL = "https://raw.githubusercontent.com/3lvia/kubernetes-charts/master"
+)
 
-	return nil
-}
-
-func helmRepoAdd(chartsNamespace string, chartsRepositoryURL string) error {
-	helmRepoAddCmd := exec.Command(
-		"helm",
-		"repo",
-		"add",
-		chartsNamespace,
-		chartsRepositoryURL,
+func checkHelmInstalledCommand(
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command("helm", "version"),
+		runOptions,
 	)
-
-	if err := helmRepoAddCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to add Helm repository: %w", err)
-	}
-
-	return nil
 }
 
-func helmRepoUpdate() error {
-	helmRepoUpdateCmd := exec.Command(
-		"helm",
-		"repo",
-		"update",
+func helmRepoAddCommand(
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"helm",
+			"repo",
+			"add",
+			chartsNamespace,
+			chartsRepositoryURL,
+		),
+		runOptions,
 	)
-	helmRepoUpdateCmd.Stdout = os.Stdout
-	helmRepoUpdateCmd.Stderr = os.Stderr
-
-	if err := helmRepoUpdateCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to update Helm repository: %w", err)
-	}
-
-	return nil
 }
 
-func helmDeploy(
+func helmRepoUpdateCommand(
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"helm",
+			"repo",
+			"update",
+		),
+		runOptions,
+	)
+}
+
+func helmDeployCommand(
 	applicationName string,
 	systemName string,
 	helmValuesFile string,
@@ -57,8 +59,15 @@ func helmDeploy(
 	repositoryName string,
 	commitHash string,
 	dryRun bool,
-) error {
-	helmDeployCmd := exec.Command(
+	runOptions *command.RunOptions,
+) command.Output {
+	if workloadType != "deployment" && workloadType != "statefulset" {
+		return command.Error(
+			fmt.Errorf("workloadType must be either deployment or statefulset, got %s", workloadType),
+		)
+	}
+
+	cmd := exec.Command(
 		"helm",
 		"upgrade",
 		"--debug",
@@ -68,7 +77,7 @@ func helmDeploy(
 		"-f",
 		helmValuesFile,
 		applicationName,
-		"elvia-charts/elvia-"+workloadType,
+		chartsNamespace+"/elvia-"+workloadType,
 		"--set-string",
 		"environment="+environment,
 		"--set-string",
@@ -78,18 +87,10 @@ func helmDeploy(
 		"--set-string",
 		"labels.commitHash=\""+commitHash+"\"",
 	)
-	helmDeployCmd.Stdout = os.Stdout
-	helmDeployCmd.Stderr = os.Stderr
 
 	if dryRun {
-		helmDeployCmd.Args = append(helmDeployCmd.Args, "--dry-run")
+		cmd.Args = append(cmd.Args, "--dry-run")
 	}
 
-	log.Print(helmDeployCmd.String())
-
-	if err := helmDeployCmd.Run(); err != nil {
-		return fmt.Errorf("Failed to deploy Helm chart: %w", err)
-	}
-
-	return nil
+	return command.Run(*cmd, runOptions)
 }

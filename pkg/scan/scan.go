@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"slices"
 
+	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -85,12 +86,13 @@ func Scan(c *cli.Context) error {
 	return nil
 }
 
-func constructScanImageArguments(
+func scanImageCommand(
 	imageName string,
 	severity string,
 	disableError bool,
 	skipDBUpdate bool,
-) []string {
+	runOptions *command.RunOptions,
+) command.Output {
 	exitCode := func() string {
 		if disableError {
 			return "0"
@@ -98,7 +100,8 @@ func constructScanImageArguments(
 		return "1"
 	}()
 
-	args := []string{
+	cmd := exec.Command(
+		"trivy",
 		"image",
 		"--severity",
 		severity,
@@ -115,15 +118,50 @@ func constructScanImageArguments(
 		"--java-db-repository",
 		"ghcr.io/3lvia/trivy-java-db",
 		"--ignore-unfixed",
-	}
+	)
 
 	if skipDBUpdate {
-		args = append(args, "--skip-db-update")
+		cmd.Args = append(cmd.Args, "--skip-db-update")
 	}
 
-	args = append(args, imageName)
+	cmd.Args = append(cmd.Args, imageName)
 
-	return args
+	return command.Run(*cmd, runOptions)
+}
+
+func convertCommand(
+	format string,
+	runOptions *command.RunOptions,
+) command.Output {
+	if format == "table" {
+		return command.Run(
+			*exec.Command(
+				"trivy",
+				"convert",
+				"--format",
+				"table",
+				"trivy.json",
+			),
+			runOptions,
+		)
+	}
+
+	if format == "sarif" {
+		return command.Run(
+			*exec.Command(
+				"trivy",
+				"convert",
+				"--format",
+				"sarif",
+				"--output",
+				"trivy.sarif",
+				"trivy.json",
+			),
+			runOptions,
+		)
+	}
+
+	return command.Error(fmt.Errorf("Invalid format %s", format))
 }
 
 func ScanImage(
@@ -133,21 +171,13 @@ func ScanImage(
 	disableError bool,
 	skipDBUpdate bool,
 ) error {
-	scanCmd := exec.Command(
-		"trivy",
-		constructScanImageArguments(
-			imageName,
-			severity,
-			disableError,
-			skipDBUpdate,
-		)...,
+	scanImageOutput := scanImageCommand(
+		imageName,
+		severity,
+		disableError,
+		skipDBUpdate,
+		nil,
 	)
-	scanCmd.Stdout = os.Stdout
-	scanCmd.Stderr = os.Stderr
-
-	log.Print(scanCmd.String())
-
-	scanErr := scanCmd.Run()
 
 	if _, err := os.Stat("trivy.json"); errors.Is(err, os.ErrNotExist) {
 		if disableError {
@@ -161,42 +191,24 @@ func ScanImage(
 	if slices.Contains(formats, "table") {
 		log.Println("Converting results to table format")
 
-		convertCmd := exec.Command(
-			"trivy",
-			"convert",
-			"--format",
+		convertOutput := convertCommand(
 			"table",
-			"trivy.json",
+			nil,
 		)
-		convertCmd.Stdout = os.Stdout
-		convertCmd.Stderr = os.Stderr
-
-		log.Print(convertCmd.String())
-
-		if err := convertCmd.Run(); err != nil {
-			return err
+		if command.IsError(convertOutput) {
+			return convertOutput.Error
 		}
 	}
 
 	if slices.Contains(formats, "sarif") {
 		log.Println("Converting results to SARIF format")
 
-		convertCmd := exec.Command(
-			"trivy",
-			"convert",
-			"--format",
+		convertOutput := convertCommand(
 			"sarif",
-			"--output",
-			"trivy.sarif",
-			"trivy.json",
+			nil,
 		)
-		convertCmd.Stdout = os.Stdout
-		convertCmd.Stderr = os.Stderr
-
-		log.Print(convertCmd.String())
-
-		if err := convertCmd.Run(); err != nil {
-			return err
+		if command.IsError(convertOutput) {
+			return convertOutput.Error
 		}
 	}
 
@@ -231,5 +243,9 @@ func ScanImage(
 		log.Println("Keeping pre-existing JSON output")
 	}
 
-	return scanErr
+	if command.IsError(scanImageOutput) {
+		return scanImageOutput.Error
+	}
+
+	return nil
 }
