@@ -208,7 +208,7 @@ func Build(c *cli.Context) error {
 		pushImageOutput := pushImageCommand(
 			imageName,
 			cacheTag,
-			true,
+			false,
 			nil,
 		)
 
@@ -229,7 +229,7 @@ func Build(c *cli.Context) error {
 		pushImageOutput := pushImageCommand(
 			imageName,
 			cacheTag,
-			false,
+			true,
 			nil,
 		)
 
