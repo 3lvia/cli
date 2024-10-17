@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 
+	"github.com/3lvia/cli/pkg/auth"
 	"github.com/3lvia/cli/pkg/command"
 )
 
@@ -19,9 +20,9 @@ func setupGKE(
 	options SetupGKEOptions,
 ) error {
 	if !skipAuthentication {
-		gcloudAuthLoginOutput := gcloudAuthLoginCommand(nil)
-		if command.IsError(gcloudAuthLoginOutput) {
-			return fmt.Errorf("Failed to authenticate to GKE: %w", gcloudAuthLoginOutput.Error)
+		err := auth.AuthenticateGoogle()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -40,19 +41,6 @@ func setupGKE(
 	}
 
 	return nil
-}
-
-func gcloudAuthLoginCommand(
-	runOptions *command.RunOptions,
-) command.Output {
-	return command.Run(
-		*exec.Command(
-			"gcloud",
-			"auth",
-			"login",
-		),
-		runOptions,
-	)
 }
 
 type GcloudGetCredentialsCommandOptions struct {

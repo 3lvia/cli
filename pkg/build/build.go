@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/3lvia/cli/pkg/auth"
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/scan"
 	"github.com/3lvia/cli/pkg/utils"
@@ -43,7 +44,6 @@ var Command *cli.Command = &cli.Command{
 			Name:    "registry",
 			Aliases: []string{"r"},
 			Usage:   "The registry to use. Image name will be prefixed with this value.",
-			Value:   "containerregistryelvia.azurecr.io",
 			EnvVars: []string{"3LV_REGISTRY"},
 		},
 		&cli.StringFlag{
@@ -63,6 +63,30 @@ var Command *cli.Command = &cli.Command{
 			Usage:   "The severity to use when scanning the image: can be any combination of CRITICAL, HIGH, MEDIUM, LOW, or UNKNOWN separated by commas",
 			Value:   "CRITICAL,HIGH",
 			EnvVars: []string{"3LV_SEVERITY"},
+		},
+		&cli.StringFlag{
+			Name:    "azure-tenant-id",
+			Usage:   "The tenant ID to use when authenticating with the Azure Container Registry.",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AZURE_TENANT_ID"},
+		},
+		&cli.StringFlag{
+			Name:    "azure-subscription-id",
+			Usage:   "The subscription ID to use when authenticating with the Azure Container Registry.",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AZURE_SUBSCRIPTION_ID"},
+		},
+		&cli.StringFlag{
+			Name:    "azure-client-id",
+			Usage:   "The client ID to use when authenticating with the registry. Must be combined with --azure-federated-token.",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AZURE_CLIENT_ID"},
+		},
+		&cli.StringFlag{
+			Name:    "azure-federated-token",
+			Usage:   "The federated token to use when authenticating with the Azure Container Registry. Must be combined with --client-id.",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AZURE_FEDERATED_TOKEN"},
 		},
 		&cli.StringSliceFlag{
 			Name:    "additional-tags",
@@ -126,6 +150,12 @@ var Command *cli.Command = &cli.Command{
 			Value:   false,
 			EnvVars: []string{"3LV_SCAN_SKIP_DB_UPDATE"},
 		},
+		&cli.BoolFlag{
+			Name:    "skip-authentication",
+			Usage:   "Skip authentication when pushing the image to the registry",
+			Value:   false,
+			EnvVars: []string{"3LV_SKIP_AUTHENTICATION"},
+		},
 	},
 	Action: Build,
 }
@@ -138,18 +168,30 @@ func Build(c *cli.Context) error {
 	// Required args
 	applicationName := c.Args().First()
 	if applicationName == "" {
-		log.Println("Application name not provided")
-		return cli.ShowCommandHelp(c, commandName)
+		return cli.Exit("Application name not provided", 1)
 	}
 	projectFile := c.String("project-file")
 	if projectFile == "" {
-		log.Println("Project file not provided")
-		return cli.ShowCommandHelp(c, commandName)
+		return cli.Exit("Project file not provided", 1)
 	}
-	systemName := c.String("system-name")
-	if systemName == "" {
-		log.Println("System name not provided")
-		return cli.ShowCommandHelp(c, commandName)
+	systemName, err := func() (string, error) {
+		possibleSystemName := c.String("system-name")
+
+		if possibleSystemName == "" {
+			log.Println("System name not provided, will try to use the current git repository name")
+
+			repositoryName, err := utils.ResolveRepositoryName("")
+			if err != nil {
+				return "", err
+			}
+
+			return repositoryName, nil
+		}
+
+		return possibleSystemName, nil
+	}()
+	if err != nil {
+		return cli.Exit(err, 1)
 	}
 
 	generateOptions := GenerateDockerfileOptions{
@@ -174,7 +216,62 @@ func Build(c *cli.Context) error {
 	}
 
 	cacheTag := c.String("cache-tag")
-	registry := c.String("registry")
+	registry := utils.StringWithDefault(c.String("registry"), "containerregistryelvia.azurecr.io")
+
+	skipAuthentication := c.Bool("skip-authentication")
+
+	if strings.Contains(registry, "azurecr.io") && !skipAuthentication {
+		log.Println("Azure registry detected, will try to authenticate with Azure")
+
+		azureTenantID := utils.StringWithDefault(
+			c.String("azure-tenant-id"),
+			auth.ElviaTenantID,
+		)
+		azureSubscriptionID := utils.StringWithDefault(
+			c.String("azure-subscription-id"),
+			auth.ElviaDefaultRuntimeSubscriptionID,
+		)
+
+		options := &auth.AzLoginCommandOptions{
+			ClientID:       c.String("azure-client-id"),
+			FederatedToken: c.String("azure-federated-token"),
+		}
+
+		err := auth.AuthenticateAzure(
+			azureTenantID,
+			azureSubscriptionID,
+			options,
+		)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		registryName, err := func() (string, error) {
+			split := strings.Split(registry, ".")
+			if len(split) <= 0 {
+				return "", fmt.Errorf("Invalid registry name: %s", registry)
+			}
+			return split[0], nil
+		}()
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		azAcrLoginCommandOutput := azAcrLoginCommand(
+			registryName,
+			nil,
+		)
+		if command.IsError(azAcrLoginCommandOutput) {
+			return cli.Exit(
+				fmt.Errorf(
+					"Failed to authenticate to Azure Container Registry: %w",
+					azAcrLoginCommandOutput.Error,
+				),
+				1,
+			)
+		}
+
+	}
 
 	imageName, err := getImageName(
 		registry,
@@ -234,7 +331,7 @@ func Build(c *cli.Context) error {
 		)
 
 		if command.IsError(pushImageOutput) {
-			return fmt.Errorf("Failed to push Docker image: %w", err)
+			return fmt.Errorf("Failed to push Docker image. If using GHCR, please login using the command `gh auth login` first. %w", err)
 		}
 	}
 
@@ -326,6 +423,22 @@ func pushImageCommand(
 			"docker",
 			"push",
 			imageName+":"+cacheTag,
+		),
+		options,
+	)
+}
+
+func azAcrLoginCommand(
+	registryName string,
+	options *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"az",
+			"acr",
+			"login",
+			"--name",
+			registryName,
 		),
 		options,
 	)
