@@ -2,7 +2,7 @@ name: 'Setup 3lv'
 description: 'Sets up the Elvia CLI on your GitHub Actions runner.'
 inputs:
   version:
-    description: 'The version of 3lv to install.'
+    description: 'The version of 3lv to install. Specify `git` to build and install the latest version from the default branch.'
     required: false
     default: 'latest'
 
@@ -13,6 +13,14 @@ runs:
       shell: bash
       run: |
         # Setup the 3lv CLI
+        if [[ '${{ inputs.version }}' == 'git' ]]; then
+          cd '${{ github.action_path }}/..'
+          echo 'git' > VERSION
+          sudo make install
+          3lv --version
+          exit 0
+        fi
+
         if [[ '${{ inputs.version }}' == 'latest' ]]; then
           version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
         else
