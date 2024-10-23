@@ -91,6 +91,11 @@ var Command *cli.Command = &cli.Command{
 			Usage:   "The commit hash to use",
 		},
 		&cli.StringFlag{
+			Name:    "commit-message",
+			Aliases: []string{"m"},
+			Usage:   "The commit message to use",
+		},
+		&cli.StringFlag{
 			Name:    "repository-name",
 			Aliases: []string{"n"},
 			Usage:   "The repository name to use",
@@ -106,24 +111,28 @@ var Command *cli.Command = &cli.Command{
 			Usage:   "Simulate the deployment without actually deploying.",
 		},
 		&cli.StringFlag{
-			Name:   "aks-tenant-id",
-			Usage:  "The AKS tenant ID to use",
-			Hidden: true,
+			Name:    "aks-tenant-id",
+			Usage:   "The AKS tenant ID to use",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AKS_TENANT_ID"},
 		},
 		&cli.StringFlag{
-			Name:   "aks-subscription-id",
-			Usage:  "The AKS subscription ID to use",
-			Hidden: true,
+			Name:    "aks-subscription-id",
+			Usage:   "The AKS subscription ID to use",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AKS_SUBSCRIPTION_ID"},
 		},
 		&cli.StringFlag{
-			Name:   "aks-cluster-name",
-			Usage:  "The AKS cluster name to use",
-			Hidden: true,
+			Name:    "aks-cluster-name",
+			Usage:   "The AKS cluster name to use",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AKS_CLUSTER_NAME"},
 		},
 		&cli.StringFlag{
-			Name:   "aks-resource-group-name",
-			Usage:  "The AKS resource group name to use",
-			Hidden: true,
+			Name:    "aks-resource-group-name",
+			Usage:   "The AKS resource group name to use",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AKS_RESOURCE_GROUP_NAME"},
 		},
 		&cli.StringFlag{
 			Name:    "gke-project-id",
@@ -142,6 +151,18 @@ var Command *cli.Command = &cli.Command{
 			Usage:   "The GKE cluster location to use",
 			Hidden:  true,
 			EnvVars: []string{"3LV_GKE_CLUSTER_LOCATION"},
+		},
+		&cli.BoolFlag{
+			Name:  "add-deployment-annotation",
+			Usage: "Add a deployment annotation to Grafana. Requires --grafana-url and --grafana-api-key to be set.",
+		},
+		&cli.StringFlag{
+			Name:  "grafana-url",
+			Usage: "The Grafana URL to use for deployment annotations.",
+		},
+		&cli.StringFlag{
+			Name:  "grafana-api-key",
+			Usage: "The Grafana API key to use for deployment annotations.",
 		},
 	},
 	Action: Deploy,
@@ -172,11 +193,24 @@ func Deploy(c *cli.Context) error {
 		return cli.Exit(err, 1)
 	}
 
+	addDeploymentAnnotation := c.Bool("add-deployment-annotation")
+	commitMessage, err := resolveCommitMessage(c.String("commit-message"))
+	if err != nil && addDeploymentAnnotation {
+		return cli.Exit(err, 1)
+	}
+
+	grafanaURL := c.String("grafana-url")
+	grafanaAPIKey := c.String("grafana-api-key")
+	if addDeploymentAnnotation && (grafanaURL == "" || grafanaAPIKey == "") {
+		return cli.Exit("Grafana URL and API key must be set when adding a deployment annotation", 1)
+	}
+
 	environment := strings.ToLower(c.String("environment"))
 	workloadType := strings.ToLower(c.String("workload-type"))
 	runtimeCloudProvider := strings.ToLower(c.String("runtime-cloud-provider"))
 	skipAuthentication := c.Bool("skip-authentication")
 	dryRun := c.Bool("dry-run")
+	runID := c.String("run-id")
 
 	checkKubectlInstalledOutput := checkKubectlInstalledCommand(nil)
 	if command.IsError(checkKubectlInstalledOutput) {
@@ -233,6 +267,26 @@ func Deploy(c *cli.Context) error {
 		nil,
 	)
 	if command.IsError(helmDeployOutput) {
+		// If the deployment failed, we still want to post the Grafana annotation, but we add a failure message to the annotation.
+		if err := addGrafanaDeploymentAnnotation(
+			false,
+			applicationName,
+			systemName,
+			environment,
+			repositoryName,
+			commitMessage,
+			grafanaURL,
+			grafanaAPIKey,
+			&PostGrafanaAnnotationOptions{
+				RunID: runID,
+			},
+		); err != nil {
+			return cli.Exit(
+				fmt.Errorf("Failed to deploy Helm chart %w and post Grafana annotation: %w", helmDeployOutput.Error, err),
+				1,
+			)
+		}
+
 		return cli.Exit(fmt.Errorf("Failed to deploy Helm chart: %w", helmDeployOutput.Error), 1)
 	}
 
@@ -258,6 +312,24 @@ func Deploy(c *cli.Context) error {
 	for _, event := range events {
 		if strings.Contains(event, applicationName) {
 			log.Print(event)
+		}
+	}
+
+	if addDeploymentAnnotation {
+		if err := addGrafanaDeploymentAnnotation(
+			true,
+			applicationName,
+			systemName,
+			environment,
+			repositoryName,
+			commitMessage,
+			grafanaURL,
+			grafanaAPIKey,
+			&PostGrafanaAnnotationOptions{
+				RunID: runID,
+			},
+		); err != nil {
+			return cli.Exit(err, 1)
 		}
 	}
 
@@ -296,6 +368,23 @@ func resolveRepositoryName(possibleRepositoryName string) (string, error) {
 	}
 
 	return path.Base(strings.TrimSpace(string(gitTopLevel))), nil
+}
+
+func resolveCommitMessage(possibleCommitMessage string) (string, error) {
+	if possibleCommitMessage != "" {
+		return possibleCommitMessage, nil
+	}
+
+	message, err := exec.Command("git", "log", "-1", "--no-merges", "--pretty=%B").Output()
+	if err != nil {
+		return "",
+			fmt.Errorf(
+				"Failed to resolve commit message: %w. Please verify you are currently in a Git repository, or manually specify the commit message with --commit-message.",
+				err,
+			)
+	}
+
+	return strings.TrimSpace(string(message)), nil
 }
 
 func checkKubectlInstalledCommand(
