@@ -39,11 +39,14 @@ func formatDeploymentMessage(
 	}()
 
 	deployLink := func() string {
+		const GITHUB_OWNER = "3lvia"
+
 		if options.RunID == "" {
 			return ""
 		}
 		return fmt.Sprintf(
-			"<a href=\"https://github.com/%s/actions/runs/%s\">Link</a>",
+			"<a href=\"https://github.com/%s/%s/actions/runs/%s\">Link</a>",
+			GITHUB_OWNER,
 			repositoryName,
 			options.RunID,
 		)
