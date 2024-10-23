@@ -88,9 +88,9 @@ func addGrafanaDeploymentAnnotation(
 ) error {
 	what := func() string {
 		if wasSuccessful {
-			return "Deploy successful"
+			return "Deploy successful."
 		}
-		return "Deploy failed"
+		return "Deploy failed."
 	}()
 
 	grafanaAnnotation := GrafanaAnnotation{
@@ -122,7 +122,7 @@ func addGrafanaDeploymentAnnotation(
 		5*time.Second,
 		func(i int, duration time.Duration) error {
 			statusCode, err := sendRequest(
-				grafanaURL,
+				grafanaURL+"annotations/graphite",
 				grafanaSecret,
 				body,
 			)
