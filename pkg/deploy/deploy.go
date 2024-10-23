@@ -164,6 +164,10 @@ var Command *cli.Command = &cli.Command{
 			Name:  "grafana-api-key",
 			Usage: "The Grafana API key to use for deployment annotations.",
 		},
+		&cli.StringFlag{
+			Name:  "run-id",
+			Usage: "The GitHub Actions run ID to use for deployment annotations.",
+		},
 	},
 	Action: Deploy,
 }
@@ -329,7 +333,7 @@ func Deploy(c *cli.Context) error {
 				RunID: runID,
 			},
 		); err != nil {
-			return cli.Exit(err, 1)
+			return cli.Exit(fmt.Errorf("Failed to post Grafana annotation: %w", err), 1)
 		}
 	}
 
