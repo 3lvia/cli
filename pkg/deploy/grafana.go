@@ -117,10 +117,15 @@ func addGrafanaDeploymentAnnotation(
 	}
 
 	// TODO: actually find out why Grafana is returning 429 instead of just retrying
+	const RETRY_ATTEMPTS = 5
+	const RETRY_DELAY = 5 * time.Second
+
 	_, _, err = lo.AttemptWithDelay(
-		5,
-		5*time.Second,
+		RETRY_ATTEMPTS,
+		RETRY_DELAY,
 		func(i int, duration time.Duration) error {
+			log.Printf("Sending deploy annotation to Grafana, attempt %d\n", i)
+
 			statusCode, err := sendRequest(
 				grafanaURL+"annotations/graphite",
 				grafanaSecret,
@@ -138,8 +143,11 @@ func addGrafanaDeploymentAnnotation(
 		},
 	)
 	if err != nil {
+		log.Printf("Failed to send deploy annotation to Grafana after %d attempts\n", RETRY_ATTEMPTS)
 		return err
 	}
+
+	log.Println("Deploy annotation sent to Grafana!")
 
 	return nil
 }
