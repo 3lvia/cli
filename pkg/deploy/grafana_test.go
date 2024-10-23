@@ -1,15 +1,28 @@
 package deploy
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
+
+const repositoryOwner = "3lvia"
 
 func TestFormatDeploymentMessage1(t *testing.T) {
-	repositoryName := "test-repo"
-	commitMessage := "Did something very important"
+	const repositoryName = "test-repo"
+	const commitMessage = "Did something very important"
 	options := &FormatDeploymentMessageOptions{
 		RunID: "123",
 	}
 
-	expected := "Deployed from GitHub Actions run " + options.RunID + " - " + commitMessage + " - " + repositoryName + " - <a href=\"https://github.com/" + repositoryName + "/actions/runs/" + options.RunID + "\">Link</a>"
+	expected := fmt.Sprintf(
+		"Deployed from GitHub Actions run %s - %s - %s - <a href=\"https://github.com/%s/%s/actions/runs/%s\">Link</a>",
+		options.RunID,
+		commitMessage,
+		repositoryName,
+		repositoryOwner,
+		repositoryName,
+		options.RunID,
+	)
 	actual := formatDeploymentMessage(repositoryName, commitMessage, options)
 
 	if actual != expected {
@@ -18,13 +31,21 @@ func TestFormatDeploymentMessage1(t *testing.T) {
 }
 
 func TestFormatDeploymentMessage2(t *testing.T) {
-	repositoryName := "core-very-important-repo"
-	commitMessage := "Did something very important"
+	const repositoryName = "core-very-important-repo"
+	const commitMessage = "Did something very important"
 	options := &FormatDeploymentMessageOptions{
 		RunID: "1237757570",
 	}
 
-	expected := "Deployed from GitHub Actions run " + options.RunID + " - " + commitMessage + " - " + repositoryName + " - <a href=\"https://github.com/" + repositoryName + "/actions/runs/" + options.RunID + "\">Link</a>"
+	expected := fmt.Sprintf(
+		"Deployed from GitHub Actions run %s - %s - %s - <a href=\"https://github.com/%s/%s/actions/runs/%s\">Link</a>",
+		options.RunID,
+		commitMessage,
+		repositoryName,
+		repositoryOwner,
+		repositoryName,
+		options.RunID,
+	)
 	actual := formatDeploymentMessage(repositoryName, commitMessage, options)
 
 	if actual != expected {
@@ -33,13 +54,17 @@ func TestFormatDeploymentMessage2(t *testing.T) {
 }
 
 func TestFormatDeploymentMessage3(t *testing.T) {
-	repositoryName := "core-very-important-repo"
-	commitMessage := "Did something very important"
+	const repositoryName = "core-very-important-repo"
+	const commitMessage = "Did something very important"
 	options := &FormatDeploymentMessageOptions{
 		RunID: "",
 	}
 
-	expected := "Manually deployed with CLI - " + commitMessage + " - " + repositoryName
+	expected := fmt.Sprintf(
+		"Manually deployed with CLI - %s - %s",
+		commitMessage,
+		repositoryName,
+	)
 	actual := formatDeploymentMessage(repositoryName, commitMessage, options)
 
 	if actual != expected {
@@ -48,10 +73,14 @@ func TestFormatDeploymentMessage3(t *testing.T) {
 }
 
 func TestFormatDeploymentMessage4(t *testing.T) {
-	repositoryName := "core-not-important-repo"
-	commitMessage := "Not very pretty"
+	const repositoryName = "core-not-important-repo"
+	const commitMessage = "Not very pretty"
 
-	expected := "Manually deployed with CLI - " + commitMessage + " - " + repositoryName
+	expected := fmt.Sprintf(
+		"Manually deployed with CLI - %s - %s",
+		commitMessage,
+		repositoryName,
+	)
 	actual := formatDeploymentMessage(repositoryName, commitMessage, nil)
 
 	if actual != expected {
