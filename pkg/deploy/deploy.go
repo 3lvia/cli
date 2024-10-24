@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"path"
 	"slices"
 	"strings"
 
+	"github.com/3lvia/cli/pkg/auth"
 	"github.com/3lvia/cli/pkg/command"
+	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -111,10 +112,22 @@ var Command *cli.Command = &cli.Command{
 			Usage:   "Simulate the deployment without actually deploying.",
 		},
 		&cli.StringFlag{
-			Name:    "aks-tenant-id",
+			Name:    "azure-tenant-id",
 			Usage:   "The AKS tenant ID to use",
 			Hidden:  true,
-			EnvVars: []string{"3LV_AKS_TENANT_ID"},
+			EnvVars: []string{"3LV_AZURE_TENANT_ID"},
+		},
+		&cli.StringFlag{
+			Name:    "azure-client-id",
+			Usage:   "The client ID to use when authenticating with the registry. Must be combined with --azure-federated-token.",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AZURE_CLIENT_ID"},
+		},
+		&cli.StringFlag{
+			Name:    "azure-federated-token",
+			Usage:   "The federated token to use when authenticating with the Azure Container Registry. Must be combined with --client-id.",
+			Hidden:  true,
+			EnvVars: []string{"3LV_AZURE_FEDERATED_TOKEN"},
 		},
 		&cli.StringFlag{
 			Name:    "aks-subscription-id",
@@ -187,18 +200,18 @@ func Deploy(c *cli.Context) error {
 	helmValuesFile := c.String("helm-values-file")
 	imageTag := c.String("image-tag")
 
-	commitHash, err := resolveCommitHash(c.String("commit-hash"))
+	commitHash, err := utils.ResolveCommitHash(c.String("commit-hash"))
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
 
-	repositoryName, err := resolveRepositoryName(c.String("repository-name"))
+	repositoryName, err := utils.ResolveRepositoryName(c.String("repository-name"))
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
 
 	addDeploymentAnnotation := c.Bool("add-deployment-annotation")
-	commitMessage, err := resolveCommitMessage(c.String("commit-message"))
+	commitMessage, err := utils.ResolveCommitMessage(c.String("commit-message"))
 	if err != nil && addDeploymentAnnotation {
 		return cli.Exit(err, 1)
 	}
@@ -227,13 +240,27 @@ func Deploy(c *cli.Context) error {
 	}
 
 	if runtimeCloudProvider == "aks" {
-		setupOptions := SetupAKSOptions{
-			AKSTenantID:          c.String("aks-tenant-id"),
-			AKSSubscriptionID:    c.String("aks-subscription-id"),
-			AKSClusterName:       c.String("aks-cluster-name"),
-			AKSResourceGroupName: c.String("aks-resource-group-name"),
+		azureTenantID := utils.StringWithDefault(
+			c.String("azure-tenant-id"),
+			auth.ElviaTenantID,
+		)
+		loginOptions := &auth.AzLoginCommandOptions{
+			ClientID:       c.String("azure-client-id"),
+			FederatedToken: c.String("azure-federated-token"),
 		}
-		if err := setupAKS(environment, skipAuthentication, setupOptions); err != nil {
+
+		setupOptions := &SetupAKSOptions{
+			SubscriptionID:    c.String("aks-subscription-id"),
+			ClusterName:       c.String("aks-cluster-name"),
+			ResourceGroupName: c.String("aks-resource-group-name"),
+			AzLoginOptions:    loginOptions,
+		}
+		if err := setupAKS(
+			azureTenantID,
+			environment,
+			skipAuthentication,
+			setupOptions,
+		); err != nil {
 			return cli.Exit(err, 1)
 		}
 
@@ -270,7 +297,7 @@ func Deploy(c *cli.Context) error {
 		dryRun,
 		nil,
 	)
-	if command.IsError(helmDeployOutput) {
+	if command.IsError(helmDeployOutput) && !dryRun {
 		// If the deployment failed, we still want to post the Grafana annotation, but we add a failure message to the annotation.
 		if err := addGrafanaDeploymentAnnotation(
 			false,
@@ -319,7 +346,7 @@ func Deploy(c *cli.Context) error {
 		}
 	}
 
-	if addDeploymentAnnotation {
+	if addDeploymentAnnotation && !dryRun {
 		if err := addGrafanaDeploymentAnnotation(
 			true,
 			applicationName,
@@ -338,57 +365,6 @@ func Deploy(c *cli.Context) error {
 	}
 
 	return nil
-}
-
-func resolveCommitHash(possibleCommitHash string) (string, error) {
-	if possibleCommitHash != "" {
-		return possibleCommitHash, nil
-	}
-
-	hash, err := exec.Command("git", "rev-parse", "--short", "HEAD").Output()
-	if err != nil {
-		return "",
-			fmt.Errorf(
-				"Failed to resolve commit hash: %w. Please verify you are currently in a Git repository, or manually specify the commit hash with --commit-hash.",
-				err,
-			)
-	}
-
-	return strings.TrimSpace(string(hash)), nil
-}
-
-func resolveRepositoryName(possibleRepositoryName string) (string, error) {
-	if possibleRepositoryName != "" {
-		return possibleRepositoryName, nil
-	}
-
-	gitTopLevel, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
-	if err != nil {
-		return "",
-			fmt.Errorf(
-				"Failed to resolve repository name: %w. Please verify you are currently in a Git repository, or manually specify the repository with --repository-name.",
-				err,
-			)
-	}
-
-	return path.Base(strings.TrimSpace(string(gitTopLevel))), nil
-}
-
-func resolveCommitMessage(possibleCommitMessage string) (string, error) {
-	if possibleCommitMessage != "" {
-		return possibleCommitMessage, nil
-	}
-
-	message, err := exec.Command("git", "log", "-1", "--no-merges", "--pretty=%B").Output()
-	if err != nil {
-		return "",
-			fmt.Errorf(
-				"Failed to resolve commit message: %w. Please verify you are currently in a Git repository, or manually specify the commit message with --commit-message.",
-				err,
-			)
-	}
-
-	return strings.TrimSpace(string(message)), nil
 }
 
 func checkKubectlInstalledCommand(
