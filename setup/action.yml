@@ -13,21 +13,27 @@ runs:
       shell: bash
       run: |
         # Setup the 3lv CLI
-        if [[ '${{ inputs.version }}' == 'git' ]]; then
-          cd '${{ github.action_path }}/..'
-          echo 'git' > VERSION
+        if [[ '${{ inputs.version }}' == 'latest' ]]; then
+          version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name' | cut -c 2-)
+        else
+          version='${{ inputs.version }}'
+        fi
+
+        if ! gh release download -R "$CLI_REPOSITORY" "v$version" --pattern "$BINARY_TARBALL*"; then
+          echo "Failed to find release for version $version, will try to find a matching branch and build from source."
+
+          cd "$(mktemp -d)"
+          if ! git clone -b "$version" "https://github.com/$CLI_REPOSITORY.git" .; then
+            echo "Failed to find branch $version."
+            exit 1
+          fi
+
+          echo "git-$version-$(git rev-parse --short HEAD)" > VERSION
           sudo make install
           3lv --version
           exit 0
         fi
 
-        if [[ '${{ inputs.version }}' == 'latest' ]]; then
-          version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
-        else
-          version='v${{ inputs.version }}'
-        fi
-
-        gh release download -R 3lvia/cli "$version" --pattern "$BINARY_TARBALL*"
         md5sum -c --quiet "$BINARY_TARBALL.md5"
         tar -xzf "$BINARY_TARBALL"
         sudo install -Dm755 -t /usr/bin 3lv
@@ -35,3 +41,4 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
         BINARY_TARBALL: '3lv-linux-amd64.tar.gz'
+        CLI_REPOSITORY: '3lvia/cli'
