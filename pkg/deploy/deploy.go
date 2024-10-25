@@ -166,6 +166,12 @@ var Command *cli.Command = &cli.Command{
 			EnvVars: []string{"3LV_GKE_CLUSTER_LOCATION"},
 		},
 		&cli.BoolFlag{
+			Name:    "gke-use-internal-ip",
+			Usage:   "Use the internal IP when connecting to the GKE cluster",
+			Hidden:  true,
+			EnvVars: []string{"3LV_GKE_USE_INTERNAL_IP"},
+		},
+		&cli.BoolFlag{
 			Name:  "add-deployment-annotation",
 			Usage: "Add a deployment annotation to Grafana. Requires --grafana-url and --grafana-api-key to be set.",
 		},
@@ -265,10 +271,11 @@ func Deploy(c *cli.Context) error {
 		}
 
 	} else if runtimeCloudProvider == "gke" {
-		authOptions := SetupGKEOptions{
-			GKEProjectID:       c.String("gke-project-id"),
-			GKEClusterName:     c.String("gke-cluster-name"),
-			GKEClusterLocation: c.String("gke-cluster-location"),
+		authOptions := &SetupGKEOptions{
+			ProjectID:       c.String("gke-project-id"),
+			ClusterName:     c.String("gke-cluster-name"),
+			ClusterLocation: c.String("gke-cluster-location"),
+			UseInternalIP:   c.Bool("gke-use-internal-ip"),
 		}
 		if err := setupGKE(environment, skipAuthentication, authOptions); err != nil {
 			return cli.Exit(err, 1)

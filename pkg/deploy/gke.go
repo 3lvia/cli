@@ -6,18 +6,20 @@ import (
 
 	"github.com/3lvia/cli/pkg/auth"
 	"github.com/3lvia/cli/pkg/command"
+	"github.com/3lvia/cli/pkg/utils"
 )
 
 type SetupGKEOptions struct {
-	GKEProjectID       string
-	GKEClusterName     string
-	GKEClusterLocation string
+	ProjectID       string
+	ClusterName     string
+	ClusterLocation string
+	UseInternalIP   bool
 }
 
 func setupGKE(
 	environment string,
 	skipAuthentication bool,
-	options SetupGKEOptions,
+	options *SetupGKEOptions,
 ) error {
 	if !skipAuthentication {
 		err := auth.AuthenticateGoogle()
@@ -28,11 +30,11 @@ func setupGKE(
 
 	gcloudGetCredentialsOutput := gcloudGetCredentialsCommand(
 		environment,
-		GcloudGetCredentialsCommandOptions{
-			GKEProjectID:       options.GKEProjectID,
-			GKEClusterName:     options.GKEClusterName,
-			GKEClusterLocation: options.GKEClusterLocation,
-			RunOptions:         nil,
+		&GcloudGetCredentialsCommandOptions{
+			ProjectID:       options.ProjectID,
+			ClusterName:     options.ClusterName,
+			ClusterLocation: options.ClusterLocation,
+			RunOptions:      nil,
 		},
 	)
 
@@ -44,59 +46,64 @@ func setupGKE(
 }
 
 type GcloudGetCredentialsCommandOptions struct {
-	GKEProjectID       string
-	GKEClusterName     string
-	GKEClusterLocation string
-	RunOptions         *command.RunOptions
+	ProjectID       string
+	ClusterName     string
+	ClusterLocation string
+	UseInternalIP   bool
+	RunOptions      *command.RunOptions
 }
 
 func gcloudGetCredentialsCommand(
 	environment string,
-	options GcloudGetCredentialsCommandOptions,
+	options *GcloudGetCredentialsCommandOptions,
 ) command.Output {
+	if options == nil {
+		options = &GcloudGetCredentialsCommandOptions{}
+	}
+
 	if environment == "" &&
-		(options.GKEProjectID == "" ||
-			options.GKEClusterName == "" ||
-			options.GKEClusterLocation == "") {
+		(options.ProjectID == "" ||
+			options.ClusterName == "" ||
+			options.ClusterLocation == "") {
 		return command.ErrorString("environment must be set if any of the GKE options are not set")
 	}
 
 	gkeProjectID := func() string {
-		if options.GKEProjectID == "" {
+		if options.ProjectID == "" {
 			return "elvia-runtimeservice-" + environment
 		}
 
-		return options.GKEProjectID
+		return options.ProjectID
 	}()
 
 	gkeClusterName := func() string {
-		if options.GKEClusterName == "" {
+		if options.ClusterName == "" {
 			return "runtimeservice-gke-" + environment
 		}
 
-		return options.GKEClusterName
+		return options.ClusterName
 	}()
 
-	gkeClusterLocation := func() string {
-		if options.GKEClusterLocation == "" {
-			return "europe-west1"
-		}
+	gkeClusterLocation := utils.StringWithDefault(options.ClusterLocation, "europe-west1")
 
-		return options.GKEClusterLocation
-	}()
+	cmd := exec.Command(
+		"gcloud",
+		"container",
+		"clusters",
+		"get-credentials",
+		gkeClusterName,
+		"--region",
+		gkeClusterLocation,
+		"--project",
+		gkeProjectID,
+	)
+
+	if options.UseInternalIP {
+		cmd.Args = append(cmd.Args, "--internal-ip")
+	}
 
 	return command.Run(
-		*exec.Command(
-			"gcloud",
-			"container",
-			"clusters",
-			"get-credentials",
-			gkeClusterName,
-			"--region",
-			gkeClusterLocation,
-			"--project",
-			gkeProjectID,
-		),
+		*cmd,
 		options.RunOptions,
 	)
 }
