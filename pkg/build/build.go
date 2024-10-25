@@ -3,6 +3,7 @@ package build
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -333,6 +334,8 @@ func Build(c *cli.Context) error {
 			return fmt.Errorf("Failed to push Docker image. If using GHCR, please login using the command `gh auth login` first. %w", err)
 		}
 	}
+
+	os.Setenv("3LV_OUTPUT_IMAGE_NAME", imageName)
 
 	return nil
 }
