@@ -1,0 +1,243 @@
+package githubactions
+
+import (
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+
+	"github.com/3lvia/cli/pkg/utils"
+	"github.com/urfave/cli/v2"
+)
+
+const commandName = "github-actions"
+
+const exampleWorkflowBaseURL = "https://raw.githubusercontent.com/3lvia/.github/refs/heads/trunk/workflow-templates"
+
+var Command *cli.Command = &cli.Command{
+	Name:    commandName,
+	Aliases: []string{"gha"},
+	Usage:   "Add GitHub Actions to a project",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:     "project-file",
+			Aliases:  []string{"f"},
+			Usage:    "The project file to use. We currently support .NET, Go or a generic project (Dockerfile).",
+			Required: true,
+		},
+		&cli.StringFlag{
+			Name:    "runtime-cloud-provider",
+			Aliases: []string{"r"},
+			Usage:   "The runtime cloud provider to use",
+			Value:   "aks",
+			Action: func(c *cli.Context, runtimeCloudProvider string) error {
+				allowedRuntimeCloudProviders := []string{"aks", "gke"}
+				if !slices.Contains(allowedRuntimeCloudProviders, strings.ToLower(runtimeCloudProvider)) {
+					return cli.Exit(
+						fmt.Sprintf(
+							"Invalid runtime cloud provider '%s' provided: must be one of %v (ignoring case)",
+							runtimeCloudProvider,
+							allowedRuntimeCloudProviders),
+						1,
+					)
+				}
+
+				return nil
+			},
+		},
+		&cli.StringFlag{
+			Name:    "default-branch",
+			Aliases: []string{"b"},
+			Usage:   "The default branch of the repository",
+			Value:   "trunk",
+		},
+		&cli.StringFlag{
+			Name:    "system-name",
+			Aliases: []string{"s"},
+			Usage:   "The name of the system",
+		},
+		&cli.StringFlag{
+			Name:    "application-name",
+			Aliases: []string{"a"},
+			Usage:   "The name of the application",
+		},
+		&cli.StringFlag{
+			Name:    "helm-values-path",
+			Aliases: []string{"H"},
+			Usage:   "The path to the Helm values file",
+		},
+	},
+	Action: GitHubActions,
+}
+
+func GitHubActions(c *cli.Context) error {
+	const githubActionsDir = ".github/workflows"
+	if _, err := os.Stat(githubActionsDir); os.IsNotExist(err) {
+		log.Printf("Creating directory '%s'", githubActionsDir)
+		if err := os.MkdirAll(githubActionsDir, 0755); err != nil {
+			return cli.Exit(fmt.Sprintf("Failed to create directory '%s'", githubActionsDir), 1)
+		}
+	}
+
+	projectFile := c.String("project-file")
+	runtimeCloudProvider := c.String("runtime-cloud-provider")
+
+	language, err := getLanguageFromProjectFile(projectFile)
+	if err != nil {
+		return cli.Exit(err.Error(), 1)
+	}
+
+	exampleWorkflowFileURL, err := getExampleWorkflowFileURL(language, runtimeCloudProvider)
+	if err != nil {
+		return cli.Exit(err.Error(), 1)
+	}
+
+	workflowFileName := filepath.Base(exampleWorkflowFileURL)
+	workflowFilePath := filepath.Join(githubActionsDir, workflowFileName)
+
+	log.Printf("Downloading example workflow file from '%s' to '%s'", exampleWorkflowFileURL, workflowFilePath)
+	if err := downloadFile(exampleWorkflowFileURL, workflowFilePath); err != nil {
+		return cli.Exit(err.Error(), 1)
+	}
+
+	log.Printf("Replacing placeholders in workflow file '%s'. You may need to manually fill in some values yourself.", workflowFilePath)
+	replaceWorkflowPlaceholdersOptions := &ReplaceWorkflowPlaceholdersOptions{
+		DefaultBranch:   c.String("default-branch"),
+		SystemName:      c.String("system-name"),
+		ApplicationName: c.String("application-name"),
+		HelmValuesPath:  c.String("helm-values-path"),
+	}
+	if err := replaceWorkflowPlaceholders(
+		workflowFilePath,
+		projectFile,
+		replaceWorkflowPlaceholdersOptions,
+	); err != nil {
+		return cli.Exit(err.Error(), 1)
+	}
+
+	return nil
+}
+
+type ReplaceWorkflowPlaceholdersOptions struct {
+	DefaultBranch   string
+	SystemName      string
+	ApplicationName string
+	HelmValuesPath  string
+}
+
+func replaceWorkflowPlaceholders(
+	workflowFilePath string,
+	projectFile string,
+	options *ReplaceWorkflowPlaceholdersOptions,
+) error {
+	if options == nil {
+		options = &ReplaceWorkflowPlaceholdersOptions{}
+	}
+
+	file, err := os.Open(workflowFilePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	contents, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+
+	contentsString := string(contents)
+
+	defaultBranch := utils.StringWithDefault(options.DefaultBranch, "trunk")
+	contentsString = strings.ReplaceAll(contentsString, "$default-branch", defaultBranch)
+
+	contentsString = strings.ReplaceAll(contentsString, "<your project file path here>", projectFile)
+
+	if options.ApplicationName != "" {
+		contentsString = strings.ReplaceAll(contentsString, "<your application name here>", options.ApplicationName)
+	}
+
+	if options.SystemName != "" {
+		contentsString = strings.ReplaceAll(contentsString, "<your system name here>", options.SystemName)
+	}
+
+	if options.HelmValuesPath != "" {
+		contentsString = strings.ReplaceAll(contentsString, ".github/deploy/values.yml", options.HelmValuesPath)
+	}
+
+	contentsString = fmt.Sprintf("# This file was generated by the 3lvia CLI: https://github.com/3lvia/cli\n\n%s", contentsString)
+
+	if err := os.WriteFile(workflowFilePath, []byte(contentsString), 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func downloadFile(url string, outputFilePath string) error {
+	outputFile, err := os.Create(outputFilePath)
+	if err != nil {
+		return err
+	}
+	defer outputFile.Close()
+
+	response, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	_, err = io.Copy(outputFile, response.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getLanguageFromProjectFile(projectFile string) (string, error) {
+	if strings.HasSuffix(projectFile, ".csproj") {
+		return "dotnet", nil
+	}
+
+	if projectFile == "go.mod" {
+		return "go", nil
+	}
+
+	if strings.Contains(projectFile, "Dockerfile") {
+		return "dockerfile", nil
+	}
+
+	return "", fmt.Errorf("Unsupported project file '%s'", projectFile)
+}
+
+func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (string, error) {
+	// .NET
+	if language == "dotnet" && runtimeCloudProvider == "aks" {
+		return fmt.Sprintf("%s/build-deploy-dotnet.yml", exampleWorkflowBaseURL), nil
+	}
+	if language == "dotnet" && runtimeCloudProvider == "gke" {
+		return fmt.Sprintf("%s/build-deploy-dotnet-google.yml", exampleWorkflowBaseURL), nil
+	}
+
+	// Go
+	if language == "go" && runtimeCloudProvider == "aks" {
+		return fmt.Sprintf("%s/build-deploy-go.yml", exampleWorkflowBaseURL), nil
+	}
+	if language == "go" && runtimeCloudProvider == "gke" {
+		return fmt.Sprintf("%s/build-deploy-go-google.yml", exampleWorkflowBaseURL), nil
+	}
+
+	// Dockerfile
+	if language == "dockerfile" && runtimeCloudProvider == "aks" {
+		return fmt.Sprintf("%s/build-deploy-dockerfile.yml", exampleWorkflowBaseURL), nil
+	}
+	if language == "dockerfile" && runtimeCloudProvider == "gke" {
+		return fmt.Sprintf("%s/build-deploy-dockerfile-google.yml", exampleWorkflowBaseURL), nil
+	}
+
+	return "", fmt.Errorf("No example workflow file found for language '%s' and runtime cloud provider '%s'", language, runtimeCloudProvider)
+}
