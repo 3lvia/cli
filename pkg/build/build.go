@@ -218,7 +218,8 @@ func Build(c *cli.Context) error {
 	cacheTag := c.String("cache-tag")
 	registry := utils.StringWithDefault(c.String("registry"), "containerregistryelvia.azurecr.io")
 
-	skipAuthentication := c.Bool("skip-authentication")
+	push := c.Bool("push")
+	skipAuthentication := c.Bool("skip-authentication") || !push
 
 	if strings.Contains(registry, "azurecr.io") && !skipAuthentication {
 		log.Println("Azure registry detected, will try to authenticate with Azure")
@@ -298,8 +299,6 @@ func Build(c *cli.Context) error {
 		c.Bool("scan-disable-error"),
 		c.Bool("scan-skip-db-update"),
 	)
-
-	push := c.Bool("push")
 
 	if push && scanErr != nil {
 		pushImageOutput := pushImageCommand(
