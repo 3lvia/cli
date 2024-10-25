@@ -13,6 +13,11 @@ test_build_cli() {
         echo "Failed to build CLI"
         exit 1
     fi
+
+    if [[ -z "$3LV_OUTPUT_IMAGE_NAME" ]]; then
+        echo "3LV_OUTPUT_IMAGE_NAME is not set"
+        exit 1
+    fi
 }
 
 test_build_dockerfile() {
@@ -34,6 +39,11 @@ test_disable_scan_error() {
         --scan-disable-error \
         vulnerable-service; then
         echo "Should not fail due to vulnerabilities in base image"
+        exit 1
+    fi
+
+    if [[ -z "$3LV_OUTPUT_IMAGE_NAME" ]]; then
+        echo "3LV_OUTPUT_IMAGE_NAME is not set"
         exit 1
     fi
 }
