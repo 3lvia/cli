@@ -8,9 +8,9 @@ import (
 )
 
 func TestGcloudGetCredentialsCommand1(t *testing.T) {
-	const gkeClusterName = "my-sick-cluster"
-	const gkeClusterLocation = "europe-west1"
-	const gkeProjectID = "my-cool-project"
+	const clusterName = "my-sick-cluster"
+	const clusterLocation = "europe-west1"
+	const projectID = "my-cool-project"
 	const environment = "this-will-not-be-used"
 
 	expectedCommandString := strings.Join(
@@ -19,22 +19,135 @@ func TestGcloudGetCredentialsCommand1(t *testing.T) {
 			"container",
 			"clusters",
 			"get-credentials",
-			gkeClusterName,
+			clusterName,
 			"--region",
-			gkeClusterLocation,
+			clusterLocation,
 			"--project",
-			gkeProjectID,
+			projectID,
 		},
 		" ",
 	)
 
 	actualCommand := gcloudGetCredentialsCommand(
 		environment,
-		GcloudGetCredentialsCommandOptions{
-			GKEClusterName:     gkeClusterName,
-			GKEClusterLocation: gkeClusterLocation,
-			GKEProjectID:       gkeProjectID,
-			RunOptions:         &command.RunOptions{DryRun: true},
+		&GcloudGetCredentialsCommandOptions{
+			ClusterName:     clusterName,
+			ClusterLocation: clusterLocation,
+			ProjectID:       projectID,
+			RunOptions:      &command.RunOptions{DryRun: true},
+		},
+	)
+
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
+}
+
+func TestGcloudGetCredentialsCommand2(t *testing.T) {
+	const clusterName = "my-sick-cluster"
+	const clusterLocation = "europe-west1"
+	const projectID = "my-cool-project"
+	const environment = "this-will-not-be-used"
+	const useInternalIP = true
+
+	expectedCommandString := strings.Join(
+		[]string{
+			"gcloud",
+			"container",
+			"clusters",
+			"get-credentials",
+			clusterName,
+			"--region",
+			clusterLocation,
+			"--project",
+			projectID,
+			"--internal-ip",
+		},
+		" ",
+	)
+
+	actualCommand := gcloudGetCredentialsCommand(
+		environment,
+		&GcloudGetCredentialsCommandOptions{
+			ClusterName:     clusterName,
+			ClusterLocation: clusterLocation,
+			ProjectID:       projectID,
+			UseInternalIP:   useInternalIP,
+			RunOptions:      &command.RunOptions{DryRun: true},
+		},
+	)
+
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
+}
+
+func TestGcloudGetCredentialsCommand3(t *testing.T) {
+	const clusterName = "my-sick-cluster"
+	const clusterLocation = "europe-west1"
+	const projectID = "my-cool-project"
+	const environment = "this-will-not-be-used"
+	const useInternalIP = false
+
+	expectedCommandString := strings.Join(
+		[]string{
+			"gcloud",
+			"container",
+			"clusters",
+			"get-credentials",
+			clusterName,
+			"--region",
+			clusterLocation,
+			"--project",
+			projectID,
+		},
+		" ",
+	)
+
+	actualCommand := gcloudGetCredentialsCommand(
+		environment,
+		&GcloudGetCredentialsCommandOptions{
+			ClusterName:     clusterName,
+			ClusterLocation: clusterLocation,
+			ProjectID:       projectID,
+			UseInternalIP:   useInternalIP,
+			RunOptions:      &command.RunOptions{DryRun: true},
+		},
+	)
+
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
+}
+
+func TestGcloudGetCredentialsCommand4(t *testing.T) {
+	const environment = "dev"
+
+	expectedCommandString := strings.Join(
+		[]string{
+			"gcloud",
+			"container",
+			"clusters",
+			"get-credentials",
+			"runtimeservice-gke-" + environment,
+			"--region",
+			"europe-west1",
+			"--project",
+			"elvia-runtimeservice-" + environment,
+		},
+		" ",
+	)
+
+	actualCommand := gcloudGetCredentialsCommand(
+		environment,
+		&GcloudGetCredentialsCommandOptions{
+			RunOptions: &command.RunOptions{DryRun: true},
 		},
 	)
 
