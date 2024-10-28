@@ -47,7 +47,7 @@ func AuthenticateAzure(
 		return nil
 	}
 
-	if tenantID := azAccountShowCommandOutput.Output; tenantID != "" {
+	if tenantID := strings.TrimSpace(azAccountShowCommandOutput.Output); tenantID != "" {
 		azAccountShowCmdOutputString := strings.TrimSpace(string(tenantID))
 		if azAccountShowCmdOutputString != tenantID {
 			azLoginTenantCommandOutput := azLoginCommand(
