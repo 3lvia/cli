@@ -28,7 +28,7 @@ func generateDockerfile(
 	applicationName string,
 	options GenerateDockerfileOptions,
 ) (string, string, error) {
-	directory, err := os.MkdirTemp("", "3lv-build")
+	directory, err := os.MkdirTemp("", "3lv-build-*")
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to create temporary directory: %s", err)
 	}
