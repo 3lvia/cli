@@ -24,7 +24,7 @@ lint:
 ## build: Build the binary (tries to guess the OS and architecture).
 .PHONY: build
 build:
-	GOOS=${go_os} GOARCH=${go_arch} go build -o ${build_dir}/${binary_name} ${main_package_path}
+	GOOS=${go_os} GOARCH=${go_arch} CGO_ENABLED=0 go build -o ${build_dir}/${binary_name} ${main_package_path}
 
 ## build-linux-amd64: Build the binary for Linux/amd64.
 .PHONY: build-linux-amd64
