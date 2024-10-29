@@ -335,7 +335,18 @@ func Build(c *cli.Context) error {
 		}
 	}
 
-	os.Setenv("3LV_OUTPUT_IMAGE_NAME", imageName)
+	outputDirectory := os.TempDir() + "/3lv-cli-output"
+	if _, err := os.Stat(outputDirectory); os.IsNotExist(err) {
+		err := os.Mkdir(outputDirectory, 0700)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+
+	err = os.WriteFile(outputDirectory+"/image-name", []byte(imageName), 0644)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
 
 	return nil
 }

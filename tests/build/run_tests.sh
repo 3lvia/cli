@@ -14,8 +14,8 @@ test_build_cli() {
         exit 1
     fi
 
-    if [[ -z "$3LV_OUTPUT_IMAGE_NAME" ]]; then
-        echo "3LV_OUTPUT_IMAGE_NAME is not set"
+    if ! [[ -f /tmp/3lv-cli-output/image-name ]]; then
+        echo "Output image-name is not set"
         exit 1
     fi
 }
@@ -42,8 +42,8 @@ test_disable_scan_error() {
         exit 1
     fi
 
-    if [[ -z "$3LV_OUTPUT_IMAGE_NAME" ]]; then
-        echo "3LV_OUTPUT_IMAGE_NAME is not set"
+    if ! [[ -f /tmp/3lv-cli-output/image-name ]]; then
+        echo "Output image-name is not set"
         exit 1
     fi
 }
