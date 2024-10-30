@@ -281,12 +281,14 @@ func Build(c *cli.Context) error {
 		applicationName,
 	)
 
+	additionalTags := utils.RemoveZeroValues(c.StringSlice("additional-tags"))
+
 	buildImageCommandOutput := buildImageCommand(
 		dockerfilePath,
 		buildContext,
 		imageName,
 		cacheTag,
-		utils.RemoveZeroValues(c.StringSlice("additional-tags")),
+		additionalTags,
 		nil,
 	)
 	if command.IsError(buildImageCommandOutput) {
@@ -343,7 +345,21 @@ func Build(c *cli.Context) error {
 		}
 	}
 
-	err = os.WriteFile(outputDirectory+"/image-name", []byte(imageName), 0644)
+	firstAdditionalTagThatsNotCacheTag := func() string {
+		for _, tag := range additionalTags {
+			if tag != cacheTag {
+				return tag
+			}
+		}
+
+		return cacheTag
+	}()
+
+	err = os.WriteFile(
+		outputDirectory+"/image-name",
+		[]byte(imageName+":"+firstAdditionalTagThatsNotCacheTag),
+		0700,
+	)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
