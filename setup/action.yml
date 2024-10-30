@@ -13,6 +13,11 @@ runs:
       shell: bash
       run: |
         # Setup the 3lv CLI
+        if ! command -v gh &> /dev/null; then
+          echo "The GitHub CLI is required to install the 3lv CLI."
+          exit 1
+        fi
+
         if [[ '${{ inputs.version }}' == 'latest' ]]; then
           version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name' | cut -c 2-)
         else
