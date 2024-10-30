@@ -19,6 +19,7 @@ func setupAKS(
 	tenantID string,
 	environment string,
 	skipAuthentication bool,
+	skipGettingCredentials bool,
 	options *SetupAKSOptions,
 ) error {
 	if options == nil {
@@ -47,36 +48,38 @@ func setupAKS(
 		}
 	}
 
-	checkKubeLoginInstalledOutput := checkKubeloginInstalledCommand(nil)
-	if command.IsError(checkKubeLoginInstalledOutput) {
-		return checkKubeLoginInstalledOutput.Error
-	}
-
-	clusterName := func() string {
-		if options.ClusterName == "" {
-			return "akscluster" + environment
+	if !skipGettingCredentials {
+		checkKubeLoginInstalledOutput := checkKubeloginInstalledCommand(nil)
+		if command.IsError(checkKubeLoginInstalledOutput) {
+			return checkKubeLoginInstalledOutput.Error
 		}
-		return options.ClusterName
-	}()
 
-	contextName := "aks" + environment
+		clusterName := func() string {
+			if options.ClusterName == "" {
+				return "akscluster" + environment
+			}
+			return options.ClusterName
+		}()
 
-	resourceGroupName := func() string {
-		if options.ResourceGroupName == "" {
-			return "RUNTIMESERVICE-RG" + environment
+		contextName := "aks" + environment
+
+		resourceGroupName := func() string {
+			if options.ResourceGroupName == "" {
+				return "RUNTIMESERVICE-RG" + environment
+			}
+			return options.ResourceGroupName
+		}()
+
+		runKubeloginConvert := options.AzLoginOptions.FederatedToken != "" && options.AzLoginOptions.ClientID != ""
+		if err := getAKSCredentials(
+			resourceGroupName,
+			clusterName,
+			subscriptionID,
+			contextName,
+			runKubeloginConvert,
+		); err != nil {
+			return fmt.Errorf("Failed to get AKS credentials: %w", err)
 		}
-		return options.ResourceGroupName
-	}()
-
-	runKubeloginConvert := options.AzLoginOptions.FederatedToken != "" && options.AzLoginOptions.ClientID != ""
-	if err := getAKSCredentials(
-		resourceGroupName,
-		clusterName,
-		subscriptionID,
-		contextName,
-		runKubeloginConvert,
-	); err != nil {
-		return fmt.Errorf("Failed to get AKS credentials: %w", err)
 	}
 
 	return nil

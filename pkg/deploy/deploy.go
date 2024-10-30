@@ -105,6 +105,13 @@ var Command *cli.Command = &cli.Command{
 			Name:    "skip-authentication",
 			Aliases: []string{"A"},
 			Usage:   "Skips authentication against the runtime cloud provider",
+			EnvVars: []string{"3LV_SKIP_AUTHENTICATION"},
+		},
+		&cli.BoolFlag{
+			Name:    "skip-getting-credentials",
+			Aliases: []string{"G"},
+			Usage:   "Skips getting credentials from the cloud provider for the Kubernetes cluster",
+			EnvVars: []string{"3LV_SKIP_GETTING_CREDENTIALS"},
 		},
 		&cli.BoolFlag{
 			Name:    "dry-run",
@@ -232,6 +239,7 @@ func Deploy(c *cli.Context) error {
 	workloadType := strings.ToLower(c.String("workload-type"))
 	runtimeCloudProvider := strings.ToLower(c.String("runtime-cloud-provider"))
 	skipAuthentication := c.Bool("skip-authentication")
+	skipGettingCredentials := c.Bool("skip-getting-credentials")
 	dryRun := c.Bool("dry-run")
 	runID := c.String("run-id")
 
@@ -265,6 +273,7 @@ func Deploy(c *cli.Context) error {
 			azureTenantID,
 			environment,
 			skipAuthentication,
+			skipGettingCredentials,
 			setupOptions,
 		); err != nil {
 			return cli.Exit(err, 1)
@@ -277,7 +286,12 @@ func Deploy(c *cli.Context) error {
 			ClusterLocation: c.String("gke-cluster-location"),
 			UseInternalIP:   c.Bool("gke-use-internal-ip"),
 		}
-		if err := setupGKE(environment, skipAuthentication, authOptions); err != nil {
+		if err := setupGKE(
+			environment,
+			skipAuthentication,
+			skipGettingCredentials,
+			authOptions,
+		); err != nil {
 			return cli.Exit(err, 1)
 		}
 	}

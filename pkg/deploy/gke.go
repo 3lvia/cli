@@ -19,6 +19,7 @@ type SetupGKEOptions struct {
 func setupGKE(
 	environment string,
 	skipAuthentication bool,
+	skipGettingCredentials bool,
 	options *SetupGKEOptions,
 ) error {
 	if !skipAuthentication {
