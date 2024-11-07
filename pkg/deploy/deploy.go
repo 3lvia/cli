@@ -72,7 +72,7 @@ var Command *cli.Command = &cli.Command{
 			Usage:   "The runtime cloud provider to use",
 			Value:   "aks",
 			Action: func(c *cli.Context, runtimeCloudProvider string) error {
-				allowedRuntimeCloudProviders := []string{"aks", "gke"}
+				allowedRuntimeCloudProviders := []string{"aks", "gke", "iss"}
 				if !slices.Contains(allowedRuntimeCloudProviders, strings.ToLower(runtimeCloudProvider)) {
 					return cli.Exit(
 						fmt.Sprintf(
@@ -100,18 +100,6 @@ var Command *cli.Command = &cli.Command{
 			Name:    "repository-name",
 			Aliases: []string{"n"},
 			Usage:   "The repository name to use",
-		},
-		&cli.BoolFlag{
-			Name:    "skip-authentication",
-			Aliases: []string{"A"},
-			Usage:   "Skips authentication against the runtime cloud provider",
-			EnvVars: []string{"3LV_SKIP_AUTHENTICATION"},
-		},
-		&cli.BoolFlag{
-			Name:    "skip-getting-credentials",
-			Aliases: []string{"G"},
-			Usage:   "Skips getting credentials from the cloud provider for the Kubernetes cluster",
-			EnvVars: []string{"3LV_SKIP_GETTING_CREDENTIALS"},
 		},
 		&cli.BoolFlag{
 			Name:    "dry-run",
@@ -173,12 +161,6 @@ var Command *cli.Command = &cli.Command{
 			EnvVars: []string{"3LV_GKE_CLUSTER_LOCATION"},
 		},
 		&cli.BoolFlag{
-			Name:    "gke-use-internal-ip",
-			Usage:   "Use the internal IP when connecting to the GKE cluster",
-			Hidden:  true,
-			EnvVars: []string{"3LV_GKE_USE_INTERNAL_IP"},
-		},
-		&cli.BoolFlag{
 			Name:  "add-deployment-annotation",
 			Usage: "Add a deployment annotation to Grafana. Requires --grafana-url and --grafana-api-key to be set.",
 		},
@@ -238,8 +220,6 @@ func Deploy(c *cli.Context) error {
 	environment := strings.ToLower(c.String("environment"))
 	workloadType := strings.ToLower(c.String("workload-type"))
 	runtimeCloudProvider := strings.ToLower(c.String("runtime-cloud-provider"))
-	skipAuthentication := c.Bool("skip-authentication")
-	skipGettingCredentials := c.Bool("skip-getting-credentials")
 	dryRun := c.Bool("dry-run")
 	runID := c.String("run-id")
 
@@ -272,8 +252,6 @@ func Deploy(c *cli.Context) error {
 		if err := setupAKS(
 			azureTenantID,
 			environment,
-			skipAuthentication,
-			skipGettingCredentials,
 			setupOptions,
 		); err != nil {
 			return cli.Exit(err, 1)
@@ -284,16 +262,18 @@ func Deploy(c *cli.Context) error {
 			ProjectID:       c.String("gke-project-id"),
 			ClusterName:     c.String("gke-cluster-name"),
 			ClusterLocation: c.String("gke-cluster-location"),
-			UseInternalIP:   c.Bool("gke-use-internal-ip"),
 		}
 		if err := setupGKE(
 			environment,
-			skipAuthentication,
-			skipGettingCredentials,
 			authOptions,
 		); err != nil {
 			return cli.Exit(err, 1)
 		}
+	} else if runtimeCloudProvider == "iss" {
+		// do nothing
+	} else {
+		// This should never happen, as the runtimeCloudProvider flag is validated in the cli.Action function.
+		return cli.Exit(fmt.Errorf("Invalid runtime cloud provider: %s", runtimeCloudProvider), 1)
 	}
 
 	helmRepoAddOutput := helmRepoAddCommand(nil)
@@ -306,6 +286,7 @@ func Deploy(c *cli.Context) error {
 		return cli.Exit(fmt.Errorf("Failed to update Helm repository: %w", helmRepoUpdateOutput.Error), 1)
 	}
 
+	useISSChart := runtimeCloudProvider == "iss"
 	helmDeployOutput := helmDeployCommand(
 		applicationName,
 		systemName,
@@ -316,6 +297,7 @@ func Deploy(c *cli.Context) error {
 		repositoryName,
 		commitHash,
 		dryRun,
+		useISSChart,
 		nil,
 	)
 	if command.IsError(helmDeployOutput) && !dryRun {

@@ -13,36 +13,29 @@ type SetupGKEOptions struct {
 	ProjectID       string
 	ClusterName     string
 	ClusterLocation string
-	UseInternalIP   bool
 }
 
 func setupGKE(
 	environment string,
-	skipAuthentication bool,
-	skipGettingCredentials bool,
 	options *SetupGKEOptions,
 ) error {
-	if !skipAuthentication {
-		err := auth.AuthenticateGoogle()
-		if err != nil {
-			return err
-		}
+	err := auth.AuthenticateGoogle()
+	if err != nil {
+		return err
 	}
 
-	if !skipGettingCredentials {
-		gcloudGetCredentialsOutput := gcloudGetCredentialsCommand(
-			environment,
-			&GcloudGetCredentialsCommandOptions{
-				ProjectID:       options.ProjectID,
-				ClusterName:     options.ClusterName,
-				ClusterLocation: options.ClusterLocation,
-				RunOptions:      nil,
-			},
-		)
+	gcloudGetCredentialsOutput := gcloudGetCredentialsCommand(
+		environment,
+		&GcloudGetCredentialsCommandOptions{
+			ProjectID:       options.ProjectID,
+			ClusterName:     options.ClusterName,
+			ClusterLocation: options.ClusterLocation,
+			RunOptions:      nil,
+		},
+	)
 
-		if command.IsError(gcloudGetCredentialsOutput) {
-			return fmt.Errorf("Failed to get GKE credentials: %w", gcloudGetCredentialsOutput.Error)
-		}
+	if command.IsError(gcloudGetCredentialsOutput) {
+		return fmt.Errorf("Failed to get GKE credentials: %w", gcloudGetCredentialsOutput.Error)
 	}
 
 	return nil
@@ -52,7 +45,6 @@ type GcloudGetCredentialsCommandOptions struct {
 	ProjectID       string
 	ClusterName     string
 	ClusterLocation string
-	UseInternalIP   bool
 	RunOptions      *command.RunOptions
 }
 
@@ -100,10 +92,6 @@ func gcloudGetCredentialsCommand(
 		"--project",
 		gkeProjectID,
 	)
-
-	if options.UseInternalIP {
-		cmd.Args = append(cmd.Args, "--internal-ip")
-	}
 
 	return command.Run(
 		*cmd,

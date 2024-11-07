@@ -102,6 +102,7 @@ func TestHelmDeployCommand1(t *testing.T) {
 		repositoryName,
 		commitHash,
 		false,
+		false,
 		&command.RunOptions{DryRun: true},
 	)
 
@@ -156,6 +157,7 @@ func TestHelmDeployCommand2(t *testing.T) {
 		repositoryName,
 		commitHash,
 		false,
+		false,
 		&command.RunOptions{DryRun: true},
 	)
 
@@ -186,6 +188,91 @@ func TestHelmDeployCommand3(t *testing.T) {
 		repositoryName,
 		commitHash,
 		false,
+		false,
+		&command.RunOptions{DryRun: true},
+	)
+
+	if !command.IsError(commandOutput) {
+		t.Errorf("Expected error, got %s", commandOutput)
+	}
+}
+
+func TestHelmDeployCommand4(t *testing.T) {
+	const systemName = "core"
+	const helmValuesFile = ".github/deploy/values.yml"
+	const applicationName = "demo-api"
+	const environment = "prod"
+	const workloadType = "deployment"
+	const imageTag = "v420"
+	const repositoryName = "iss-demo-api"
+	const commitHash = "abcdef"
+
+	expectedCommandString := strings.Join(
+		[]string{
+			"helm",
+			"upgrade",
+			"--debug",
+			"--install",
+			"-n",
+			systemName,
+			"-f",
+			helmValuesFile,
+			applicationName,
+			"elvia-charts/iss-" + workloadType,
+			"--set-string",
+			"environment=" + environment,
+			"--set-string",
+			"image.tag=" + imageTag,
+			"--set-string",
+			"labels.repositoryName=" + repositoryName,
+			"--set-string",
+			"labels.commitHash=\"" + commitHash + "\"",
+		},
+		" ",
+	)
+
+	actualCommand := helmDeployCommand(
+		applicationName,
+		systemName,
+		helmValuesFile,
+		environment,
+		workloadType,
+		imageTag,
+		repositoryName,
+		commitHash,
+		false,
+		true,
+		&command.RunOptions{DryRun: true},
+	)
+
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
+}
+
+func TestHelmDeployCommand5(t *testing.T) {
+	const systemName = "core"
+	const helmValuesFile = ".github/deploy/values.yml"
+	const applicationName = "demo-api"
+	const environment = "prod"
+	const workloadType = "statefulset"
+	const imageTag = "v420"
+	const repositoryName = "iss-demo-api"
+	const commitHash = "abcdef"
+
+	commandOutput := helmDeployCommand(
+		applicationName,
+		systemName,
+		helmValuesFile,
+		environment,
+		workloadType,
+		imageTag,
+		repositoryName,
+		commitHash,
+		false,
+		true,
 		&command.RunOptions{DryRun: true},
 	)
 
