@@ -50,7 +50,6 @@ func TestGcloudGetCredentialsCommand2(t *testing.T) {
 	const clusterLocation = "europe-west1"
 	const projectID = "my-cool-project"
 	const environment = "this-will-not-be-used"
-	const useInternalIP = true
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -63,7 +62,6 @@ func TestGcloudGetCredentialsCommand2(t *testing.T) {
 			clusterLocation,
 			"--project",
 			projectID,
-			"--internal-ip",
 		},
 		" ",
 	)
@@ -74,7 +72,6 @@ func TestGcloudGetCredentialsCommand2(t *testing.T) {
 			ClusterName:     clusterName,
 			ClusterLocation: clusterLocation,
 			ProjectID:       projectID,
-			UseInternalIP:   useInternalIP,
 			RunOptions:      &command.RunOptions{DryRun: true},
 		},
 	)
@@ -91,7 +88,6 @@ func TestGcloudGetCredentialsCommand3(t *testing.T) {
 	const clusterLocation = "europe-west1"
 	const projectID = "my-cool-project"
 	const environment = "this-will-not-be-used"
-	const useInternalIP = false
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -114,7 +110,6 @@ func TestGcloudGetCredentialsCommand3(t *testing.T) {
 			ClusterName:     clusterName,
 			ClusterLocation: clusterLocation,
 			ProjectID:       projectID,
-			UseInternalIP:   useInternalIP,
 			RunOptions:      &command.RunOptions{DryRun: true},
 		},
 	)

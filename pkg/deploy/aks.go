@@ -18,8 +18,6 @@ type SetupAKSOptions struct {
 func setupAKS(
 	tenantID string,
 	environment string,
-	skipAuthentication bool,
-	skipGettingCredentials bool,
 	options *SetupAKSOptions,
 ) error {
 	if options == nil {
@@ -37,49 +35,45 @@ func setupAKS(
 		return err
 	}
 
-	if !skipAuthentication {
-		err = auth.AuthenticateAzure(
-			tenantID,
-			subscriptionID,
-			options.AzLoginOptions,
-		)
-		if err != nil {
-			return fmt.Errorf("Failed to authenticate with AKS: %w", err)
-		}
+	err = auth.AuthenticateAzure(
+		tenantID,
+		subscriptionID,
+		options.AzLoginOptions,
+	)
+	if err != nil {
+		return fmt.Errorf("Failed to authenticate with AKS: %w", err)
 	}
 
-	if !skipGettingCredentials {
-		checkKubeLoginInstalledOutput := checkKubeloginInstalledCommand(nil)
-		if command.IsError(checkKubeLoginInstalledOutput) {
-			return checkKubeLoginInstalledOutput.Error
+	checkKubeLoginInstalledOutput := checkKubeloginInstalledCommand(nil)
+	if command.IsError(checkKubeLoginInstalledOutput) {
+		return checkKubeLoginInstalledOutput.Error
+	}
+
+	clusterName := func() string {
+		if options.ClusterName == "" {
+			return "akscluster" + environment
 		}
+		return options.ClusterName
+	}()
 
-		clusterName := func() string {
-			if options.ClusterName == "" {
-				return "akscluster" + environment
-			}
-			return options.ClusterName
-		}()
+	contextName := "aks" + environment
 
-		contextName := "aks" + environment
-
-		resourceGroupName := func() string {
-			if options.ResourceGroupName == "" {
-				return "RUNTIMESERVICE-RG" + environment
-			}
-			return options.ResourceGroupName
-		}()
-
-		runKubeloginConvert := options.AzLoginOptions.FederatedToken != "" && options.AzLoginOptions.ClientID != ""
-		if err := getAKSCredentials(
-			resourceGroupName,
-			clusterName,
-			subscriptionID,
-			contextName,
-			runKubeloginConvert,
-		); err != nil {
-			return fmt.Errorf("Failed to get AKS credentials: %w", err)
+	resourceGroupName := func() string {
+		if options.ResourceGroupName == "" {
+			return "RUNTIMESERVICE-RG" + environment
 		}
+		return options.ResourceGroupName
+	}()
+
+	runKubeloginConvert := options.AzLoginOptions.FederatedToken != "" && options.AzLoginOptions.ClientID != ""
+	if err := getAKSCredentials(
+		resourceGroupName,
+		clusterName,
+		subscriptionID,
+		contextName,
+		runKubeloginConvert,
+	); err != nil {
+		return fmt.Errorf("Failed to get AKS credentials: %w", err)
 	}
 
 	return nil

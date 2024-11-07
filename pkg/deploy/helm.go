@@ -59,12 +59,27 @@ func helmDeployCommand(
 	repositoryName string,
 	commitHash string,
 	dryRun bool,
+	useISSChart bool,
 	runOptions *command.RunOptions,
 ) command.Output {
 	if workloadType != "deployment" && workloadType != "statefulset" {
 		return command.Error(
 			fmt.Errorf("workloadType must be either deployment or statefulset, got %s", workloadType),
 		)
+	}
+
+	chartName, err := func() (string, error) {
+		if useISSChart {
+			if workloadType == "deployment" {
+				return "iss-" + workloadType, nil
+			} else {
+				return "", fmt.Errorf("%s is not supported with ISS chart", workloadType)
+			}
+		}
+		return "elvia-" + workloadType, nil
+	}()
+	if err != nil {
+		return command.Error(err)
 	}
 
 	cmd := exec.Command(
@@ -77,7 +92,7 @@ func helmDeployCommand(
 		"-f",
 		helmValuesFile,
 		applicationName,
-		chartsNamespace+"/elvia-"+workloadType,
+		chartsNamespace+"/"+chartName,
 		"--set-string",
 		"environment="+environment,
 		"--set-string",
