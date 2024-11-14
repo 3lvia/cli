@@ -1,6 +1,6 @@
 # cli
 
-Command Line Interface tool for developing, building and deploying Elvia applications ⚡
+Command Line Interface tool for developing, building and securing Elvia applications ⚡
 
 ## 💾 Installation
 
@@ -24,9 +24,11 @@ To use the 3lv CLI, you need to have these dependencies installed:
 - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install): used for deploying to Google Kubernetes Engine
 - [GitHub CLI](https://cli.github.com): used for pushing to GitHub Container Registry
 
-## 🚀 Breaking changes
+## ❓ Usage
 
-Before version `v1.0.0` is released, breaking changes will happen in minor versions (and possibly also patch versions).
+```bash
+3lv --help
+```
 
 ### Pushing to registries
 
@@ -45,11 +47,9 @@ Use the following command (with your GitHub username) to login:
 gh auth token | docker login ghcr.io --username your-github-username --password-stdin
 ```
 
-## ❓ Usage
+## 🚀 Breaking changes
 
-```bash
-3lv --help
-```
+Before version `v1.0.0` is released, breaking changes will happen in minor versions (and possibly also patch versions).
 
 ## 📖 Examples
 
