@@ -1,0 +1,135 @@
+package shared
+
+import (
+	"fmt"
+	"slices"
+	"strings"
+
+	"github.com/urfave/cli/v2"
+)
+
+func nameToEnvVar(name string) string {
+	return fmt.Sprintf("3LV_%s", strings.ToUpper(strings.ReplaceAll(name, "-", "_")))
+}
+
+func ProjectFileFlag() *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:     "project-file",
+		Aliases:  []string{"f"},
+		Usage:    "The project file to use. We currently support .NET (*.csproj), Go (go.mod) or a generic project (Dockerfile).",
+		Required: true,
+	}
+}
+
+func RuntimeCloudProviderFlag() *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:    "runtime-cloud-provider",
+		Aliases: []string{"r"},
+		Usage:   "The runtime cloud provider to use",
+		Value:   "aks",
+		Action: func(c *cli.Context, runtimeCloudProvider string) error {
+			allowedRuntimeCloudProviders := []string{"aks", "gke", "iss"}
+			if !slices.Contains(allowedRuntimeCloudProviders, strings.ToLower(runtimeCloudProvider)) {
+				return cli.Exit(
+					fmt.Sprintf(
+						"Invalid runtime cloud provider '%s' provided: must be one of %v (ignoring case)",
+						runtimeCloudProvider,
+						allowedRuntimeCloudProviders),
+					1,
+				)
+			}
+
+			return nil
+		},
+	}
+}
+
+func SystemNameFlag() *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:     "system-name",
+		Aliases:  []string{"s"},
+		Usage:    "The name of the system",
+		Required: true,
+	}
+}
+
+func ApplicationNameFlag() *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:     "application-name",
+		Aliases:  []string{"a"},
+		Usage:    "The name of the application",
+		Required: true,
+	}
+}
+
+func HelmValuesPathFlag() *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:    "helm-values-path",
+		Aliases: []string{"f"},
+		Usage:   "The path to the Helm values file",
+		Value:   ".github/deploy/values.yml",
+	}
+}
+
+func SeverityFlag(nameOverride string) *cli.StringFlag {
+	name := func() string {
+		if nameOverride == "" {
+			return "severity"
+		}
+
+		return nameOverride
+	}()
+
+	return &cli.StringFlag{
+		Name:    name,
+		Aliases: []string{"S"},
+		Usage:   "The severity to use when scanning the image: can be any combination of CRITICAL, HIGH, MEDIUM, LOW, or UNKNOWN separated by commas",
+		Value:   "CRITICAL,HIGH",
+		EnvVars: []string{nameToEnvVar(name)},
+	}
+}
+
+func FormatsFlag(nameOverride string) *cli.StringSliceFlag {
+	name := func() string {
+		if nameOverride == "" {
+			return "formats"
+		}
+
+		return nameOverride
+	}()
+
+	return &cli.StringSliceFlag{
+		Name:    name,
+		Aliases: []string{"F"},
+		Usage:   "The formats to use when outputting the Trivy scan results: can be table, json, sarif or markdown.",
+		Value:   cli.NewStringSlice("table"),
+		Action: func(c *cli.Context, formats []string) error {
+			for _, format := range formats {
+				if format != "table" && format != "json" && format != "sarif" && format != "markdown" {
+					return cli.Exit("Invalid format provided", 1)
+				}
+			}
+
+			return nil
+		},
+		EnvVars: []string{nameToEnvVar(name)},
+	}
+}
+
+func DisableErrorFlag(nameOverride string) *cli.BoolFlag {
+	name := func() string {
+		if nameOverride == "" {
+			return "disable-error"
+		}
+
+		return nameOverride
+	}()
+
+	return &cli.BoolFlag{
+		Name:    name,
+		Aliases: []string{"D"},
+		Usage:   "Disable error exit code on vulnerabilities found by Trivy.",
+		Value:   false,
+		EnvVars: []string{nameToEnvVar(name)},
+	}
+}

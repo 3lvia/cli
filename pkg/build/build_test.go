@@ -7,7 +7,7 @@ import (
 	"github.com/3lvia/cli/pkg/command"
 )
 
-func TestGetImageName1(t *testing.T) {
+func TestGetImageName(t *testing.T) {
 	const registry = "containerregistryelvia.azurecr.io"
 	const systemName = "core"
 	const imageName = "demo-api"
@@ -24,24 +24,7 @@ func TestGetImageName1(t *testing.T) {
 	}
 }
 
-func TestGetImageName2(t *testing.T) {
-	const registry = "containerregistryelvia.azurecr.o"
-	const systemName = "core"
-	const imageName = "demo-api"
-
-	expectedImageName := registry + "/" + systemName + "/" + imageName
-
-	actualImageName, err := getImageName(registry, systemName, imageName)
-	if err != nil {
-		t.Errorf("Expected no error, got %s", err)
-	}
-
-	if actualImageName != expectedImageName {
-		t.Errorf("Expected %s, got %s", expectedImageName, actualImageName)
-	}
-}
-
-func TestGetImageName3(t *testing.T) {
+func TestGetImageNameGHCR(t *testing.T) {
 	const registry = "ghcr.io"
 	const systemName = "core"
 	const imageName = "demo-api"
@@ -58,7 +41,7 @@ func TestGetImageName3(t *testing.T) {
 	}
 }
 
-func TestGetImageName4(t *testing.T) {
+func TestGetImageNameOtherRegistry(t *testing.T) {
 	const registry = "quay.io"
 	const systemName = "core"
 	const imageName = "demo-api"

@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
+	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -23,50 +23,10 @@ var Command *cli.Command = &cli.Command{
 	Aliases: []string{"gha"},
 	Usage:   "Add GitHub Actions to a project",
 	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:     "project-file",
-			Aliases:  []string{"f"},
-			Usage:    "The project file to use. We currently support .NET, Go or a generic project (Dockerfile).",
-			Required: true,
-		},
-		&cli.StringFlag{
-			Name:    "runtime-cloud-provider",
-			Aliases: []string{"r"},
-			Usage:   "The runtime cloud provider to use",
-			Value:   "aks",
-			Action: func(c *cli.Context, runtimeCloudProvider string) error {
-				allowedRuntimeCloudProviders := []string{"aks", "gke", "iss"}
-				if !slices.Contains(allowedRuntimeCloudProviders, strings.ToLower(runtimeCloudProvider)) {
-					return cli.Exit(
-						fmt.Sprintf(
-							"Invalid runtime cloud provider '%s' provided: must be one of %v (ignoring case)",
-							runtimeCloudProvider,
-							allowedRuntimeCloudProviders),
-						1,
-					)
-				}
-
-				return nil
-			},
-		},
-		&cli.StringFlag{
-			Name:     "system-name",
-			Aliases:  []string{"s"},
-			Usage:    "The name of the system",
-			Required: true,
-		},
-		&cli.StringFlag{
-			Name:     "application-name",
-			Aliases:  []string{"a"},
-			Usage:    "The name of the application",
-			Required: true,
-		},
-		&cli.StringFlag{
-			Name:    "helm-values-path",
-			Aliases: []string{"H"},
-			Usage:   "The path to the Helm values file",
-			Value:   ".github/deploy/values.yml",
-		},
+		shared.SystemNameFlag(),
+		shared.ApplicationNameFlag(),
+		shared.RuntimeCloudProviderFlag(),
+		shared.HelmValuesPathFlag(),
 		&cli.StringFlag{
 			Name:    "default-branch",
 			Aliases: []string{"b"},

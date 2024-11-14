@@ -9,6 +9,7 @@ import (
 
 	"github.com/3lvia/cli/pkg/auth"
 	"github.com/3lvia/cli/pkg/command"
+	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -18,30 +19,22 @@ const commandName = "deploy"
 var Command *cli.Command = &cli.Command{
 	Name:    "deploy",
 	Aliases: []string{"d"},
-	Usage:   "Deploy the project",
+	Usage:   "Deploy an application to a Kubernetes cluster",
+	Hidden:  true,
 	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:     "system-name",
-			Aliases:  []string{"s"},
-			Usage:    "The system name to use",
-			Required: true,
-		},
-		&cli.StringFlag{
-			Name:     "helm-values-file",
-			Aliases:  []string{"f"},
-			Usage:    "The helm values file to use",
-			Required: true,
-		},
+		shared.SystemNameFlag(),
+		shared.RuntimeCloudProviderFlag(),
+		shared.HelmValuesPathFlag(),
 		&cli.StringFlag{
 			Name:     "image-tag",
 			Aliases:  []string{"i"},
-			Usage:    "The image tag to deploy",
+			Usage:    "The image tag to deploy.",
 			Required: true,
 		},
 		&cli.StringFlag{
 			Name:    "environment",
 			Aliases: []string{"e"},
-			Usage:   "The environment to deploy to",
+			Usage:   "The environment to deploy to: sandbox, dev, test or prod",
 			Value:   "dev",
 			Action: func(c *cli.Context, environment string) error {
 				allowedEnvironments := []string{"sandbox", "dev", "test", "prod"}
@@ -55,7 +48,7 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "workload-type",
 			Aliases: []string{"w"},
-			Usage:   "The workload type to use",
+			Usage:   "The Kubernetes workload type to use: deployment or statefulset",
 			Value:   "deployment",
 			Action: func(c *cli.Context, workloadType string) error {
 				allowedWorkloadTypes := []string{"deployment", "statefulset"}
@@ -67,39 +60,19 @@ var Command *cli.Command = &cli.Command{
 			},
 		},
 		&cli.StringFlag{
-			Name:    "runtime-cloud-provider",
-			Aliases: []string{"r"},
-			Usage:   "The runtime cloud provider to use",
-			Value:   "aks",
-			Action: func(c *cli.Context, runtimeCloudProvider string) error {
-				allowedRuntimeCloudProviders := []string{"aks", "gke", "iss"}
-				if !slices.Contains(allowedRuntimeCloudProviders, strings.ToLower(runtimeCloudProvider)) {
-					return cli.Exit(
-						fmt.Sprintf(
-							"Invalid runtime cloud provider '%s' provided: must be one of %v (ignoring case)",
-							runtimeCloudProvider,
-							allowedRuntimeCloudProviders),
-						1,
-					)
-				}
-
-				return nil
-			},
-		},
-		&cli.StringFlag{
 			Name:    "commit-hash",
 			Aliases: []string{"c"},
-			Usage:   "The commit hash to use",
+			Usage:   "The commit hash of the commit being deployed. Used for deployment annotations. If you are running this command from a git repository, the commit hash of the latest commit in the currently checked out branch will be used by default.",
 		},
 		&cli.StringFlag{
 			Name:    "commit-message",
 			Aliases: []string{"m"},
-			Usage:   "The commit message to use",
+			Usage:   "The commit message of the commit being deployed. Used for deployment annotations. If you are running this command from a git repository, the commit message of the latest commit in the currently checked out branch will be used by default.",
 		},
 		&cli.StringFlag{
 			Name:    "repository-name",
 			Aliases: []string{"n"},
-			Usage:   "The repository name to use",
+			Usage:   "Name of the repository the code of the application is stored in. Used for deployment annotations. If you are running this command from a git repository, that repository name will be used by default.",
 		},
 		&cli.BoolFlag{
 			Name:    "dry-run",
@@ -109,54 +82,46 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "azure-tenant-id",
 			Usage:   "The AKS tenant ID to use",
-			Hidden:  true,
 			EnvVars: []string{"3LV_AZURE_TENANT_ID"},
 		},
 		&cli.StringFlag{
 			Name:    "azure-client-id",
 			Usage:   "The client ID to use when authenticating with the registry. Must be combined with --azure-federated-token.",
-			Hidden:  true,
 			EnvVars: []string{"3LV_AZURE_CLIENT_ID"},
 		},
 		&cli.StringFlag{
 			Name:    "azure-federated-token",
 			Usage:   "The federated token to use when authenticating with the Azure Container Registry. Must be combined with --client-id.",
-			Hidden:  true,
 			EnvVars: []string{"3LV_AZURE_FEDERATED_TOKEN"},
 		},
 		&cli.StringFlag{
 			Name:    "aks-subscription-id",
-			Usage:   "The AKS subscription ID to use",
-			Hidden:  true,
+			Usage:   "Subscription ID of the AKS cluster to deploy to.",
 			EnvVars: []string{"3LV_AKS_SUBSCRIPTION_ID"},
 		},
 		&cli.StringFlag{
 			Name:    "aks-cluster-name",
-			Usage:   "The AKS cluster name to use",
-			Hidden:  true,
+			Usage:   "Name of the AKS cluster to deploy to.",
 			EnvVars: []string{"3LV_AKS_CLUSTER_NAME"},
 		},
 		&cli.StringFlag{
 			Name:    "aks-resource-group-name",
-			Usage:   "The AKS resource group name to use",
-			Hidden:  true,
+			Usage:   "Resource group name of the AKS cluster to deploy to.",
 			EnvVars: []string{"3LV_AKS_RESOURCE_GROUP_NAME"},
 		},
 		&cli.StringFlag{
 			Name:    "gke-project-id",
-			Usage:   "The GKE project ID to use",
-			Hidden:  true,
+			Usage:   "Project ID of the GKE cluster to deploy to.",
 			EnvVars: []string{"3LV_GKE_PROJECT_ID"},
 		},
 		&cli.StringFlag{
 			Name:    "gke-cluster-name",
-			Usage:   "The GKE cluster name to use",
-			Hidden:  true,
+			Usage:   "Name of the GKE cluster to deploy to.",
 			EnvVars: []string{"3LV_GKE_CLUSTER_NAME"},
 		},
 		&cli.StringFlag{
 			Name:    "gke-cluster-location",
-			Usage:   "The GKE cluster location to use",
+			Usage:   "Location of the GKE cluster to deploy to.",
 			Hidden:  true,
 			EnvVars: []string{"3LV_GKE_CLUSTER_LOCATION"},
 		},
@@ -176,6 +141,11 @@ var Command *cli.Command = &cli.Command{
 			Name:  "run-id",
 			Usage: "The GitHub Actions run ID to use for deployment annotations.",
 		},
+		&cli.BoolFlag{
+			Name:    "allow-deploy",
+			Hidden:  true,
+			EnvVars: []string{"CI"},
+		},
 	},
 	Action: Deploy,
 }
@@ -183,6 +153,10 @@ var Command *cli.Command = &cli.Command{
 func Deploy(c *cli.Context) error {
 	if c.NArg() <= 0 {
 		return cli.ShowCommandHelp(c, commandName)
+	}
+
+	if !c.Bool("allow-deploy") {
+		return cli.Exit("Deploy command is disabled when not running 3lv from GitHub Actions.", 1)
 	}
 
 	applicationName := c.Args().First()

@@ -7,11 +7,10 @@ import (
 	"github.com/3lvia/cli/pkg/command"
 )
 
-func TestScanImageCommand1(t *testing.T) {
+func TestScanImageCommandNormal(t *testing.T) {
 	const imageName = "test-image:latest"
 	const severity = "CRITICAL,HIGH"
 	const disableError = false
-	const skipUpdate = false
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -19,8 +18,6 @@ func TestScanImageCommand1(t *testing.T) {
 			"image",
 			"--severity",
 			severity,
-			"--exit-code",
-			"1",
 			"--timeout",
 			"15m0s",
 			"--format",
@@ -32,6 +29,8 @@ func TestScanImageCommand1(t *testing.T) {
 			"--java-db-repository",
 			"ghcr.io/3lvia/trivy-java-db",
 			"--ignore-unfixed",
+			"--exit-code",
+			"1",
 			imageName,
 		},
 		" ",
@@ -41,7 +40,6 @@ func TestScanImageCommand1(t *testing.T) {
 		imageName,
 		severity,
 		disableError,
-		skipUpdate,
 		&command.RunOptions{DryRun: true},
 	)
 
@@ -52,19 +50,16 @@ func TestScanImageCommand1(t *testing.T) {
 	)
 }
 
-func TestScanImageCommand2(t *testing.T) {
+func TestScanImageDisableErrorAndMoreSeverities(t *testing.T) {
 	const imageName = "test-image:latest"
 	const severity = "CRITICAL,HIGH,MEDIUM"
 	const disableError = true
-	const skipUpdate = false
 
 	expectedCommandString := strings.Join(
 		[]string{
 			"image",
 			"--severity",
 			severity,
-			"--exit-code",
-			"0",
 			"--timeout",
 			"15m0s",
 			"--format",
@@ -76,6 +71,8 @@ func TestScanImageCommand2(t *testing.T) {
 			"--java-db-repository",
 			"ghcr.io/3lvia/trivy-java-db",
 			"--ignore-unfixed",
+			"--exit-code",
+			"0",
 			imageName,
 		},
 		" ",
@@ -85,7 +82,6 @@ func TestScanImageCommand2(t *testing.T) {
 		imageName,
 		severity,
 		disableError,
-		skipUpdate,
 		&command.RunOptions{DryRun: true},
 	)
 
@@ -96,19 +92,16 @@ func TestScanImageCommand2(t *testing.T) {
 	)
 }
 
-func TestScanImageCommand3(t *testing.T) {
+func TestScanImageCommandDisableErrorAndLessSeverities(t *testing.T) {
 	const imageName = "test-image:latest"
 	const severity = "CRITICAL"
 	const disableError = true
-	const skipUpdate = true
 
 	expectedCommandString := strings.Join(
 		[]string{
 			"image",
 			"--severity",
 			severity,
-			"--exit-code",
-			"0",
 			"--timeout",
 			"15m0s",
 			"--format",
@@ -120,7 +113,8 @@ func TestScanImageCommand3(t *testing.T) {
 			"--java-db-repository",
 			"ghcr.io/3lvia/trivy-java-db",
 			"--ignore-unfixed",
-			"--skip-db-update",
+			"--exit-code",
+			"0",
 			imageName,
 		},
 		" ",
@@ -130,7 +124,6 @@ func TestScanImageCommand3(t *testing.T) {
 		imageName,
 		severity,
 		disableError,
-		skipUpdate,
 		&command.RunOptions{DryRun: true},
 	)
 
@@ -141,19 +134,16 @@ func TestScanImageCommand3(t *testing.T) {
 	)
 }
 
-func TestScanImageCommand4(t *testing.T) {
+func TestScanImageCommandEventMoreSeverities(t *testing.T) {
 	const imageName = "test-image:latest"
 	const severity = "CRITICAL,HIGH,MEDIUM,LOW"
 	const disableError = true
-	const skipUpdate = false
 
 	expectedCommandString := strings.Join(
 		[]string{
 			"image",
 			"--severity",
 			severity,
-			"--exit-code",
-			"0",
 			"--timeout",
 			"15m0s",
 			"--format",
@@ -165,6 +155,8 @@ func TestScanImageCommand4(t *testing.T) {
 			"--java-db-repository",
 			"ghcr.io/3lvia/trivy-java-db",
 			"--ignore-unfixed",
+			"--exit-code",
+			"0",
 			imageName,
 		},
 		" ",
@@ -174,7 +166,6 @@ func TestScanImageCommand4(t *testing.T) {
 		imageName,
 		severity,
 		disableError,
-		skipUpdate,
 		&command.RunOptions{DryRun: true},
 	)
 
@@ -185,19 +176,16 @@ func TestScanImageCommand4(t *testing.T) {
 	)
 }
 
-func TestScanImageCommand5(t *testing.T) {
+func TestScanImageCommandAllSeveritiesAndVersionTag(t *testing.T) {
 	const imageName = "test-image:v42"
 	const severity = "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
 	const disableError = false
-	const skipUpdate = true
 
 	expectedCommandString := strings.Join(
 		[]string{
 			"image",
 			"--severity",
 			severity,
-			"--exit-code",
-			"1",
 			"--timeout",
 			"15m0s",
 			"--format",
@@ -209,7 +197,8 @@ func TestScanImageCommand5(t *testing.T) {
 			"--java-db-repository",
 			"ghcr.io/3lvia/trivy-java-db",
 			"--ignore-unfixed",
-			"--skip-db-update",
+			"--exit-code",
+			"1",
 			imageName,
 		},
 		" ",
@@ -219,7 +208,6 @@ func TestScanImageCommand5(t *testing.T) {
 		imageName,
 		severity,
 		disableError,
-		skipUpdate,
 		&command.RunOptions{DryRun: true},
 	)
 

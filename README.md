@@ -24,18 +24,18 @@ To use the 3lv CLI, you need to have these dependencies installed:
 - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install): used for deploying to Google Kubernetes Engine
 - [GitHub CLI](https://cli.github.com): used for pushing to GitHub Container Registry
 
-### Pusing to registries
+## 🚀 Breaking changes
+
+Before version `v1.0.0` is released, breaking changes will happen in minor versions (and possibly also patch versions).
+
+### Pushing to registries
 
 If you want to push to a registry, you need to be authenticated to that registry.
 
 #### Azure Container Registry
 
 This is Elvia's default registry.
-Use the following command to login to Elvias registry:
-
-```bash
-az acr login -n containerregistryelvia
-```
+The CLI will automatically log you in if you have the Azure CLI installed.
 
 #### GitHub Container Registry
 
@@ -144,6 +144,22 @@ sudo make build-windows-amd64
 ```
 
 You can then move the binary to a directory in your PATH.
+
+### Running tests
+
+Unit tests are written in Go and can be run with the following command:
+
+```bash
+make test
+```
+
+### Linter
+
+We use the linter [golangci-lint](https://golangci-lint.run) and can be run with the following command:
+
+```bash
+make lint
+```
 
 ### Releasing a new version
 

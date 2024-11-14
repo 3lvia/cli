@@ -7,7 +7,7 @@ import (
 	"github.com/3lvia/cli/pkg/command"
 )
 
-func TestAzLoginTenantCommand1(t *testing.T) {
+func TestAzLoginTenantCommand(t *testing.T) {
 	const tenantID = "test-tenant-id"
 
 	expectedCommandString := strings.Join(
@@ -34,7 +34,7 @@ func TestAzLoginTenantCommand1(t *testing.T) {
 	)
 }
 
-func TestAzLoginTenantCommand2(t *testing.T) {
+func TestAzLoginTenantCommandOIDC(t *testing.T) {
 	const tenantID = "test-tenant-id"
 	const clientID = "test-client-id"
 	const federatedToken = "test-federated-token"
