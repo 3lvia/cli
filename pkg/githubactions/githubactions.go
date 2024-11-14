@@ -35,7 +35,7 @@ var Command *cli.Command = &cli.Command{
 			Usage:   "The runtime cloud provider to use",
 			Value:   "aks",
 			Action: func(c *cli.Context, runtimeCloudProvider string) error {
-				allowedRuntimeCloudProviders := []string{"aks", "gke"}
+				allowedRuntimeCloudProviders := []string{"aks", "gke", "iss"}
 				if !slices.Contains(allowedRuntimeCloudProviders, strings.ToLower(runtimeCloudProvider)) {
 					return cli.Exit(
 						fmt.Sprintf(
@@ -50,25 +50,28 @@ var Command *cli.Command = &cli.Command{
 			},
 		},
 		&cli.StringFlag{
-			Name:    "default-branch",
-			Aliases: []string{"b"},
-			Usage:   "The default branch of the repository",
-			Value:   "trunk",
+			Name:     "system-name",
+			Aliases:  []string{"s"},
+			Usage:    "The name of the system",
+			Required: true,
 		},
 		&cli.StringFlag{
-			Name:    "system-name",
-			Aliases: []string{"s"},
-			Usage:   "The name of the system",
-		},
-		&cli.StringFlag{
-			Name:    "application-name",
-			Aliases: []string{"a"},
-			Usage:   "The name of the application",
+			Name:     "application-name",
+			Aliases:  []string{"a"},
+			Usage:    "The name of the application",
+			Required: true,
 		},
 		&cli.StringFlag{
 			Name:    "helm-values-path",
 			Aliases: []string{"H"},
 			Usage:   "The path to the Helm values file",
+			Value:   ".github/deploy/values.yml",
+		},
+		&cli.StringFlag{
+			Name:    "default-branch",
+			Aliases: []string{"b"},
+			Usage:   "The default branch of the repository",
+			Value:   "trunk",
 		},
 	},
 	Action: GitHubActions,
@@ -77,14 +80,17 @@ var Command *cli.Command = &cli.Command{
 func GitHubActions(c *cli.Context) error {
 	const githubActionsDir = ".github/workflows"
 	if _, err := os.Stat(githubActionsDir); os.IsNotExist(err) {
-		log.Printf("Creating directory '%s'", githubActionsDir)
+		log.Printf("Creating directory '%s'\n", githubActionsDir)
 		if err := os.MkdirAll(githubActionsDir, 0755); err != nil {
 			return cli.Exit(fmt.Sprintf("Failed to create directory '%s'", githubActionsDir), 1)
 		}
 	}
 
+	// Required
 	projectFile := c.String("project-file")
 	runtimeCloudProvider := c.String("runtime-cloud-provider")
+	systemName := c.String("system-name")
+	applicationName := c.String("application-name")
 
 	language, err := getLanguageFromProjectFile(projectFile)
 	if err != nil {
@@ -96,20 +102,20 @@ func GitHubActions(c *cli.Context) error {
 		return cli.Exit(err.Error(), 1)
 	}
 
-	workflowFileName := filepath.Base(exampleWorkflowFileURL)
+	workflowFileName := fmt.Sprintf("build-deploy-%s.yml", applicationName)
 	workflowFilePath := filepath.Join(githubActionsDir, workflowFileName)
 
-	log.Printf("Downloading example workflow file from '%s' to '%s'", exampleWorkflowFileURL, workflowFilePath)
+	log.Printf("Downloading example workflow file from '%s' to '%s'\n", exampleWorkflowFileURL, workflowFilePath)
 	if err := downloadFile(exampleWorkflowFileURL, workflowFilePath); err != nil {
 		return cli.Exit(err.Error(), 1)
 	}
 
-	log.Printf("Replacing placeholders in workflow file '%s'. You may need to manually fill in some values yourself.", workflowFilePath)
+	log.Printf("Replacing placeholders in workflow file '%s'\n. You may need to manually fill in some values yourself.", workflowFilePath)
 	replaceWorkflowPlaceholdersOptions := &ReplaceWorkflowPlaceholdersOptions{
-		DefaultBranch:   c.String("default-branch"),
-		SystemName:      c.String("system-name"),
-		ApplicationName: c.String("application-name"),
+		SystemName:      systemName,
+		ApplicationName: applicationName,
 		HelmValuesPath:  c.String("helm-values-path"),
+		DefaultBranch:   c.String("default-branch"),
 	}
 	if err := replaceWorkflowPlaceholders(
 		workflowFilePath,
@@ -118,6 +124,15 @@ func GitHubActions(c *cli.Context) error {
 	); err != nil {
 		return cli.Exit(err.Error(), 1)
 	}
+
+	log.Printf("Successfully added GitHub Actions to the project!\n")
+	terraformReminder := func() string {
+		if runtimeCloudProvider == "iss" {
+			return "NOTE: if you have not done so already, you will need to add your repository to the Terraform module 'github-actions-deploy' at https://github.com/3lvia/iss-terraform to enable deployments from GitHub Actions."
+		}
+		return "NOTE: if you have not done so already, you will need to add your system/repository to https://github.com/3lvia/github-repositories-terraform to enable deployments from GitHub Actions."
+	}()
+	log.Printf("%s\n", terraformReminder)
 
 	return nil
 }
@@ -154,21 +169,40 @@ func replaceWorkflowPlaceholders(
 	defaultBranch := utils.StringWithDefault(options.DefaultBranch, "trunk")
 	contentsString = strings.ReplaceAll(contentsString, "$default-branch", defaultBranch)
 
-	contentsString = strings.ReplaceAll(contentsString, "<your project file path here>", projectFile)
+	contentsString = strings.ReplaceAll(
+		contentsString,
+		"<your project file path here>",
+		projectFile,
+	)
 
 	if options.ApplicationName != "" {
-		contentsString = strings.ReplaceAll(contentsString, "<your application name here>", options.ApplicationName)
+		contentsString = strings.ReplaceAll(
+			contentsString,
+			"<your application name here>",
+			options.ApplicationName,
+		)
 	}
 
 	if options.SystemName != "" {
-		contentsString = strings.ReplaceAll(contentsString, "<your system name here>", options.SystemName)
+		contentsString = strings.ReplaceAll(
+			contentsString,
+			"<your system name here>",
+			options.SystemName,
+		)
 	}
 
 	if options.HelmValuesPath != "" {
-		contentsString = strings.ReplaceAll(contentsString, ".github/deploy/values.yml", options.HelmValuesPath)
+		contentsString = strings.ReplaceAll(
+			contentsString,
+			".github/deploy/values.yml",
+			options.HelmValuesPath,
+		)
 	}
 
-	contentsString = fmt.Sprintf("# This file was generated by the 3lvia CLI: https://github.com/3lvia/cli\n\n%s", contentsString)
+	contentsString = fmt.Sprintf(
+		"# This file was generated by the 3lvia CLI: https://github.com/3lvia/cli\n\n%s",
+		contentsString,
+	)
 
 	if err := os.WriteFile(workflowFilePath, []byte(contentsString), 0644); err != nil {
 		return err
@@ -222,6 +256,9 @@ func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (st
 	if language == "dotnet" && runtimeCloudProvider == "gke" {
 		return fmt.Sprintf("%s/build-deploy-dotnet-google.yml", exampleWorkflowBaseURL), nil
 	}
+	if language == "dotnet" && runtimeCloudProvider == "iss" {
+		return fmt.Sprintf("%s/build-deploy-dotnet-iss.yml", exampleWorkflowBaseURL), nil
+	}
 
 	// Go
 	if language == "go" && runtimeCloudProvider == "aks" {
@@ -229,6 +266,13 @@ func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (st
 	}
 	if language == "go" && runtimeCloudProvider == "gke" {
 		return fmt.Sprintf("%s/build-deploy-go-google.yml", exampleWorkflowBaseURL), nil
+	}
+	if language == "go" && runtimeCloudProvider == "iss" {
+		return "",
+			fmt.Errorf("Example workflow is not implemented yet for language '%s' and runtime cloud provider '%s'",
+				language,
+				runtimeCloudProvider,
+			)
 	}
 
 	// Dockerfile
@@ -238,6 +282,18 @@ func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (st
 	if language == "dockerfile" && runtimeCloudProvider == "gke" {
 		return fmt.Sprintf("%s/build-deploy-dockerfile-google.yml", exampleWorkflowBaseURL), nil
 	}
+	if language == "dockerfile" && runtimeCloudProvider == "iss" {
+		return "",
+			fmt.Errorf("Example workflow is not implemented yet for language '%s' and runtime cloud provider '%s'",
+				language,
+				runtimeCloudProvider,
+			)
+	}
 
-	return "", fmt.Errorf("No example workflow file found for language '%s' and runtime cloud provider '%s'", language, runtimeCloudProvider)
+	return "",
+		fmt.Errorf(
+			"No example workflow file found for language '%s' and runtime cloud provider '%s'",
+			language,
+			runtimeCloudProvider,
+		)
 }
