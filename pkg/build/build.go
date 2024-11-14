@@ -23,7 +23,10 @@ var Command *cli.Command = &cli.Command{
 	Usage:   "Build a Docker image from a project file.",
 	Flags: []cli.Flag{
 		shared.ProjectFileFlag(),
-		shared.SystemNameFlag(),
+		shared.SystemNameFlag(
+			"The system name to prefix the image name with. If not provided, we will try to use the current git repository name.",
+			false,
+		),
 		shared.SeverityFlag("scan-severity"),
 		shared.FormatsFlag("scan-formats"),
 		shared.DisableErrorFlag("scan-disable-error"),
