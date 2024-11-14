@@ -10,6 +10,10 @@ jobs:
   e2e-tests:
     name: End-to-End Tests
     runs-on: elvia-runner
+    strategy:
+      matrix:
+        command: [build, scan]
+      fail-fast: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,13 +34,5 @@ jobs:
       - name: Install CLI from source
         run: make install
 
-      - name: Run tests for build command
-        run: ./tests/build/run_tests.sh
-
-      - name: Run tests for scan command
-        run:
-          ./tests/scan/run_tests.sh
-
-          #      TODO: re-enable deploy tests
-#     - name: Run tests for deploy command
-#       run: ./tests/deploy/run_tests.sh
+      - name: 'Run tests for ${{ matrix.command }} command'
+        run: './tests/${{ matrix.command }}/run_tests.sh'

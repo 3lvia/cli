@@ -10,6 +10,7 @@ import (
 	"github.com/3lvia/cli/pkg/auth"
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/scan"
+	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -19,51 +20,35 @@ const commandName = "build"
 var Command *cli.Command = &cli.Command{
 	Name:    commandName,
 	Aliases: []string{"b"},
-	Usage:   "Build the project",
+	Usage:   "Build a Docker image from a project file.",
 	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:     "project-file",
-			Aliases:  []string{"f"},
-			Usage:    "The project file to use",
-			Required: true,
-			EnvVars:  []string{"3LV_PROJECT_FILE"},
-		},
-		&cli.StringFlag{
-			Name:     "system-name",
-			Aliases:  []string{"s"},
-			Usage:    "The system name to use",
-			Required: true,
-			EnvVars:  []string{"3LV_SYSTEM_NAME"},
-		},
+		shared.ProjectFileFlag(),
+		shared.SystemNameFlag(),
+		shared.SeverityFlag("scan-severity"),
+		shared.FormatsFlag("scan-formats"),
+		shared.DisableErrorFlag("scan-disable-error"),
 		&cli.StringFlag{
 			Name:    "build-context",
 			Aliases: []string{"c"},
-			Usage:   "The build context to use",
+			Usage:   "The directory to use as the build context for Docker, i.e. what files Docker will know about when building. We default to the directory of the project file. This means that if you need files outside of the directory of the project file, you need to specify this flag.",
 			EnvVars: []string{"3LV_BUILD_CONTEXT"},
 		},
 		&cli.StringFlag{
 			Name:    "registry",
 			Aliases: []string{"r"},
-			Usage:   "The registry to use. Image name will be prefixed with this value.",
+			Usage:   "The container registry to use. Image name will be prefixed with this value.",
 			EnvVars: []string{"3LV_REGISTRY"},
 		},
 		&cli.StringFlag{
 			Name:    "go-main-package-directory",
-			Usage:   "The main package directory to use when building a Go application",
+			Usage:   "The main package directory to use when building a Go application.",
 			EnvVars: []string{"3LV_GO_MAIN_PACKAGE_DIRECTORY"},
 		},
 		&cli.StringFlag{
 			Name:    "cache-tag",
-			Usage:   "The cache tag to use",
+			Usage:   "The tag to use for the cache image.",
 			Value:   "latest-cache",
 			EnvVars: []string{"3LV_CACHE_TAG"},
-		},
-		&cli.StringFlag{
-			Name:    "severity",
-			Aliases: []string{"S"},
-			Usage:   "The severity to use when scanning the image: can be any combination of CRITICAL, HIGH, MEDIUM, LOW, or UNKNOWN separated by commas",
-			Value:   "CRITICAL,HIGH",
-			EnvVars: []string{"3LV_SEVERITY"},
 		},
 		&cli.StringFlag{
 			Name:    "azure-tenant-id",
@@ -79,7 +64,7 @@ var Command *cli.Command = &cli.Command{
 		},
 		&cli.StringFlag{
 			Name:    "azure-client-id",
-			Usage:   "The client ID to use when authenticating with the registry. Must be combined with --azure-federated-token.",
+			Usage:   "The client ID to use when authenticating with the Azure Container registry. Must be combined with --azure-federated-token.",
 			Hidden:  true,
 			EnvVars: []string{"3LV_AZURE_CLIENT_ID"},
 		},
@@ -92,68 +77,38 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringSliceFlag{
 			Name:    "additional-tags",
 			Aliases: []string{"t"},
-			Usage:   "The additional tags to use",
+			Usage:   "Additional tags to use when pushing the image to the registry.",
 			EnvVars: []string{"3LV_ADDITIONAL_TAGS"},
 		},
 		&cli.StringSliceFlag{
 			Name:    "include-files",
 			Aliases: []string{"i"},
-			Usage:   "The files to include in the build context",
+			Usage:   "A list of files to include in the Docker image. Currently only supported for Go applications.",
 			EnvVars: []string{"3LV_INCLUDE_FILES"},
 		},
 		&cli.StringSliceFlag{
 			Name:    "include-directories",
 			Aliases: []string{"I"},
-			Usage:   "The directories to include in the build context",
+			Usage:   "A list of directories to include in the Docker image. Currently only supported for Go applications.",
 			EnvVars: []string{"3LV_INCLUDE_DIRECTORIES"},
-		},
-		&cli.StringSliceFlag{
-			Name:    "scan-formats",
-			Aliases: []string{"F"},
-			Usage:   "The formats to use when outputting the scan results: can be table, json, sarif or markdown.",
-			Value:   cli.NewStringSlice("table"),
-			Action: func(c *cli.Context, formats []string) error {
-				for _, format := range formats {
-					if format != "table" && format != "json" && format != "sarif" && format != "markdown" {
-						return cli.Exit("Invalid format provided", 1)
-					}
-				}
-
-				return nil
-			},
-			EnvVars: []string{"3LV_SCAN_FORMATS"},
 		},
 		&cli.BoolFlag{
 			Name:    "push",
 			Aliases: []string{"p"},
-			Usage:   "Push the image to the registry",
+			Usage:   "Push the image to the registry.",
 			Value:   false,
 			EnvVars: []string{"3LV_PUSH"},
 		},
 		&cli.BoolFlag{
 			Name:    "generate-only",
 			Aliases: []string{"G"},
-			Usage:   "Generates a Dockerfile, but does not build the image",
+			Usage:   "Generates a Dockerfile, but does not build the image.",
 			Value:   false,
 			EnvVars: []string{"3LV_GENERATE_ONLY"},
 		},
 		&cli.BoolFlag{
-			Name:    "scan-disable-error",
-			Aliases: []string{"D"},
-			Usage:   "Disables Trivy scan returning a non-zero exit code if vulnerabilities are found",
-			Value:   false,
-			EnvVars: []string{"3LV_SCAN_DISABLE_ERROR"},
-		},
-		&cli.BoolFlag{
-			Name:    "scan-skip-db-update",
-			Aliases: []string{"U"},
-			Usage:   "Skip updating the Trivy database.",
-			Value:   false,
-			EnvVars: []string{"3LV_SCAN_SKIP_DB_UPDATE"},
-		},
-		&cli.BoolFlag{
 			Name:    "skip-authentication",
-			Usage:   "Skip authentication when pushing the image to the registry",
+			Usage:   "Skip authentication before pushing the image to the registry.",
 			Value:   false,
 			EnvVars: []string{"3LV_SKIP_AUTHENTICATION"},
 		},
@@ -297,10 +252,9 @@ func Build(c *cli.Context) error {
 
 	scanErr := scan.ScanImage(
 		imageName+":"+cacheTag,
-		c.String("severity"),
+		c.String("scan-severity"),
 		utils.RemoveZeroValues(c.StringSlice("scan-formats")),
 		c.Bool("scan-disable-error"),
-		c.Bool("scan-skip-db-update"),
 	)
 
 	if push && scanErr != nil {
