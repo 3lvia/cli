@@ -25,7 +25,7 @@ func main() {
 
 	app := &cli.App{
 		Name:                 "3lv",
-		Usage:                "Command Line Interface tool for developing, building and deploying Elvia applications",
+		Usage:                "Command Line Interface tool for developing, building and securing Elvia applications ⚡",
 		EnableBashCompletion: true,
 		Version:              string(versionFile),
 		Commands: []*cli.Command{
