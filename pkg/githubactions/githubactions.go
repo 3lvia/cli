@@ -23,8 +23,13 @@ var Command *cli.Command = &cli.Command{
 	Aliases: []string{"gha"},
 	Usage:   "Add GitHub Actions to a project",
 	Flags: []cli.Flag{
-		shared.SystemNameFlag(),
-		shared.ApplicationNameFlag(),
+		shared.SystemNameFlag(
+			"The name of your system (Kubernetes namespace) you want to deploy to.",
+			true,
+		),
+		shared.ApplicationNameFlag(
+			"The name of the application you want to build and deploy.",
+		),
 		shared.RuntimeCloudProviderFlag(),
 		shared.HelmValuesPathFlag(),
 		&cli.StringFlag{

@@ -21,9 +21,9 @@ var Command *cli.Command = &cli.Command{
 	Aliases: []string{"s"},
 	Usage:   "Scan image using Trivy.",
 	Flags: []cli.Flag{
-		shared.SeverityFlag(""),
-		shared.FormatsFlag(""),
-		shared.DisableErrorFlag(""),
+		shared.SeverityFlag("severity"),
+		shared.FormatsFlag("formats"),
+		shared.DisableErrorFlag("disable-error"),
 	},
 	Action: Scan,
 }

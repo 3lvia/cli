@@ -44,20 +44,21 @@ func RuntimeCloudProviderFlag() *cli.StringFlag {
 	}
 }
 
-func SystemNameFlag() *cli.StringFlag {
+func SystemNameFlag(usage string, required bool) *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:     "system-name",
 		Aliases:  []string{"s"},
-		Usage:    "The name of the system",
-		Required: true,
+		Usage:    usage,
+		Required: required,
+		EnvVars:  []string{"3LV_SYSTEM_NAME"},
 	}
 }
 
-func ApplicationNameFlag() *cli.StringFlag {
+func ApplicationNameFlag(usage string) *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:     "application-name",
 		Aliases:  []string{"a"},
-		Usage:    "The name of the application",
+		Usage:    usage,
 		Required: true,
 	}
 }
@@ -66,20 +67,12 @@ func HelmValuesPathFlag() *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:    "helm-values-path",
 		Aliases: []string{"f"},
-		Usage:   "The path to the Helm values file",
+		Usage:   "The path to the Helm values file used for deploying.",
 		Value:   ".github/deploy/values.yml",
 	}
 }
 
-func SeverityFlag(nameOverride string) *cli.StringFlag {
-	name := func() string {
-		if nameOverride == "" {
-			return "severity"
-		}
-
-		return nameOverride
-	}()
-
+func SeverityFlag(name string) *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:    name,
 		Aliases: []string{"S"},
@@ -89,15 +82,7 @@ func SeverityFlag(nameOverride string) *cli.StringFlag {
 	}
 }
 
-func FormatsFlag(nameOverride string) *cli.StringSliceFlag {
-	name := func() string {
-		if nameOverride == "" {
-			return "formats"
-		}
-
-		return nameOverride
-	}()
-
+func FormatsFlag(name string) *cli.StringSliceFlag {
 	return &cli.StringSliceFlag{
 		Name:    name,
 		Aliases: []string{"F"},

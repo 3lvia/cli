@@ -22,7 +22,10 @@ var Command *cli.Command = &cli.Command{
 	Usage:   "Deploy an application to a Kubernetes cluster",
 	Hidden:  true,
 	Flags: []cli.Flag{
-		shared.SystemNameFlag(),
+		shared.SystemNameFlag(
+			"The name of the system (Kubernetes namespace) to deploy to.",
+			true,
+		),
 		shared.RuntimeCloudProviderFlag(),
 		shared.HelmValuesPathFlag(),
 		&cli.StringFlag{
