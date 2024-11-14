@@ -79,7 +79,7 @@ func GitHubActions(c *cli.Context) error {
 	replaceWorkflowPlaceholdersOptions := &ReplaceWorkflowPlaceholdersOptions{
 		SystemName:      systemName,
 		ApplicationName: applicationName,
-		HelmValuesPath:  c.String("helm-values-path"),
+		HelmValuesPath:  c.String("helm-values-file"),
 		DefaultBranch:   c.String("default-branch"),
 	}
 	if err := replaceWorkflowPlaceholders(

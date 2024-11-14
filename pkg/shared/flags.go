@@ -65,9 +65,9 @@ func ApplicationNameFlag(usage string) *cli.StringFlag {
 
 func HelmValuesPathFlag() *cli.StringFlag {
 	return &cli.StringFlag{
-		Name:    "helm-values-path",
+		Name:    "helm-values-file",
 		Aliases: []string{"f"},
-		Usage:   "The path to the Helm values file used for deploying.",
+		Usage:   "The Helm values file used for deploying.",
 		Value:   ".github/deploy/values.yml",
 	}
 }
