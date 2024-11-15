@@ -85,6 +85,8 @@ func scanImageCommand(
 		"--ignore-unfixed",
 		"--exit-code",
 		exitCode,
+		"--scanners",
+		"vuln",
 	)
 
 	cmd.Args = append(cmd.Args, imageName)
