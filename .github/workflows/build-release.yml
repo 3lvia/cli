@@ -37,6 +37,11 @@ jobs:
           echo "VERSION_TAG=v$version" >> "$GITHUB_OUTPUT"
           echo "MAJOR_VERSION_TAG=v$(echo $version | cut -d. -f1)" >> "$GITHUB_OUTPUT"
 
+      # TODO: remove when wixl is pre-installed on elvia-runner runners
+      - name: Install dependencies for Windows
+        if: ${{ matrix.os == 'windows' }}
+        run: sudo apt-get install -y --no-install-recommends wixl
+
       - name: Package CLI
         run: make package-${{ matrix.os }}-${{ matrix.arch }}
 
@@ -116,19 +121,19 @@ jobs:
       - name: Upload binaries if new version
         if: ${{ needs.pre-release.outputs.new-version == 'true' }}
         run: |
-          # Workaround for macOS binaries being named differently from their architecture (darwin)
+          # Special case for macOS binaries being named differently from their architecture (darwin)
           if [[ '${{ matrix.os }}' == 'macos' ]]; then
             mv '3lv-darwin-${{ matrix.arch }}.tar.gz' '3lv-macos-${{ matrix.arch }}.tar.gz'
             mv '3lv-darwin-${{ matrix.arch }}.tar.gz.md5' '3lv-macos-${{ matrix.arch }}.tar.gz.md5'
           fi
 
-          # Workaround for Windows being packaged in zip files, not tarballs
+          # Special case for Windows being packaged as MSI
           if [[ '${{ matrix.os }}' != 'windows' ]]; then
             gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
             gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
           else
-            gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.zip'
-            gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.zip.md5'
+            gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.msi'
+            gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.msi.md5'
           fi
         env:
           GH_TOKEN: ${{ github.token }}
