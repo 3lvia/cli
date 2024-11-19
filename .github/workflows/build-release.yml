@@ -126,8 +126,7 @@ jobs:
 
       - name: Upload binaries if not already uploaded
         run: |
-          latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
-          number_of_binaries=$(gh release view "$latest_version" --json assets -q '.[] | length')
+          number_of_binaries=$(gh release view "$VERSION_TAG" --json assets -q '.[] | length')
 
           if [[ "$number_of_binaries" -gt 0 ]]; then
             echo "Binaries already uploaded."
