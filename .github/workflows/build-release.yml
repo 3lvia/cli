@@ -127,6 +127,7 @@ jobs:
       - name: Upload binaries if not already uploaded
         run: |
           number_of_binaries=$(gh release view "$VERSION_TAG" --json assets -q '.[] | length')
+          version=$(echo "$VERSION_TAG" | cut -c 2-)
 
           if [[ "$number_of_binaries" -gt 0 ]]; then
             echo "Binaries already uploaded."
@@ -135,17 +136,17 @@ jobs:
 
           # Special case for macOS binaries being named differently from their architecture (darwin)
           if [[ '${{ matrix.os }}' == 'macos' ]]; then
-            mv '3lv-darwin-${{ matrix.arch }}.tar.gz' '3lv-macos-${{ matrix.arch }}.tar.gz'
-            mv '3lv-darwin-${{ matrix.arch }}.tar.gz.md5' '3lv-macos-${{ matrix.arch }}.tar.gz.md5'
+            mv "3lv-darwin-$version-${{ matrix.arch }}.tar.gz" "3lv-macos-$version-${{ matrix.arch }}.tar.gz"
+            mv "3lv-darwin-$version-${{ matrix.arch }}.tar.gz.md5" "3lv-macos-$version-${{ matrix.arch }}.tar.gz.md5"
           fi
 
           # Special case for Windows being packaged as MSI
           if [[ '${{ matrix.os }}' == 'windows' ]]; then
-            gh release upload "$VERSION_TAG" '3lv-${{ matrix.arch }}.msi'
-            gh release upload "$VERSION_TAG" '3lv-${{ matrix.arch }}.msi.md5'
+            gh release upload "$VERSION_TAG" "3lv-$version-${{ matrix.arch }}.msi"
+            gh release upload "$VERSION_TAG" "3lv-$version-${{ matrix.arch }}.msi.md5"
           else
-            gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
-            gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
+            gh release upload "$VERSION_TAG" "3lv-$version-${{ matrix.os }}-${{ matrix.arch }}.tar.gz"
+            gh release upload "$VERSION_TAG" "3lv-$version-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5"
           fi
         env:
           GH_TOKEN: ${{ github.token }}
