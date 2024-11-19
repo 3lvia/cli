@@ -26,29 +26,29 @@ lint:
 build:
 	GOOS=${go_os} GOARCH=${go_arch} CGO_ENABLED=0 go build -o ${build_dir}/${binary_name} ${main_package_path}
 
-## build-linux-amd64: Build the binary for Linux/amd64.
+## build-linux-amd64: Build the binary for Linux (amd64).
 .PHONY: build-linux-amd64
 build-linux-amd64: go_os=linux
 build-linux-amd64: go_arch=amd64
 build-linux-amd64: build
 
-## build-macos-amd64: Build the binary for macOS/amd64.
+## build-macos-amd64: Build the binary for macOS (amd64).
 .PHONY: build-macos-amd64
 build-macos-amd64: go_os=darwin
 build-macos-amd64: go_arch=amd64
 build-macos-amd64: build
 
-## build-macos-arm64: Build the binary for macOS/arm64.
+## build-macos-arm64: Build the binary for macOS (arm64).
 .PHONY: build-macos-arm64
 build-macos-arm64: go_os=darwin
 build-macos-amr64: go_arch=arm64
 build-macos-arm64: build
 
-## build-windows-amd64: Build the binary for Windows/amd64.
+## build-windows-amd64: Build the binary for Windows (amd64).
 .PHONY: build-windows-amd64
 build-windows-amd64: go_os=windows
 build-windows-amd64: go_arch=amd64
-build-windows-amd64: binary_name=3lv.exe
+build-windows-amd64: binary_name=3lv-amd64.exe
 build-windows-amd64: build
 
 ## run: Build and then run the binary.
@@ -69,46 +69,46 @@ package-linux-amd64: go_os=linux
 package-linux-amd64: go_arch=amd64
 package-linux-amd64: package
 
-## package-macos-amd64: Build and then package the binary for macOS/amd64.
+## package-macos-amd64: Build and then package the binary for macOS (amd64).
 .PHONY: package-macos-amd64
 package-macos-amd64: go_os=darwin
 package-macos-amd64: go_arch=amd64
 package-macos-amd64: package
 
-## package-macos-arm64: Build and then package the binary for macOS/arm64.
+## package-macos-arm64: Build and then package the binary for macOS (arm64).
 .PHONY: package-macos-arm64
 package-macos-arm64: go_os=darwin
 package-macos-arm64: go_arch=arm64
 package-macos-arm64: package
 
-## package-windows-amd64: Build and then package the binary for Windows/amd64.
+## package-windows-amd64: Build and then package the binary for Windows (amd64).
 .PHONY: package-windows-amd64
 package-windows-amd64: build-windows-amd64
 package-windows-amd64:
 	mkdir -p ${package_dir}
-	cp LICENSE README.md build/package/3lv.wxs ${build_dir}/3lv.exe ${package_dir}
-	cd ${package_dir} && wixl -v -o 3lv.msi 3lv.wxs
-	cd ${package_dir} && md5sum 3lv.msi > 3lv.msi.md5
-	cd ${package_dir} && rm -f LICENSE README.md 3lv.wxs 3lv.exe
+	cp LICENSE README.md build/package/3lv-${go_arch}.wxs ${build_dir}/3lv-${go_arch}.exe ${package_dir}
+	cd ${package_dir} && wixl -v -o 3lv-${go_arch}.msi 3lv-${go_arch}.wxs
+	cd ${package_dir} && md5sum 3lv-${go_arch}.msi > 3lv-${go_arch}.msi.md5
+	cd ${package_dir} && rm -f LICENSE README.md 3lv-${go_arch}.wxs 3lv-${go_arch}.exe
 
 ## install: Build and then install the binary to /usr/local/bin. Requires root. Only works on Linux and macOS (tries to guess the OS and architecture).
 .PHONY: install
 install: build
 	sudo install -Dm755 -t /usr/local/bin ${build_dir}/${binary_name}
 
-## install-linux-amd64: Build and then install the binary for Linux/amd64 to /usr/local/bin. Requires root.
+## install-linux-amd64: Build and then install the binary for Linux (amd64) to /usr/local/bin. Requires root.
 .PHONY: install-linux-amd64
 install-linux-amd64: go_os=linux
 install-linux-amd64: go_arch=amd64
 install-linux-amd64: install
 
-## install-macos-amd64: Build and then install the binary for macOS/amd64 to /usr/local/bin. Requires root.
+## install-macos-amd64: Build and then install the binary for macOS (amd64) to /usr/local/bin. Requires root.
 .PHONY: install-macos-amd64
 install-macos-amd64: go_os=darwin
 install-macos-amd64: go_arch=amd64
 install-macos-amd64: install
 
-## install-macos-arm64: Build and then install the binary for macOS/arm64 to /usr/local/bin. Requires root.
+## install-macos-arm64: Build and then install the binary for macOS (arm64) to /usr/local/bin. Requires root.
 .PHONY: install-macos-arm64
 install-macos-arm64: go_os=darwin
 install-macos-arm64: go_arch=arm64

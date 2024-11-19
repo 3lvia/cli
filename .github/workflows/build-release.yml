@@ -128,12 +128,12 @@ jobs:
           fi
 
           # Special case for Windows being packaged as MSI
-          if [[ '${{ matrix.os }}' != 'windows' ]]; then
+          if [[ '${{ matrix.os }}' == 'windows' ]]; then
+            gh release upload "$VERSION_TAG" '3lv-${{ matrix.arch }}.msi'
+            gh release upload "$VERSION_TAG" '3lv-${{ matrix.arch }}.msi.md5'
+          else
             gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz'
             gh release upload "$VERSION_TAG" '3lv-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.md5'
-          else
-            gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.msi'
-            gh release upload "$VERSION_TAG" '3lv-windows-${{ matrix.arch }}.msi.md5'
           fi
         env:
           GH_TOKEN: ${{ github.token }}
