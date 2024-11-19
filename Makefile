@@ -4,6 +4,7 @@ build_dir = ./dist/bin
 package_dir = ./dist/package
 go_os = $(shell go env GOOS)
 go_arch = $(shell go env GOARCH)
+cli_version = $(shell cat VERSION | sed -e 's/-\(alpha\|beta\)[0-9]*//')
 
 ## help: Show this help message.
 .PHONY: help
@@ -60,8 +61,8 @@ run: build
 .PHONY: package
 package: build
 	mkdir -p ${package_dir}
-	tar -czf ${package_dir}/3lv-${go_os}-${go_arch}.tar.gz LICENSE README.md -C ${build_dir} 3lv
-	cd ${package_dir} && md5sum 3lv-${go_os}-${go_arch}.tar.gz > 3lv-${go_os}-${go_arch}.tar.gz.md5
+	tar -czf ${package_dir}/3lv-${cli_version}-${go_os}-${go_arch}.tar.gz LICENSE README.md -C ${build_dir} 3lv
+	cd ${package_dir} && md5sum 3lv-${cli_version}-${go_os}-${go_arch}.tar.gz > 3lv-${cli_version}-${go_os}-${go_arch}.tar.gz.md5
 
 ## package-linux-amd64: Build and then package the binary for Linux/amd64.
 .PHONY: package-linux-amd64
@@ -86,8 +87,8 @@ package-macos-arm64: package
 .PHONY: package-windows-amd64
 package-windows-amd64: build-windows-amd64
 package-windows-amd64:
-	wix build build/package/3lv-${go_arch}.wxs -o ${package_dir}/3lv-${go_arch}.msi -d "CliVersion=$$(cat VERSION)"
-	cd ${package_dir} && md5sum 3lv-${go_arch}.msi > 3lv-${go_arch}.msi.md5
+	wix build build/package/3lv-${go_arch}.wxs -o ${package_dir}/3lv-${cli_version}-${go_arch}.msi -d "CliVersion=${cli_version}"
+	cd ${package_dir} && md5sum 3lv-${cli_version}-${go_arch}.msi > 3lv-${cli_version}-${go_arch}.msi.md5
 
 ## install: Build and then install the binary to /usr/local/bin. Requires root. Only works on Linux and macOS (tries to guess the OS and architecture).
 .PHONY: install
