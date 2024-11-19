@@ -4,12 +4,10 @@
 		UpgradeCode="0CD31A27-AA46-4E75-BDBB-E008F751FC76"
 		Language="1033"
 		Codepage="1252"
-		Version="1.7.3"
+		Version="$(var.CliVersion)"
 		Manufacturer="Elvia AS"
-		InstallerVersion="100"
-		ProductCode="432286C8-BC7F-4919-8432-67107E4E45AA"
 	>
-		<SummaryInformation Keywords="Installer" Description="Elvia CLI installer" Manufacturer="Elvia AS" />
+		<SummaryInformation Keywords="Installer" Description="Elvia CLI installer" />
 
 		<Media Id="1" Cabinet="Sample.cab" EmbedCab="yes" DiskPrompt="CD-ROM #1" />
 		<Property Id="DiskPrompt" Value="Elvia CLI Installation [1]" />
@@ -29,7 +27,7 @@
 			<Directory Id="Elvia" Name="Elvia">
 				<Directory Id="INSTALLDIR" Name="Elvia CLI">
 					<Component Id="MainExecutable" Guid="B9716B0E-A39B-4B2E-94CE-250C40018EBB">
-						<File Id="ElviaCliEXE" Name="3lv-amd64.exe" DiskId="1" Source="$(sys.CURRENTDIR)\dist\bin\3lv-amd64.exe" KeyPath="yes" />
+						<File Id="ElviaCliEXE" Name="3lv.exe" DiskId="1" Source="$(sys.CURRENTDIR)\dist\bin\3lv-amd64.exe" KeyPath="yes" />
 					</Component>
 				</Directory>
 			</Directory>

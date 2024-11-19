@@ -86,7 +86,7 @@ package-macos-arm64: package
 .PHONY: package-windows-amd64
 package-windows-amd64: build-windows-amd64
 package-windows-amd64:
-	wix build build/package/3lv-${go_arch}.wxs -o ${package_dir}/3lv-${go_arch}.msi
+	wix build build/package/3lv-${go_arch}.wxs -o ${package_dir}/3lv-${go_arch}.msi -d "CliVersion=$$(cat VERSION)"
 	cd ${package_dir} && md5sum 3lv-${go_arch}.msi > 3lv-${go_arch}.msi.md5
 
 ## install: Build and then install the binary to /usr/local/bin. Requires root. Only works on Linux and macOS (tries to guess the OS and architecture).
