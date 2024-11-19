@@ -117,9 +117,16 @@ jobs:
         with:
           name: '3lv-${{ matrix.os }}-${{ matrix.arch }}'
 
-      - name: Upload binaries if new version
-        if: ${{ needs.pre-release.outputs.new-version == 'true' }}
+      - name: Upload binaries if not already uploaded
         run: |
+          latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
+          number_of_binaries=$(gh release view "$latest_version" --json assets -q '.[] | length')
+
+          if [[ "$number_of_binaries" -gt 0 ]]; then
+            echo "Binaries already uploaded."
+            exit 0
+          fi
+
           # Special case for macOS binaries being named differently from their architecture (darwin)
           if [[ '${{ matrix.os }}' == 'macos' ]]; then
             mv '3lv-darwin-${{ matrix.arch }}.tar.gz' '3lv-macos-${{ matrix.arch }}.tar.gz'
