@@ -93,7 +93,7 @@ jobs:
 
   upload-binaries:
     name: Upload binaries
-    needs: [build, pre-release]
+    needs: [pre-release]
     runs-on: elvia-runner
     if: ${{ github.event_name == 'push' }}
     strategy:
@@ -105,7 +105,7 @@ jobs:
             arch: arm64
       fail-fast: false
     env:
-      VERSION_TAG: ${{ needs.build.outputs.version-tag }}
+      VERSION_TAG: ${{ needs.pre-release.outputs.version-tag }}
     permissions:
       contents: write
     steps:
