@@ -86,8 +86,10 @@ package-macos-arm64: package
 package-windows-amd64: build-windows-amd64
 package-windows-amd64:
 	mkdir -p ${package_dir}
-	zip -j ${package_dir}/3lv-windows-amd64.zip LICENSE README.md ${build_dir}/3lv.exe
-	cd ${package_dir} && md5sum 3lv-windows-amd64.zip > 3lv-windows-amd64.zip.md5
+	cp LICENSE README.md build/package/3lv.wxs ${build_dir}/3lv.exe ${package_dir}
+	cd ${package_dir} && wixl -v -o 3lv.msi 3lv.wxs
+	cd ${package_dir} && md5sum 3lv.msi > 3lv.msi.md5
+	cd ${package_dir} && rm -f LICENSE README.md 3lv.wxs 3lv.exe
 
 ## install: Build and then install the binary to /usr/local/bin. Requires root. Only works on Linux and macOS (tries to guess the OS and architecture).
 .PHONY: install
