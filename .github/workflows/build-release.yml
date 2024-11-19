@@ -9,10 +9,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: elvia-runner
-    outputs:
-      version-tag: ${{ steps.get-version.outputs.version_tag }}
-      major-version-tag: ${{ steps.get-version.outputs.major_version_tag }}
+    runs-on: ${{ matrix.os == 'windows' && 'windows-latest' || 'elvia-runner' }}
     strategy:
       matrix:
         os: [linux, macos, windows]
@@ -30,27 +27,24 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - name: Resolve version
-        id: get-version
-        run: |
-          version=$(cat VERSION)
-          echo "VERSION_TAG=v$version" >> "$GITHUB_OUTPUT"
-          echo "MAJOR_VERSION_TAG=v$(echo $version | cut -d. -f1)" >> "$GITHUB_OUTPUT"
-
-      # TODO: remove when wixl is pre-installed on elvia-runner runners
-      - name: Install dependencies for Windows
+      - name: Add MSBuild to PATH
         if: ${{ matrix.os == 'windows' }}
-        run: sudo apt-get install -y --no-install-recommends wixl
+        uses: microsoft/setup-msbuild@v2
 
-      - name: Package CLI
-        run: make package-${{ matrix.os }}-${{ matrix.arch }}
+      - name: Install WiX
+        if: ${{ matrix.os == 'windows' }}
+        run: dotnet tool install --global wix
+
+      - name: Package binaries
+        shell: bash
+        run: make 'package-${{ matrix.os }}-${{ matrix.arch }}'
 
       - name: Upload artifacts (on push)
         if: ${{ github.event_name == 'push' }}
         uses: actions/upload-artifact@v4
         with:
           name: '3lv-${{ matrix.os }}-${{ matrix.arch }}'
-          path: '/tmp/3lv/dist'
+          path: 'dist/package/*'
 
   pre-release:
     name: Pre-release
@@ -58,15 +52,20 @@ jobs:
     runs-on: elvia-runner
     if: ${{ github.event_name == 'push' }}
     outputs:
+      version-tag: ${{ steps.get-version.outputs.version_tag }}
       new-version: ${{ steps.create-pre-release.outputs.new_version }}
-    env:
-      VERSION_TAG: ${{ needs.build.outputs.version-tag }}
-      MAJOR_VERSION_TAG: ${{ needs.build.outputs.major-version-tag }}
     permissions:
       contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: get-version
+        run: |
+          version=$(cat VERSION)
+          echo "VERSION_TAG=v$version" | tee -a "$GITHUB_ENV" "$GITHUB_OUTPUT"
+          echo "MAJOR_VERSION_TAG=v$(echo $version | cut -d. -f1)" >> "$GITHUB_ENV"
 
       - name: Create pre-release if new version
         id: create-pre-release
