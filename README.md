@@ -4,17 +4,34 @@ Command Line Interface tool for developing, building and securing Elvia applicat
 
 ## 💾 Installation
 
-See the [releases page](https://github.com/3lvia/cli/releases) and download your platform's binary.
-
 Supported platforms:
 
-- **Linux**
-- **macOS** (Intel and M-series)
 - **Windows**
+- **macOS** (Intel and M-series)
+- **Linux** (any distribution)
+
+### Windows
+
+Download the MSI file from the [releases page](https://github.com/3lvia/cli/releases) and run it.
+
+### Linux/WSL and macOS
+
+Download the tarball file for your platform (and optionally the MD5 cheksum) from the [releases page](https://github.com/3lvia/cli/releases),
+extract it and move the binary to a directory in your PATH.
+
+#### Example
+
+```bash
+# Optional: verify checksum first
+md5sum -c 3lv-linux-amd64.tar.gz.md5
+
+tar -xzf 3lv-linux-amd64.tar.gz
+sudo install -Dm755 -t /usr/bin 3lv
+```
 
 ## 📋 Requirements
 
-To use the 3lv CLI, you need to have these dependencies installed:
+To use every part of the 3lv CLI, you need to have these dependencies installed:
 
 - [Docker](https://docs.docker.com/engine/install): used for building
 - [Helm](https://helm.sh/docs/intro/install): used for deploying
@@ -23,6 +40,8 @@ To use the 3lv CLI, you need to have these dependencies installed:
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli): used for pushing to Azure Container Registry and deploying to Azure Kubernetes Service
 - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install): used for deploying to Google Kubernetes Engine
 - [GitHub CLI](https://cli.github.com): used for pushing to GitHub Container Registry
+
+**Any of these dependencies can be skipped if you dont't use the subcommands that require them.**
 
 ## ❓ Usage
 
@@ -107,10 +126,23 @@ Before version `v1.0.0` is released, breaking changes will happen in minor versi
 
 ### Installation from source
 
+Requires [Go](https://golang.org) and [Make](https://www.gnu.org/software/make).
+
+#### Windows
+
+Install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow the Linux instructions.
+
+Optionally, you can build a Windows binary using the following command:
+
+```bash
+make build-windows-amd64
+```
+
+You can then move the binary to a directory in your PATH.
+
 #### Linux and macOS
 
-Requires [Go](https://golang.org) and [Make](https://www.gnu.org/software/make).
-These can be installed on Debian/Ubuntu/WSL with the following command:
+Ensure you have Go and Make installed:
 
 ```bash
 sudo apt install golang make
@@ -124,7 +156,7 @@ cd cli
 sudo make install
 ```
 
-**macOS**: If `GOOS` and `GOARCH` is not properly set, you can use this command:
+**macOS**: If `GOOS` and `GOARCH` are not properly set, you can use this command:
 
 ```bash
 # for Intel macs
@@ -132,18 +164,6 @@ sudo make install-macos-amd64
 # for M1 and newer macs
 sudo make install-macos-arm64
 ```
-
-#### Windows
-
-Install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow the Linux instructions.
-
-Optionally, you can build a Windows binary using the following command:
-
-```bash
-sudo make build-windows-amd64
-```
-
-You can then move the binary to a directory in your PATH.
 
 ### Running tests
 
