@@ -136,8 +136,8 @@ jobs:
 
           # Special case for macOS binaries being named differently from their architecture (darwin)
           if [[ '${{ matrix.os }}' == 'macos' ]]; then
-            mv "3lv-darwin-$version-${{ matrix.arch }}.tar.gz" "3lv-macos-$version-${{ matrix.arch }}.tar.gz"
-            mv "3lv-darwin-$version-${{ matrix.arch }}.tar.gz.md5" "3lv-macos-$version-${{ matrix.arch }}.tar.gz.md5"
+            mv "3lv-$version-darwin-${{ matrix.arch }}.tar.gz" "3lv-$version-macos-${{ matrix.arch }}.tar.gz"
+            mv "3lv-$version-darwin-${{ matrix.arch }}.tar.gz.md5" "3lv-$version-macos-${{ matrix.arch }}.tar.gz.md5"
           fi
 
           # Special case for Windows being packaged as MSI
