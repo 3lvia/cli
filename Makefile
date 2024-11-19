@@ -1,7 +1,7 @@
 main_package_path = .
 binary_name = 3lv
-build_dir = /tmp/3lv/bin
-package_dir = /tmp/3lv/dist
+build_dir = ./dist/bin
+package_dir = ./dist/package
 go_os = $(shell go env GOOS)
 go_arch = $(shell go env GOARCH)
 
@@ -82,14 +82,12 @@ package-macos-arm64: go_arch=arm64
 package-macos-arm64: package
 
 ## package-windows-amd64: Build and then package the binary for Windows (amd64).
+## Only works on Windows, requires WiX Toolset to be installed.
 .PHONY: package-windows-amd64
 package-windows-amd64: build-windows-amd64
 package-windows-amd64:
-	mkdir -p ${package_dir}
-	cp LICENSE README.md build/package/3lv-${go_arch}.wxs ${build_dir}/3lv-${go_arch}.exe ${package_dir}
-	cd ${package_dir} && wixl -v -o 3lv-${go_arch}.msi 3lv-${go_arch}.wxs
+	wix build build/package/3lv-${go_arch}.wxs -o ${package_dir}/3lv-${go_arch}.msi
 	cd ${package_dir} && md5sum 3lv-${go_arch}.msi > 3lv-${go_arch}.msi.md5
-	cd ${package_dir} && rm -f LICENSE README.md 3lv-${go_arch}.wxs 3lv-${go_arch}.exe
 
 ## install: Build and then install the binary to /usr/local/bin. Requires root. Only works on Linux and macOS (tries to guess the OS and architecture).
 .PHONY: install
