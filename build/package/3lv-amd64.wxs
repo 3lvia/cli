@@ -29,7 +29,7 @@
 			  <Directory Id='INSTALLDIR' Name='Elvia CLI'>
 
 				<Component Id='MainExecutable' Guid='B9716B0E-A39B-4B2E-94CE-250C40018EBB'>
-					<File Id='3lvEXE' Name='3lv.exe' DiskId='1' Source='3lv.exe' KeyPath='yes'/>
+					<File Id='3lvEXE' Name='3lv.exe' DiskId='1' Source='3lv-amd64.exe' KeyPath='yes'/>
 				</Component>
 
 			  </Directory>
