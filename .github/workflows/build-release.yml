@@ -77,6 +77,13 @@ jobs:
             exit 0
           fi
 
+          latest_prelrease_version=$(gh release list --json name,isPrerelease -q 'first(.[] | select(.isPrerelease == true) | .name)')
+          if [[ "$latest_prelrease_version" == "$VERSION_TAG" ]]; then
+            echo "Pre-release already created."
+            echo 'new_version=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           gh release create "$VERSION_TAG" --generate-notes --prerelease
           echo 'new_version=true' >> "$GITHUB_OUTPUT"
         env:
