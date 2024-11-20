@@ -53,7 +53,6 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     outputs:
       version-tag: ${{ steps.get-version.outputs.version_tag }}
-      new-version: ${{ steps.create-pre-release.outputs.new_version }}
     permissions:
       contents: write
     steps:
@@ -73,19 +72,16 @@ jobs:
           latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
           if [[ "$latest_version" == "$VERSION_TAG" ]]; then
             echo "Version already released."
-            echo 'new_version=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           latest_prelrease_version=$(gh release list --json name,isPrerelease -q 'first(.[] | select(.isPrerelease == true) | .name)')
           if [[ "$latest_prelrease_version" == "$VERSION_TAG" ]]; then
             echo "Pre-release already created."
-            echo 'new_version=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           gh release create "$VERSION_TAG" --generate-notes --prerelease
-          echo 'new_version=true' >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -155,7 +151,7 @@ jobs:
   release:
     name: Release
     runs-on: elvia-runner
-    needs: [pre-release, build, upload-binaries]
+    needs: [build, upload-binaries]
     if: ${{ github.event_name == 'push' }}
     permissions:
       contents: write
@@ -164,8 +160,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Release if new version and not alpha or beta
-        if: ${{ needs.pre-release.outputs.new-version == 'true' && !contains(needs.build.outputs.version-tag, '-alpha') && !contains(needs.build.outputs.version-tag, '-beta') }}
-        run: gh release edit "$VERSION_TAG" --prerelease=false --latest
+        if: ${{ !contains(needs.build.outputs.version-tag, '-alpha') && !contains(needs.build.outputs.version-tag, '-beta') }}
+        run: gh release edit "$VERSION_TAG" --prerelease=false --latest=true
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION_TAG: ${{ needs.build.outputs.version-tag }}
