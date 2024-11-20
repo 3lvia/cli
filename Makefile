@@ -5,6 +5,8 @@ package_dir = ./dist/package
 go_os = $(shell go env GOOS)
 go_arch = $(shell go env GOARCH)
 cli_version = $(shell cat VERSION | sed -e 's/-\(alpha\|beta\)[0-9]*//')
+package_name = ${binary_name}-${cli_version}-${go_os}-${go_arch}
+
 
 ## help: Show this help message.
 .PHONY: help
@@ -12,20 +14,23 @@ help:
 	@echo 'Usage:'
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
+
 ## test: Run unit tests.
 .PHONY: test
 test:
 	go test -v ./...
+
 
 ## lint: Run linter (golangci-lint).
 .PHONY: lint
 lint:
 	golangci-lint run ./...
 
+
 ## build: Build the binary (tries to guess the OS and architecture).
 .PHONY: build
 build:
-	GOOS=${go_os} GOARCH=${go_arch} CGO_ENABLED=0 go build -o ${build_dir}/${binary_name} ${main_package_path}
+	GOOS=${go_os} GOARCH=${go_arch} CGO_ENABLED=0 go build -o ${build_dir}/${go_os}/${go_arch}/${binary_name} ${main_package_path}
 
 ## build-linux-amd64: Build the binary for Linux (amd64).
 .PHONY: build-linux-amd64
@@ -42,29 +47,31 @@ build-macos-amd64: build
 ## build-macos-arm64: Build the binary for macOS (arm64).
 .PHONY: build-macos-arm64
 build-macos-arm64: go_os=darwin
-build-macos-amr64: go_arch=arm64
+build-macos-arm64: go_arch=arm64
 build-macos-arm64: build
 
 ## build-windows-amd64: Build the binary for Windows (amd64).
 .PHONY: build-windows-amd64
 build-windows-amd64: go_os=windows
 build-windows-amd64: go_arch=amd64
-build-windows-amd64: binary_name=3lv-amd64.exe
+build-windows-amd64: binary_name:=${binary_name}.exe
 build-windows-amd64: build
 
-## run: Build and then run the binary.
+
+## run: Build and then run the binary (tries to guess the OS and architecture).
 .PHONY: run
 run: build
-	${build_dir}/${binary_name}
+	${build_dir}/${go_os}/${go_arch}/${binary_name}
+
 
 ## package: Build and then package the binary as a tarball (tries to guess the OS and architecture).
 .PHONY: package
 package: build
 	mkdir -p ${package_dir}
-	tar -czf ${package_dir}/3lv-${cli_version}-${go_os}-${go_arch}.tar.gz LICENSE README.md -C ${build_dir} 3lv
-	cd ${package_dir} && md5sum 3lv-${cli_version}-${go_os}-${go_arch}.tar.gz > 3lv-${cli_version}-${go_os}-${go_arch}.tar.gz.md5
+	tar -czf ${package_dir}/${package_name}.tar.gz LICENSE README.md -C ${build_dir}/${go_os}/${go_arch} ${binary_name}
+	cd ${package_dir} && md5sum ${package_name}.tar.gz > ${package_name}.tar.gz.md5
 
-## package-linux-amd64: Build and then package the binary for Linux/amd64.
+## package-linux-amd64: Build and then package the binary for Linux (amd64).
 .PHONY: package-linux-amd64
 package-linux-amd64: go_os=linux
 package-linux-amd64: go_arch=amd64
@@ -82,18 +89,18 @@ package-macos-arm64: go_os=darwin
 package-macos-arm64: go_arch=arm64
 package-macos-arm64: package
 
-## package-windows-amd64: Build and then package the binary for Windows (amd64).
-## Only works on Windows, requires WiX Toolset to be installed.
+## package-windows-amd64: Build and then package the binary for Windows (amd64). Only works on Windows, requires WiX Toolset to be installed.
 .PHONY: package-windows-amd64
 package-windows-amd64: build-windows-amd64
 package-windows-amd64:
-	wix build build/package/3lv-${go_arch}.wxs -o ${package_dir}/3lv-${cli_version}-${go_arch}.msi -d "CliVersion=${cli_version}"
-	cd ${package_dir} && md5sum 3lv-${cli_version}-${go_arch}.msi > 3lv-${cli_version}-${go_arch}.msi.md5
+	wix build build/package/${binary_name}-${go_arch}.wxs -o ${package_dir}/${package_name}.msi -d "CliVersion=${cli_version}"
+	cd ${package_dir} && md5sum ${package_name}.msi > ${package_name}.msi.md5
+
 
 ## install: Build and then install the binary to /usr/local/bin. Requires root. Only works on Linux and macOS (tries to guess the OS and architecture).
 .PHONY: install
 install: build
-	sudo install -Dm755 -t /usr/local/bin ${build_dir}/${binary_name}
+	sudo install -Dm755 -t /usr/local/bin ${build_dir}/${go_os}/${go_arch}/${binary_name}
 
 ## install-linux-amd64: Build and then install the binary for Linux (amd64) to /usr/local/bin. Requires root.
 .PHONY: install-linux-amd64
@@ -112,6 +119,7 @@ install-macos-amd64: install
 install-macos-arm64: go_os=darwin
 install-macos-arm64: go_arch=arm64
 install-macos-arm64: install
+
 
 ## clean: Remove build and package directories.
 .PHONY: clean
