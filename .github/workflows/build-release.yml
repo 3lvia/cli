@@ -126,10 +126,11 @@ jobs:
 
       - name: Upload binaries if not already uploaded
         run: |
-          number_of_binaries=$(gh release view "$VERSION_TAG" --json assets -q '.[] | length')
+          number_of_binaries=$(gh release view "$VERSION_TAG" --json assets -q '.[] | map(select(.name | contains("${{ matrix.os }}-${{ matrix.arch }}")) | length')
           version=$(echo "$VERSION_TAG" | cut -c 2-)
 
-          if [[ "$number_of_binaries" -gt 0 ]]; then
+          # One binary and one checksum file per arch/os combo
+          if [[ "$number_of_binaries" -gt 1 ]]; then
             echo "Binaries already uploaded."
             exit 0
           fi
