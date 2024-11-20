@@ -153,7 +153,7 @@ jobs:
   release:
     name: Release
     runs-on: elvia-runner
-    needs: [build, upload-binaries]
+    needs: [pre-release, upload-binaries]
     if: ${{ github.event_name == 'push' }}
     permissions:
       contents: write
@@ -166,4 +166,4 @@ jobs:
         run: gh release edit "$VERSION_TAG" --prerelease=false --latest=true
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION_TAG: ${{ needs.build.outputs.version-tag }}
+          VERSION_TAG: ${{ needs.pre-release.outputs.version-tag }}
