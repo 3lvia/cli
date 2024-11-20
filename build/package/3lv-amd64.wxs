@@ -27,7 +27,7 @@
 			<Directory Id="Elvia" Name="Elvia">
 				<Directory Id="INSTALLDIR" Name="Elvia CLI">
 					<Component Id="MainExecutable" Guid="B9716B0E-A39B-4B2E-94CE-250C40018EBB">
-						<File Id="ElviaCliEXE" Name="3lv.exe" DiskId="1" Source="$(sys.CURRENTDIR)\dist\bin\3lv-amd64.exe" KeyPath="yes" />
+						<File Id="ElviaCliEXE" Name="3lv.exe" DiskId="1" Source="$(sys.CURRENTDIR)\dist\bin\windows/amd64/3lv.exe" KeyPath="yes" />
 					</Component>
 				</Directory>
 			</Directory>
