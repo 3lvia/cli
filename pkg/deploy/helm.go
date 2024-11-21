@@ -22,15 +22,20 @@ func checkHelmInstalledCommand(
 }
 
 func helmRepoAddCommand(
+	helmChartRepositoryURL string,
 	runOptions *command.RunOptions,
 ) command.Output {
+	url := chartsRepositoryURL
+	if helmChartRepositoryURL != "" {
+		url = helmChartRepositoryURL
+	}
 	return command.Run(
 		*exec.Command(
 			"helm",
 			"repo",
 			"add",
 			chartsNamespace,
-			chartsRepositoryURL,
+			url,
 		),
 		runOptions,
 	)

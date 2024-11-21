@@ -34,6 +34,31 @@ func TestHelmRepoAddCommand(t *testing.T) {
 	)
 
 	actualCommand := helmRepoAddCommand(
+		"",
+		&command.RunOptions{DryRun: true},
+	)
+
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
+}
+
+func TestHelmRepoAddCommandWithUrl(t *testing.T) {
+	expectedCommandString := strings.Join(
+		[]string{
+			"helm",
+			"repo",
+			"add",
+			"elvia-charts",
+			"https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts",
+		},
+		" ",
+	)
+
+	actualCommand := helmRepoAddCommand(
+		"https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts",
 		&command.RunOptions{DryRun: true},
 	)
 
