@@ -145,8 +145,9 @@ var Command *cli.Command = &cli.Command{
 			Usage: "The GitHub Actions run ID to use for deployment annotations.",
 		},
 		&cli.StringFlag{
-			Name:  "helm-chart-repository-url",
-			Usage: "Override the helm chart repository where the elvia-charts are located. Useful for testing feature branches. For instance 'https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts'",
+			Name:    "helm-chart-repository-url",
+			Usage:   "Override the helm chart repository where the elvia-charts are located. Useful for testing feature branches. For instance 'https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts'",
+			EnvVars: []string{"3LV_HELM_CHART_REPOSITORY_URL"},
 		},
 		&cli.BoolFlag{
 			Name:    "allow-deploy",
