@@ -25,7 +25,7 @@ func RuntimeCloudProviderFlag() *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:    "runtime-cloud-provider",
 		Aliases: []string{"r"},
-		Usage:   "The runtime cloud provider to use",
+		Usage:   "The runtime cloud provider to use (aks, gke, iss).",
 		Value:   "aks",
 		Action: func(c *cli.Context, runtimeCloudProvider string) error {
 			allowedRuntimeCloudProviders := []string{"aks", "gke", "iss"}
@@ -63,7 +63,7 @@ func ApplicationNameFlag(usage string) *cli.StringFlag {
 	}
 }
 
-func HelmValuesPathFlag() *cli.StringFlag {
+func HelmValuesFileFlag() *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:    "helm-values-file",
 		Aliases: []string{"f"},
@@ -101,20 +101,22 @@ func FormatsFlag(name string) *cli.StringSliceFlag {
 	}
 }
 
-func DisableErrorFlag(nameOverride string) *cli.BoolFlag {
-	name := func() string {
-		if nameOverride == "" {
-			return "disable-error"
-		}
-
-		return nameOverride
-	}()
-
+func DisableErrorFlag(name string) *cli.BoolFlag {
 	return &cli.BoolFlag{
 		Name:    name,
 		Aliases: []string{"D"},
 		Usage:   "Disable error exit code on vulnerabilities found by Trivy.",
 		Value:   false,
 		EnvVars: []string{nameToEnvVar(name)},
+	}
+}
+
+func RegistryFlag(usage string) *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:    "registry",
+		Aliases: []string{"r"},
+		Usage:   usage,
+		EnvVars: []string{"3LV_REGISTRY"},
+		Value:   "containerregistryelvia.azurecr.io",
 	}
 }

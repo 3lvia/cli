@@ -90,7 +90,7 @@ Before version `v1.0.0` is released, breaking changes will happen in minor versi
 
 ## 📖 Examples
 
-The CLI assumes that you are in the root of your project (git repository) when running the commands.
+The CLI assumes that you are in the git repository of the project you are working on.
 
 ### Build
 
