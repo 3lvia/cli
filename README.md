@@ -12,22 +12,31 @@ Supported platforms:
 
 ### Windows
 
-Download the MSI file from the [releases page](https://github.com/3lvia/cli/releases) and run it.
+Download the MSI file (and optionally the MD5 checksum) from the [releases page](https://github.com/3lvia/cli/releases) and run it.
+
+#### Verify checksum
+
+```pwsh
+certutil -hashfile 3lv-windows-amd64.msi MD5
+```
 
 ### Linux/WSL and macOS
 
 Download the tarball file for your platform (and optionally the MD5 cheksum) from the [releases page](https://github.com/3lvia/cli/releases),
 extract it and move the binary to a directory in your PATH.
 
-#### Example
+#### Example installation
 
 ```bash
 # Optional: verify checksum first
 md5sum -c 3lv-linux-amd64.tar.gz.md5
 
 tar -xzf 3lv-linux-amd64.tar.gz
-sudo install -Dm755 -t /usr/bin 3lv
+sudo install -Dm755 -t /usr/local/bin 3lv
 ```
+
+For macOS, you can use the same commands as above, but replace `linux` with `macos`.
+If you have an M1 or newer mac, you can use the `macos-arm64` binary.
 
 ## 📋 Requirements
 
@@ -121,6 +130,17 @@ Before version `v1.0.0` is released, breaking changes will happen in minor versi
 # or use shorthand
 3lv scan -F json,markdown my-cool-image
 ```
+
+### Generate GitHub Actions workflow for Kubernetes deploy
+
+```bash
+3lv github-actions --system-name core --application-name my-cool-application --runtime-cloud-provider aks --helm-values-file CI/values.yml
+# or use shorthand
+3lv gha -s core -a my-cool-application -r aks -f CI/values.yml
+```
+
+Remember to also add your repository to [github-repositories-terraform](https://github.com/3lvia/github-repositories-terraform)
+to enable access from GitHub Actions to Kubernetes.
 
 ## 🧑‍💻 Development
 
