@@ -26,4 +26,4 @@ go.work.sum
 
 # Build & packaging output
 dist/
-/pkg/build
+/pkg/build/_test/obj
