@@ -14,7 +14,7 @@ func TestGetImageName(t *testing.T) {
 
 	expectedImageName := registry + "/" + systemName + "-" + imageName
 
-	actualImageName, err := getImageName(registry, systemName, imageName)
+	actualImageName, err := GetImageName(registry, systemName, imageName)
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
@@ -31,7 +31,7 @@ func TestGetImageNameGHCR(t *testing.T) {
 
 	expectedImageName := registry + "/" + systemName + "/" + imageName
 
-	actualImageName, err := getImageName(registry, systemName, imageName)
+	actualImageName, err := GetImageName(registry, systemName, imageName)
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}
@@ -48,7 +48,7 @@ func TestGetImageNameOtherRegistry(t *testing.T) {
 
 	expectedImageName := registry + "/" + systemName + "/" + imageName
 
-	actualImageName, err := getImageName(registry, systemName, imageName)
+	actualImageName, err := GetImageName(registry, systemName, imageName)
 	if err != nil {
 		t.Errorf("Expected no error, got %s", err)
 	}

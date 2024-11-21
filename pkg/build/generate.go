@@ -1,20 +1,20 @@
 package build
 
 import (
-	"bytes"
 	"embed"
 	"encoding/xml"
 	"fmt"
-	"html/template"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/3lvia/cli/pkg/utils"
 )
 
 //go:embed *.tmpl*
-var templates embed.FS
+var dockerfileTemplates embed.FS
 
 type GenerateDockerfileOptions struct {
 	GoMainPackageDirectory string
@@ -107,9 +107,11 @@ func generateDockerfileForDotNet(
 
 	const templateFile = "Dockerfile.dotnet.tmpl"
 
-	dockerfilePath, err := writeDockerfile(
+	dockerfilePath, err := utils.WriteFileWithTemplate(
 		directory,
+		"Dockerfile",
 		templateFile,
+		dockerfileTemplates,
 		DockerfileVariablesDotnet{
 			CsprojFile:       csprojFileName,
 			AssemblyName:     assemblyName,
@@ -160,43 +162,18 @@ func generateDockerfileForGo(
 	}
 
 	const templateFile = "Dockerfile.go.tmpl"
-	dockerfilePath, err := writeDockerfile(dir, templateFile, dockerfileVariables)
+	dockerfilePath, err := utils.WriteFileWithTemplate(
+		dir,
+		"Dockerfile",
+		templateFile,
+		dockerfileTemplates,
+		dockerfileVariables,
+	)
 	if err != nil {
 		return "", "", err
 	}
 
 	return dockerfilePath, buildContext, nil
-}
-
-func writeDockerfile(
-	dir string,
-	templateFile string,
-	dockerfileVariables any,
-) (string, error) {
-	dockerfilePath := path.Join(dir, "Dockerfile")
-	dockerfile, err := os.Create(dockerfilePath)
-	if err != nil {
-		return "", fmt.Errorf("Failed to create Dockerfile: %s", err)
-	}
-
-	defer dockerfile.Close()
-
-	dockerfileTemplate, err := template.New(templateFile).ParseFS(templates, templateFile)
-	if err != nil {
-		return "", fmt.Errorf("Failed to parse Dockerfile template: %s", err)
-	}
-
-	var dockerfileBuffer bytes.Buffer
-	err = dockerfileTemplate.Execute(&dockerfileBuffer, dockerfileVariables)
-	if err != nil {
-		return "", fmt.Errorf("Failed to execute Dockerfile template: %s", err)
-	}
-
-	if _, err := dockerfile.Write(dockerfileBuffer.Bytes()); err != nil {
-		return "", fmt.Errorf("Failed to write Dockerfile: %s", err)
-	}
-
-	return dockerfilePath, nil
 }
 
 type CSharpProjectFile struct {

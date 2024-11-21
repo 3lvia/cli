@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"bytes"
+	"embed"
 	"fmt"
+	"html/template"
+	"os"
 	"os/exec"
 	"path"
 	"strings"
@@ -75,4 +79,37 @@ func StringWithDefault(value, defaultValue string) string {
 	}
 
 	return value
+}
+
+func WriteFileWithTemplate(
+	dir string,
+	fileName string,
+	templateFile string,
+	templates embed.FS,
+	variables any,
+) (string, error) {
+	filePath := path.Join(dir, fileName)
+	file, err := os.Create(filePath)
+	if err != nil {
+		return "", fmt.Errorf("Failed to create file: %s", err)
+	}
+
+	defer file.Close()
+
+	template, err := template.New(templateFile).ParseFS(templates, templateFile)
+	if err != nil {
+		return "", fmt.Errorf("Failed to parse template: %s", err)
+	}
+
+	var fileBuffer bytes.Buffer
+	err = template.Execute(&fileBuffer, variables)
+	if err != nil {
+		return "", fmt.Errorf("Failed to execute template: %s", err)
+	}
+
+	if _, err := file.Write(fileBuffer.Bytes()); err != nil {
+		return "", fmt.Errorf("Failed to write file: %s", err)
+	}
+
+	return filePath, nil
 }
