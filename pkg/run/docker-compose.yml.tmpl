@@ -1,0 +1,11 @@
+services:
+  {{ .ApplicationName }}:
+    image: {{ .ImageName }}
+    ports:
+    - "{{ .Port }}:{{ .Port }}"
+    {{- if .EnvironmentVariables }}
+    environment:
+      {{- range $key, $value := .EnvironmentVariables }}
+      - {{ $key }}={{ $value }}
+      {{- end }}
+    {{- end }}

@@ -31,7 +31,7 @@ var Command *cli.Command = &cli.Command{
 			"The name of the application you want to build and deploy.",
 		),
 		shared.RuntimeCloudProviderFlag(),
-		shared.HelmValuesPathFlag(),
+		shared.HelmValuesFileFlag(),
 		&cli.StringFlag{
 			Name:    "default-branch",
 			Aliases: []string{"b"},

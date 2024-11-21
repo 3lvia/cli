@@ -27,7 +27,7 @@ var Command *cli.Command = &cli.Command{
 			true,
 		),
 		shared.RuntimeCloudProviderFlag(),
-		shared.HelmValuesPathFlag(),
+		shared.HelmValuesFileFlag(),
 		&cli.StringFlag{
 			Name:     "image-tag",
 			Aliases:  []string{"i"},

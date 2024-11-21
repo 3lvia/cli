@@ -1,264 +1,175 @@
 package run
 
 import (
+	"embed"
 	"fmt"
-	"io"
-	"log"
-	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
+	"os/exec"
 
+	"github.com/3lvia/cli/pkg/build"
+	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
+	"gopkg.in/yaml.v3"
 )
 
-const commandName = "github-actions"
+const commandName = "run"
 
-const exampleWorkflowBaseURL = "https://raw.githubusercontent.com/3lvia/.github/refs/heads/trunk/workflow-templates"
+//go:embed *.tmpl*
+var composeTemplates embed.FS
 
 var Command *cli.Command = &cli.Command{
 	Name:    commandName,
-	Aliases: []string{"gha"},
-	Usage:   "Add GitHub Actions to a project",
+	Aliases: []string{"r"},
+	Usage:   "Run your application with Docker Compose",
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
-			"The name of your system (Kubernetes namespace) you want to deploy to.",
+			"The name of your system.",
 			true,
 		),
-		shared.ApplicationNameFlag(
-			"The name of the application you want to build and deploy.",
+		shared.HelmValuesFileFlag(),
+		shared.RegistryFlag(
+			"The registry to use for the image. Used for finding the image name.",
 		),
-		shared.RuntimeCloudProviderFlag(),
-		shared.HelmValuesPathFlag(),
-		&cli.StringFlag{
-			Name:    "default-branch",
-			Aliases: []string{"b"},
-			Usage:   "The default branch of the repository",
-			Value:   "trunk",
-		},
 	},
-	Action: GitHubActions,
+	Action: Run,
 }
 
-func GitHubActions(c *cli.Context) error {
-	const githubActionsDir = ".github/workflows"
-	if _, err := os.Stat(githubActionsDir); os.IsNotExist(err) {
-		log.Printf("Creating directory '%s'\n", githubActionsDir)
-		if err := os.MkdirAll(githubActionsDir, 0755); err != nil {
-			return cli.Exit(fmt.Sprintf("Failed to create directory '%s'", githubActionsDir), 1)
-		}
+func Run(c *cli.Context) error {
+	if c.NArg() <= 0 {
+		return cli.ShowCommandHelp(c, commandName)
 	}
 
-	// Required
-	projectFile := c.String("project-file")
-	runtimeCloudProvider := c.String("runtime-cloud-provider")
-	systemName := c.String("system-name")
-	applicationName := c.String("application-name")
-
-	language, err := getLanguageFromProjectFile(projectFile)
-	if err != nil {
-		return cli.Exit(err.Error(), 1)
+	applicationName := c.Args().First()
+	if applicationName == "" {
+		return cli.Exit("Application name not provided", 1)
 	}
 
-	exampleWorkflowFileURL, err := getExampleWorkflowFileURL(language, runtimeCloudProvider)
-	if err != nil {
-		return cli.Exit(err.Error(), 1)
-	}
-
-	workflowFileName := fmt.Sprintf("build-deploy-%s.yml", applicationName)
-	workflowFilePath := filepath.Join(githubActionsDir, workflowFileName)
-
-	log.Printf("Downloading example workflow file from '%s' to '%s'\n", exampleWorkflowFileURL, workflowFilePath)
-	if err := downloadFile(exampleWorkflowFileURL, workflowFilePath); err != nil {
-		return cli.Exit(err.Error(), 1)
-	}
-
-	log.Printf("Replacing placeholders in workflow file '%s'\n. You may need to manually fill in some values yourself.", workflowFilePath)
-	replaceWorkflowPlaceholdersOptions := &ReplaceWorkflowPlaceholdersOptions{
-		SystemName:      systemName,
-		ApplicationName: applicationName,
-		HelmValuesPath:  c.String("helm-values-file"),
-		DefaultBranch:   c.String("default-branch"),
-	}
-	if err := replaceWorkflowPlaceholders(
-		workflowFilePath,
-		projectFile,
-		replaceWorkflowPlaceholdersOptions,
-	); err != nil {
-		return cli.Exit(err.Error(), 1)
-	}
-
-	log.Printf("Successfully added GitHub Actions to the project!\n")
-	terraformReminder := func() string {
-		if runtimeCloudProvider == "iss" {
-			return "NOTE: if you have not done so already, you will need to add your repository to the Terraform module 'github-actions-deploy' at https://github.com/3lvia/iss-terraform to enable deployments from GitHub Actions."
-		}
-		return "NOTE: if you have not done so already, you will need to add your system/repository to https://github.com/3lvia/github-repositories-terraform to enable deployments from GitHub Actions."
-	}()
-	log.Printf("%s\n", terraformReminder)
-
-	return nil
-}
-
-type ReplaceWorkflowPlaceholdersOptions struct {
-	DefaultBranch   string
-	SystemName      string
-	ApplicationName string
-	HelmValuesPath  string
-}
-
-func replaceWorkflowPlaceholders(
-	workflowFilePath string,
-	projectFile string,
-	options *ReplaceWorkflowPlaceholdersOptions,
-) error {
-	if options == nil {
-		options = &ReplaceWorkflowPlaceholdersOptions{}
-	}
-
-	file, err := os.Open(workflowFilePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	contents, err := io.ReadAll(file)
-	if err != nil {
-		return err
-	}
-
-	contentsString := string(contents)
-
-	defaultBranch := utils.StringWithDefault(options.DefaultBranch, "trunk")
-	contentsString = strings.ReplaceAll(contentsString, "$default-branch", defaultBranch)
-
-	contentsString = strings.ReplaceAll(
-		contentsString,
-		"<your project file path here>",
-		projectFile,
+	helmValues, err := parseHelmValuesFile(
+		c.String("helm-values-file"),
 	)
-
-	if options.ApplicationName != "" {
-		contentsString = strings.ReplaceAll(
-			contentsString,
-			"<your application name here>",
-			options.ApplicationName,
-		)
+	if err != nil {
+		return cli.Exit(err.Error(), 1)
 	}
 
-	if options.SystemName != "" {
-		contentsString = strings.ReplaceAll(
-			contentsString,
-			"<your system name here>",
-			options.SystemName,
-		)
-	}
-
-	if options.HelmValuesPath != "" {
-		contentsString = strings.ReplaceAll(
-			contentsString,
-			".github/deploy/values.yml",
-			options.HelmValuesPath,
-		)
-	}
-
-	contentsString = fmt.Sprintf(
-		"# This file was generated by the 3lvia CLI: https://github.com/3lvia/cli\n\n%s",
-		contentsString,
+	composeFile, err := generateComposeFile(
+		c.String("registry"),
+		c.String("system-name"),
+		applicationName,
+		helmValues,
 	)
+	if err != nil {
+		return cli.Exit(err.Error(), 1)
+	}
 
-	if err := os.WriteFile(workflowFilePath, []byte(contentsString), 0644); err != nil {
-		return err
+	dockerComposeUpOutput := dockerComposeUpCommand(
+		composeFile,
+		nil,
+	)
+	if command.IsError(dockerComposeUpOutput) {
+		return cli.Exit(dockerComposeUpOutput.Error, 1)
 	}
 
 	return nil
 }
 
-func downloadFile(url string, outputFilePath string) error {
-	outputFile, err := os.Create(outputFilePath)
-	if err != nil {
-		return err
-	}
-	defer outputFile.Close()
-
-	response, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	_, err = io.Copy(outputFile, response.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
+type ComposeFileVariables struct {
+	ApplicationName      string
+	ImageName            string
+	Port                 int
+	TargetPort           int
+	EnvironmentVariables map[string]string
 }
 
-func getLanguageFromProjectFile(projectFile string) (string, error) {
-	if strings.HasSuffix(projectFile, ".csproj") {
-		return "dotnet", nil
+func generateComposeFile(
+	registry string,
+	systemName string,
+	applicationName string,
+	helmValues *HelmValues,
+) (string, error) {
+	directory, err := os.MkdirTemp("", "3lv-run-*")
+	if err != nil {
+		return "", fmt.Errorf("Failed to create temporary directory: %s", err)
 	}
 
-	if projectFile == "go.mod" {
-		return "go", nil
+	imageName, err := build.GetImageName(registry, systemName, applicationName)
+	if err != nil {
+		return "", err
 	}
 
-	if strings.Contains(projectFile, "Dockerfile") {
-		return "dockerfile", nil
+	composeFile, err := utils.WriteFileWithTemplate(
+		directory,
+		"docker-compose.yml",
+		"docker-compose.yml.tmpl",
+		composeTemplates,
+		ComposeFileVariables{
+			ApplicationName:      applicationName,
+			ImageName:            imageName + ":latest-cache",
+			Port:                 helmValues.Service.Port,
+			TargetPort:           helmValues.Service.TargetPort,
+			EnvironmentVariables: helmValues.GetEnvironmentVariablesMap(),
+		},
+	)
+	if err != nil {
+		return "", err
 	}
 
-	return "", fmt.Errorf("Unsupported project file '%s'", projectFile)
+	return composeFile, nil
 }
 
-func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (string, error) {
-	// .NET
-	if language == "dotnet" && runtimeCloudProvider == "aks" {
-		return fmt.Sprintf("%s/build-deploy-dotnet.yml", exampleWorkflowBaseURL), nil
+func (v HelmValues) GetEnvironmentVariablesMap() map[string]string {
+	env := make(map[string]string)
+	for _, e := range v.Env {
+		env[e.Name] = e.Value
 	}
-	if language == "dotnet" && runtimeCloudProvider == "gke" {
-		return fmt.Sprintf("%s/build-deploy-dotnet-google.yml", exampleWorkflowBaseURL), nil
-	}
-	if language == "dotnet" && runtimeCloudProvider == "iss" {
-		return fmt.Sprintf("%s/build-deploy-dotnet-iss.yml", exampleWorkflowBaseURL), nil
+	return env
+}
+
+type HelmValues struct {
+	Env []struct {
+		Name  string `yaml:"name"`
+		Value string `yaml:"value"`
+	} `yaml:"env"`
+	Service struct {
+		Port       int `yaml:"port"`
+		TargetPort int `yaml:"targetPort"`
+	} `yaml:"service"`
+}
+
+func parseHelmValuesFile(
+	helmValuesFilePath string,
+) (*HelmValues, error) {
+	var helmValues HelmValues
+	if helmValuesFilePath == "" {
+		return &helmValues, nil
 	}
 
-	// Go
-	if language == "go" && runtimeCloudProvider == "aks" {
-		return fmt.Sprintf("%s/build-deploy-go.yml", exampleWorkflowBaseURL), nil
-	}
-	if language == "go" && runtimeCloudProvider == "gke" {
-		return fmt.Sprintf("%s/build-deploy-go-google.yml", exampleWorkflowBaseURL), nil
-	}
-	if language == "go" && runtimeCloudProvider == "iss" {
-		return "",
-			fmt.Errorf("Example workflow is not implemented yet for language '%s' and runtime cloud provider '%s'",
-				language,
-				runtimeCloudProvider,
-			)
+	helmValuesFileBytes, err := os.ReadFile(helmValuesFilePath)
+	if err != nil {
+		return nil, err
 	}
 
-	// Dockerfile
-	if language == "dockerfile" && runtimeCloudProvider == "aks" {
-		return fmt.Sprintf("%s/build-deploy-dockerfile.yml", exampleWorkflowBaseURL), nil
-	}
-	if language == "dockerfile" && runtimeCloudProvider == "gke" {
-		return fmt.Sprintf("%s/build-deploy-dockerfile-google.yml", exampleWorkflowBaseURL), nil
-	}
-	if language == "dockerfile" && runtimeCloudProvider == "iss" {
-		return "",
-			fmt.Errorf("Example workflow is not implemented yet for language '%s' and runtime cloud provider '%s'",
-				language,
-				runtimeCloudProvider,
-			)
+	err = yaml.Unmarshal(helmValuesFileBytes, &helmValues)
+	if err != nil {
+		return nil, err
 	}
 
-	return "",
-		fmt.Errorf(
-			"No example workflow file found for language '%s' and runtime cloud provider '%s'",
-			language,
-			runtimeCloudProvider,
-		)
+	return &helmValues, nil
+}
+
+func dockerComposeUpCommand(
+	composeFile string,
+	options *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"docker",
+			"compose",
+			"-f",
+			composeFile,
+			"up",
+		),
+		options,
+	)
 }

@@ -30,17 +30,12 @@ var Command *cli.Command = &cli.Command{
 		shared.SeverityFlag("scan-severity"),
 		shared.FormatsFlag("scan-formats"),
 		shared.DisableErrorFlag("scan-disable-error"),
+		shared.RegistryFlag("The container registry to use. Image name will be prefixed with this value."),
 		&cli.StringFlag{
 			Name:    "build-context",
 			Aliases: []string{"c"},
 			Usage:   "The directory to use as the build context for Docker, i.e. what files Docker will know about when building. We default to the directory of the project file. This means that if you need files outside of the directory of the project file, you need to specify this flag.",
 			EnvVars: []string{"3LV_BUILD_CONTEXT"},
-		},
-		&cli.StringFlag{
-			Name:    "registry",
-			Aliases: []string{"r"},
-			Usage:   "The container registry to use. Image name will be prefixed with this value.",
-			EnvVars: []string{"3LV_REGISTRY"},
 		},
 		&cli.StringFlag{
 			Name:    "go-main-package-directory",
@@ -175,7 +170,7 @@ func Build(c *cli.Context) error {
 	}
 
 	cacheTag := c.String("cache-tag")
-	registry := utils.StringWithDefault(c.String("registry"), "containerregistryelvia.azurecr.io")
+	registry := c.String("registry")
 
 	push := c.Bool("push")
 	skipAuthentication := c.Bool("skip-authentication") || !push
@@ -233,7 +228,7 @@ func Build(c *cli.Context) error {
 
 	}
 
-	imageName, err := getImageName(
+	imageName, err := GetImageName(
 		registry,
 		systemName,
 		applicationName,
@@ -324,19 +319,19 @@ func Build(c *cli.Context) error {
 	return nil
 }
 
-func getImageName(
+func GetImageName(
 	registry string,
 	systemName string,
 	applicationName string,
 ) (string, error) {
 	if registry == "" {
-		return "", fmt.Errorf("getImageName: Registry not provided")
+		return "", fmt.Errorf("Registry not provided")
 	}
 	if systemName == "" {
-		return "", fmt.Errorf("getImageName: System name not provided")
+		return "", fmt.Errorf("System name not provided")
 	}
 	if applicationName == "" {
-		return "", fmt.Errorf("getImageName: Application name not provided")
+		return "", fmt.Errorf("Application name not provided")
 	}
 
 	if strings.Contains(registry, "azurecr.io") || strings.Contains(registry, "gcr.io") {
