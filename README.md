@@ -2,6 +2,15 @@
 
 Command Line Interface tool for developing, building and securing Elvia applications ⚡
 
+## 🚀 Features
+
+- **Build** Docker images for .NET and Go projects without needing a Dockerfile.
+- **Scan** Docker images for vulnerabilities using Trivy.
+- **Generate** GitHub Actions workflows for deploying to Elvia's clusters on Azure, Google Cloud and ISS.
+
+The GitHub composite actions at [core-github-actions-templates](https://github.com/3lvia/core-github-actions-templates) are wrappers around many of the CLI commands.
+Therefore it's useful to use the CLI when debugging or testing Elvias actions, since you can very easily reproduce the same commands locally.
+
 ## 💾 Installation
 
 Supported platforms:
@@ -75,11 +84,13 @@ Use the following command (with your GitHub username) to login:
 gh auth token | docker login ghcr.io --username your-github-username --password-stdin
 ```
 
-## 🚀 Breaking changes
+## 💥 Breaking changes
 
 Before version `v1.0.0` is released, breaking changes will happen in minor versions (and possibly also patch versions).
 
 ## 📖 Examples
+
+The CLI assumes that you are in the root of your project (git repository) when running the commands.
 
 ### Build
 
@@ -106,7 +117,13 @@ Before version `v1.0.0` is released, breaking changes will happen in minor versi
 # or use shorthand
 3lv build -f src/MyProject.csproj -s core -p -r ghcr my-cool-application
 ```
+#### Generate a Dockerfile for a .NET project
 
+```bash
+3lv build --project-file src/MyProject.csproj --system-name core --generate-only my-cool-application
+# or use shorthand
+3lv build -f src/MyProject.csproj -s core -G my-cool-application
+```
 ### Scan
 
 #### Scan a Docker image for vulnerabilities
