@@ -54,7 +54,7 @@ func Run(c *cli.Context) error {
 	}
 
 	composeFile, err := generateComposeFile(
-		c.String("registry"),
+		utils.StringWithDefault(c.String("registry"), "containerregistryelvia.azurecr.io"),
 		c.String("system-name"),
 		applicationName,
 		helmValues,

@@ -170,7 +170,7 @@ func Build(c *cli.Context) error {
 	}
 
 	cacheTag := c.String("cache-tag")
-	registry := c.String("registry")
+	registry := utils.StringWithDefault(c.String("registry"), "containerregistryelvia.azurecr.io")
 
 	push := c.Bool("push")
 	skipAuthentication := c.Bool("skip-authentication") || !push

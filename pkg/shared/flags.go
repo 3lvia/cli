@@ -117,6 +117,5 @@ func RegistryFlag(usage string) *cli.StringFlag {
 		Aliases: []string{"r"},
 		Usage:   usage,
 		EnvVars: []string{"3LV_REGISTRY"},
-		Value:   "containerregistryelvia.azurecr.io",
 	}
 }
