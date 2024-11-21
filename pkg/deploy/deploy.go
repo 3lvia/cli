@@ -144,6 +144,10 @@ var Command *cli.Command = &cli.Command{
 			Name:  "run-id",
 			Usage: "The GitHub Actions run ID to use for deployment annotations.",
 		},
+		&cli.StringFlag{
+			Name:  "helm-chart-repository-url",
+			Usage: "Override the helm chart repository where the elvia-charts are located. Useful for testing feature branches. For instance 'https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts'",
+		},
 		&cli.BoolFlag{
 			Name:    "allow-deploy",
 			Hidden:  true,
@@ -199,6 +203,7 @@ func Deploy(c *cli.Context) error {
 	runtimeCloudProvider := strings.ToLower(c.String("runtime-cloud-provider"))
 	dryRun := c.Bool("dry-run")
 	runID := c.String("run-id")
+	helmChartRepositoryURL := c.String("helm-chart-repository-url")
 
 	checkKubectlInstalledOutput := checkKubectlInstalledCommand(nil)
 	if command.IsError(checkKubectlInstalledOutput) {
@@ -253,7 +258,7 @@ func Deploy(c *cli.Context) error {
 		return cli.Exit(fmt.Errorf("Invalid runtime cloud provider: %s", runtimeCloudProvider), 1)
 	}
 
-	helmRepoAddOutput := helmRepoAddCommand(nil)
+	helmRepoAddOutput := helmRepoAddCommand(helmChartRepositoryURL, nil)
 	if command.IsError(helmRepoAddOutput) {
 		return cli.Exit(fmt.Errorf("Failed to add Helm repository: %w", helmRepoAddOutput.Error), 1)
 	}
@@ -277,25 +282,27 @@ func Deploy(c *cli.Context) error {
 		useISSChart,
 		nil,
 	)
-	if command.IsError(helmDeployOutput) && !dryRun {
-		// If the deployment failed, we still want to post the Grafana annotation, but we add a failure message to the annotation.
-		if err := addGrafanaDeploymentAnnotation(
-			false,
-			applicationName,
-			systemName,
-			environment,
-			repositoryName,
-			commitMessage,
-			grafanaURL,
-			grafanaAPIKey,
-			&PostGrafanaAnnotationOptions{
-				RunID: runID,
-			},
-		); err != nil {
-			return cli.Exit(
-				fmt.Errorf("Failed to deploy Helm chart %w and post Grafana annotation: %w", helmDeployOutput.Error, err),
-				1,
-			)
+	if command.IsError(helmDeployOutput) {
+		if !dryRun {
+			// If the deployment failed, we still want to post the Grafana annotation, but we add a failure message to the annotation.
+			if err := addGrafanaDeploymentAnnotation(
+				false,
+				applicationName,
+				systemName,
+				environment,
+				repositoryName,
+				commitMessage,
+				grafanaURL,
+				grafanaAPIKey,
+				&PostGrafanaAnnotationOptions{
+					RunID: runID,
+				},
+			); err != nil {
+				return cli.Exit(
+					fmt.Errorf("Failed to deploy Helm chart %w and post Grafana annotation: %w", helmDeployOutput.Error, err),
+					1,
+				)
+			}
 		}
 
 		return cli.Exit(fmt.Errorf("Failed to deploy Helm chart: %w", helmDeployOutput.Error), 1)
