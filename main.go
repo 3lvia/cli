@@ -1,16 +1,20 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/3lvia/cli/pkg/build"
 	"github.com/3lvia/cli/pkg/deploy"
 	"github.com/3lvia/cli/pkg/githubactions"
 	"github.com/3lvia/cli/pkg/run"
 	"github.com/3lvia/cli/pkg/scan"
+	"github.com/google/go-github/v66/github"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/mod/semver"
 )
 
 //go:embed VERSION
@@ -23,12 +27,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	version := strings.TrimSpace(string(versionFile))
 
 	app := &cli.App{
 		Name:                 "3lv",
 		Usage:                "Command Line Interface tool for developing, building and securing Elvia applications ⚡",
 		EnableBashCompletion: true,
-		Version:              string(versionFile),
+		Version:              version,
+		After: func(c *cli.Context) error {
+			latestVersion, _ := getLatestVersion()
+			if semver.Compare("v"+version, "v"+latestVersion) == -1 {
+				log.Printf("\n\nA new version of 3lv is available! %s -> %s", version, latestVersion)
+			}
+
+			return nil
+		},
 		Commands: []*cli.Command{
 			build.Command,
 			deploy.Command,
@@ -41,4 +54,15 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("\n\nERROR: %v", err)
 	}
+}
+
+func getLatestVersion() (string, error) {
+	client := github.NewClient(nil)
+
+	release, _, err := client.Repositories.GetLatestRelease(context.Background(), "3lvia", "cli")
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimPrefix(*release.TagName, "v"), nil
 }
