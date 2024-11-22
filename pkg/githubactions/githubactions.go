@@ -1,6 +1,7 @@
 package githubactions
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const commandName = "github-actions"
@@ -42,7 +43,7 @@ var Command *cli.Command = &cli.Command{
 	Action: GitHubActions,
 }
 
-func GitHubActions(c *cli.Context) error {
+func GitHubActions(ctx context.Context, c *cli.Command) error {
 	const githubActionsDir = ".github/workflows"
 	if _, err := os.Stat(githubActionsDir); os.IsNotExist(err) {
 		log.Printf("Creating directory '%s'\n", githubActionsDir)
@@ -56,7 +57,6 @@ func GitHubActions(c *cli.Context) error {
 	runtimeCloudProvider := c.String("runtime-cloud-provider")
 	systemName := c.String("system-name")
 	applicationName := c.String("application-name")
-
 	language, err := getLanguageFromProjectFile(projectFile)
 	if err != nil {
 		return cli.Exit(err.Error(), 1)

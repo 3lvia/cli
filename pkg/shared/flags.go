@@ -1,11 +1,12 @@
 package shared
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strings"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func nameToEnvVar(name string) string {
@@ -27,7 +28,7 @@ func RuntimeCloudProviderFlag() *cli.StringFlag {
 		Aliases: []string{"r"},
 		Usage:   "The runtime cloud provider to use (aks, gke, iss).",
 		Value:   "aks",
-		Action: func(c *cli.Context, runtimeCloudProvider string) error {
+		Action: func(ctx context.Context, c *cli.Command, runtimeCloudProvider string) error {
 			allowedRuntimeCloudProviders := []string{"aks", "gke", "iss"}
 			if !slices.Contains(allowedRuntimeCloudProviders, strings.ToLower(runtimeCloudProvider)) {
 				return cli.Exit(
@@ -50,7 +51,7 @@ func SystemNameFlag(usage string, required bool) *cli.StringFlag {
 		Aliases:  []string{"s"},
 		Usage:    usage,
 		Required: required,
-		EnvVars:  []string{"3LV_SYSTEM_NAME"},
+		Sources:  cli.EnvVars("3LV_SYSTEM_NAME"),
 	}
 }
 
@@ -78,7 +79,7 @@ func SeverityFlag(name string) *cli.StringFlag {
 		Aliases: []string{"S"},
 		Usage:   "The severity to use when scanning the image: can be any combination of CRITICAL, HIGH, MEDIUM, LOW, or UNKNOWN separated by commas",
 		Value:   "CRITICAL,HIGH",
-		EnvVars: []string{nameToEnvVar(name)},
+		Sources: cli.EnvVars(nameToEnvVar(name)),
 	}
 }
 
@@ -87,8 +88,8 @@ func FormatsFlag(name string) *cli.StringSliceFlag {
 		Name:    name,
 		Aliases: []string{"F"},
 		Usage:   "The formats to use when outputting the Trivy scan results: can be table, json, sarif or markdown.",
-		Value:   cli.NewStringSlice("table"),
-		Action: func(c *cli.Context, formats []string) error {
+		Value:   []string{"table"},
+		Action: func(ctx context.Context, c *cli.Command, formats []string) error {
 			for _, format := range formats {
 				if format != "table" && format != "json" && format != "sarif" && format != "markdown" {
 					return cli.Exit("Invalid format provided", 1)
@@ -97,7 +98,7 @@ func FormatsFlag(name string) *cli.StringSliceFlag {
 
 			return nil
 		},
-		EnvVars: []string{nameToEnvVar(name)},
+		Sources: cli.EnvVars(nameToEnvVar(name)),
 	}
 }
 
@@ -107,7 +108,7 @@ func DisableErrorFlag(name string) *cli.BoolFlag {
 		Aliases: []string{"D"},
 		Usage:   "Disable error exit code on vulnerabilities found by Trivy.",
 		Value:   false,
-		EnvVars: []string{nameToEnvVar(name)},
+		Sources: cli.EnvVars(nameToEnvVar(name)),
 	}
 }
 
@@ -116,6 +117,6 @@ func RegistryFlag(usage string) *cli.StringFlag {
 		Name:    "registry",
 		Aliases: []string{"r"},
 		Usage:   usage,
-		EnvVars: []string{"3LV_REGISTRY"},
+		Sources: cli.EnvVars("3LV_REGISTRY"),
 	}
 }

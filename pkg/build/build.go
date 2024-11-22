@@ -1,6 +1,7 @@
 package build
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -12,7 +13,7 @@ import (
 	"github.com/3lvia/cli/pkg/scan"
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const commandName = "build"
@@ -35,88 +36,88 @@ var Command *cli.Command = &cli.Command{
 			Name:    "build-context",
 			Aliases: []string{"c"},
 			Usage:   "The directory to use as the build context for Docker, i.e. what files Docker will know about when building. We default to the directory of the project file. This means that if you need files outside of the directory of the project file, you need to specify this flag.",
-			EnvVars: []string{"3LV_BUILD_CONTEXT"},
+			Sources: cli.EnvVars("3LV_BUILD_CONTEXT"),
 		},
 		&cli.StringFlag{
 			Name:    "go-main-package-directory",
 			Usage:   "The main package directory to use when building a Go application.",
-			EnvVars: []string{"3LV_GO_MAIN_PACKAGE_DIRECTORY"},
+			Sources: cli.EnvVars("3LV_GO_MAIN_PACKAGE_DIRECTORY"),
 		},
 		&cli.StringFlag{
 			Name:    "cache-tag",
 			Usage:   "The tag to use for the cache image.",
 			Value:   "latest-cache",
-			EnvVars: []string{"3LV_CACHE_TAG"},
+			Sources: cli.EnvVars("3LV_CACHE_TAG"),
 		},
 		&cli.StringFlag{
 			Name:    "azure-tenant-id",
 			Usage:   "The tenant ID to use when authenticating with the Azure Container Registry.",
 			Hidden:  true,
-			EnvVars: []string{"3LV_AZURE_TENANT_ID"},
+			Sources: cli.EnvVars("3LV_AZURE_TENANT_ID"),
 		},
 		&cli.StringFlag{
 			Name:    "azure-subscription-id",
 			Usage:   "The subscription ID to use when authenticating with the Azure Container Registry.",
 			Hidden:  true,
-			EnvVars: []string{"3LV_AZURE_SUBSCRIPTION_ID"},
+			Sources: cli.EnvVars("3LV_AZURE_SUBSCRIPTION_ID"),
 		},
 		&cli.StringFlag{
 			Name:    "azure-client-id",
 			Usage:   "The client ID to use when authenticating with the Azure Container registry. Must be combined with --azure-federated-token.",
 			Hidden:  true,
-			EnvVars: []string{"3LV_AZURE_CLIENT_ID"},
+			Sources: cli.EnvVars("3LV_AZURE_CLIENT_ID"),
 		},
 		&cli.StringFlag{
 			Name:    "azure-federated-token",
 			Usage:   "The federated token to use when authenticating with the Azure Container Registry. Must be combined with --client-id.",
 			Hidden:  true,
-			EnvVars: []string{"3LV_AZURE_FEDERATED_TOKEN"},
+			Sources: cli.EnvVars("3LV_AZURE_FEDERATED_TOKEN"),
 		},
 		&cli.StringSliceFlag{
 			Name:    "additional-tags",
 			Aliases: []string{"t"},
 			Usage:   "Additional tags to use when pushing the image to the registry.",
-			EnvVars: []string{"3LV_ADDITIONAL_TAGS"},
+			Sources: cli.EnvVars("3LV_ADDITIONAL_TAGS"),
 		},
 		&cli.StringSliceFlag{
 			Name:    "include-files",
 			Aliases: []string{"i"},
 			Usage:   "A list of files to include in the Docker image. Currently only supported for Go applications.",
-			EnvVars: []string{"3LV_INCLUDE_FILES"},
+			Sources: cli.EnvVars("3LV_INCLUDE_FILES"),
 		},
 		&cli.StringSliceFlag{
 			Name:    "include-directories",
 			Aliases: []string{"I"},
 			Usage:   "A list of directories to include in the Docker image. Currently only supported for Go applications.",
-			EnvVars: []string{"3LV_INCLUDE_DIRECTORIES"},
+			Sources: cli.EnvVars("3LV_INCLUDE_DIRECTORIES"),
 		},
 		&cli.BoolFlag{
 			Name:    "push",
 			Aliases: []string{"p"},
 			Usage:   "Push the image to the registry.",
 			Value:   false,
-			EnvVars: []string{"3LV_PUSH"},
+			Sources: cli.EnvVars("3LV_PUSH"),
 		},
 		&cli.BoolFlag{
 			Name:    "generate-only",
 			Aliases: []string{"G"},
 			Usage:   "Generates a Dockerfile, but does not build the image.",
 			Value:   false,
-			EnvVars: []string{"3LV_GENERATE_ONLY"},
+			Sources: cli.EnvVars("3LV_GENERATE_ONLY"),
 		},
 		&cli.BoolFlag{
 			Name:    "skip-authentication",
 			Usage:   "Skip authentication before pushing the image to the registry.",
 			Value:   false,
-			EnvVars: []string{"3LV_SKIP_AUTHENTICATION"},
+			Sources: cli.EnvVars("3LV_SKIP_AUTHENTICATION"),
 		},
 	},
 	Action: Build,
 }
 
-func Build(c *cli.Context) error {
+func Build(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
-		return cli.ShowCommandHelp(c, commandName)
+		return cli.ShowAppHelp(c)
 	}
 
 	// Required args

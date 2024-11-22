@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os/exec"
@@ -11,10 +12,8 @@ import (
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
-
-const commandName = "deploy"
 
 var Command *cli.Command = &cli.Command{
 	Name:    "deploy",
@@ -39,7 +38,7 @@ var Command *cli.Command = &cli.Command{
 			Aliases: []string{"e"},
 			Usage:   "The environment to deploy to: sandbox, dev, test or prod",
 			Value:   "dev",
-			Action: func(c *cli.Context, environment string) error {
+			Action: func(ctx context.Context, c *cli.Command, environment string) error {
 				allowedEnvironments := []string{"sandbox", "dev", "test", "prod"}
 				if !slices.Contains(allowedEnvironments, environment) {
 					return cli.Exit(fmt.Sprintf("Invalid environment provided: must be one of %v", allowedEnvironments), 1)
@@ -53,7 +52,7 @@ var Command *cli.Command = &cli.Command{
 			Aliases: []string{"w"},
 			Usage:   "The Kubernetes workload type to use: deployment or statefulset",
 			Value:   "deployment",
-			Action: func(c *cli.Context, workloadType string) error {
+			Action: func(ctx context.Context, c *cli.Command, workloadType string) error {
 				allowedWorkloadTypes := []string{"deployment", "statefulset"}
 				if !slices.Contains(allowedWorkloadTypes, workloadType) {
 					return cli.Exit(fmt.Sprintf("Invalid workload type provided: must be one of %v", allowedWorkloadTypes), 1)
@@ -85,48 +84,48 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "azure-tenant-id",
 			Usage:   "The AKS tenant ID to use",
-			EnvVars: []string{"3LV_AZURE_TENANT_ID"},
+			Sources: cli.EnvVars("3LV_AZURE_TENANT_ID"),
 		},
 		&cli.StringFlag{
 			Name:    "azure-client-id",
 			Usage:   "The client ID to use when authenticating with the registry. Must be combined with --azure-federated-token.",
-			EnvVars: []string{"3LV_AZURE_CLIENT_ID"},
+			Sources: cli.EnvVars("3LV_AZURE_CLIENT_ID"),
 		},
 		&cli.StringFlag{
 			Name:    "azure-federated-token",
 			Usage:   "The federated token to use when authenticating with the Azure Container Registry. Must be combined with --client-id.",
-			EnvVars: []string{"3LV_AZURE_FEDERATED_TOKEN"},
+			Sources: cli.EnvVars("3LV_AZURE_FEDERATED_TOKEN"),
 		},
 		&cli.StringFlag{
 			Name:    "aks-subscription-id",
 			Usage:   "Subscription ID of the AKS cluster to deploy to.",
-			EnvVars: []string{"3LV_AKS_SUBSCRIPTION_ID"},
+			Sources: cli.EnvVars("3LV_AKS_SUBSCRIPTION_ID"),
 		},
 		&cli.StringFlag{
 			Name:    "aks-cluster-name",
 			Usage:   "Name of the AKS cluster to deploy to.",
-			EnvVars: []string{"3LV_AKS_CLUSTER_NAME"},
+			Sources: cli.EnvVars("3LV_AKS_CLUSTER_NAME"),
 		},
 		&cli.StringFlag{
 			Name:    "aks-resource-group-name",
 			Usage:   "Resource group name of the AKS cluster to deploy to.",
-			EnvVars: []string{"3LV_AKS_RESOURCE_GROUP_NAME"},
+			Sources: cli.EnvVars("3LV_AKS_RESOURCE_GROUP_NAME"),
 		},
 		&cli.StringFlag{
 			Name:    "gke-project-id",
 			Usage:   "Project ID of the GKE cluster to deploy to.",
-			EnvVars: []string{"3LV_GKE_PROJECT_ID"},
+			Sources: cli.EnvVars("3LV_GKE_PROJECT_ID"),
 		},
 		&cli.StringFlag{
 			Name:    "gke-cluster-name",
 			Usage:   "Name of the GKE cluster to deploy to.",
-			EnvVars: []string{"3LV_GKE_CLUSTER_NAME"},
+			Sources: cli.EnvVars("3LV_GKE_CLUSTER_NAME"),
 		},
 		&cli.StringFlag{
 			Name:    "gke-cluster-location",
 			Usage:   "Location of the GKE cluster to deploy to.",
 			Hidden:  true,
-			EnvVars: []string{"3LV_GKE_CLUSTER_LOCATION"},
+			Sources: cli.EnvVars("3LV_GKE_CLUSTER_LOCATION"),
 		},
 		&cli.BoolFlag{
 			Name:  "add-deployment-annotation",
@@ -147,20 +146,20 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "helm-chart-repository-url",
 			Usage:   "Override the helm chart repository where the elvia-charts are located. Useful for testing feature branches. For instance 'https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts'",
-			EnvVars: []string{"3LV_HELM_CHART_REPOSITORY_URL"},
+			Sources: cli.EnvVars("3LV_HELM_CHART_REPOSITORY_URL"),
 		},
 		&cli.BoolFlag{
 			Name:    "allow-deploy",
 			Hidden:  true,
-			EnvVars: []string{"CI"},
+			Sources: cli.EnvVars("CI"),
 		},
 	},
 	Action: Deploy,
 }
 
-func Deploy(c *cli.Context) error {
+func Deploy(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
-		return cli.ShowCommandHelp(c, commandName)
+		return cli.ShowAppHelp(c)
 	}
 
 	if !c.Bool("allow-deploy") {
@@ -170,7 +169,7 @@ func Deploy(c *cli.Context) error {
 	applicationName := c.Args().First()
 	if applicationName == "" {
 		log.Println("Application name not provided")
-		return cli.ShowCommandHelp(c, commandName)
+		return cli.ShowAppHelp(c)
 	}
 
 	systemName := c.String("system-name")
