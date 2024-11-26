@@ -7,11 +7,13 @@ import (
 	"os"
 	"os/exec"
 	"slices"
+	"strings"
 
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/mod/semver"
 )
 
 const commandName = "scan"
@@ -57,6 +59,7 @@ func scanImageCommand(
 	imageName string,
 	severity string,
 	disableError bool,
+	versionOlderThan0_57_1 bool,
 	runOptions *command.RunOptions,
 ) command.Output {
 	exitCode := func() string {
@@ -78,16 +81,21 @@ func scanImageCommand(
 		"json",
 		"--output",
 		"trivy.json",
-		"--db-repository",
-		"ghcr.io/3lvia/trivy-db",
-		"--java-db-repository",
-		"ghcr.io/3lvia/trivy-java-db",
 		"--ignore-unfixed",
 		"--exit-code",
 		exitCode,
 		"--scanners",
 		"vuln",
 	)
+
+	// Before v0.57.1, the default database repository was using Aqua's GHCR which was heavily rate-limited.
+	// To circumvent this, we used a mirror of the database repository hosted on 3lvia's GHCR.
+	// This is no longer necessary as the default database repository is now hosted on Google Container Registry.
+	// So, we will only explicitly set the database repository if the version is older than 0.57.1.
+	if versionOlderThan0_57_1 {
+		cmd.Args = append(cmd.Args, "--db-repository", "mirror.gcr.io/aquasec/trivy-db:2")
+		cmd.Args = append(cmd.Args, "--java-db-repository", "mirror.gcr.io/aquasec/trivy-java-db:1")
+	}
 
 	cmd.Args = append(cmd.Args, imageName)
 
@@ -135,10 +143,19 @@ func ScanImage(
 	formats []string,
 	disableError bool,
 ) error {
+	version, err := getTrivyVersion()
+	if err != nil {
+		log.Printf("Could not get Trivy version: %v", err)
+		log.Println("Will assume version is older than 0.57.1 and continue.")
+	} else {
+		log.Printf("Trivy version: %s", version)
+	}
+
 	scanImageOutput := scanImageCommand(
 		imageName,
 		severity,
 		disableError,
+		checkIfVersionOlderThan0_57_1(version),
 		nil,
 	)
 
@@ -211,4 +228,32 @@ func ScanImage(
 	}
 
 	return nil
+}
+
+func checkIfVersionOlderThan0_57_1(version string) bool {
+	if version == "" {
+		return true
+	}
+
+	return semver.Compare(version, "v0.57.1") == -1
+}
+
+func getTrivyVersion() (string, error) {
+	cmd := exec.Command("trivy", "--version")
+	output := command.Run(*cmd, nil)
+	if command.IsError(output) {
+		return "", output.Error
+	}
+
+	versionLine := strings.Split(output.Output, "\n")
+	if len(versionLine) < 1 {
+		return "", fmt.Errorf("Trivy version not found")
+	}
+
+	version, wasFound := strings.CutPrefix(versionLine[0], "Version: ")
+	if !wasFound {
+		return "", fmt.Errorf("Trivy version not found")
+	}
+
+	return "v" + version, nil
 }
