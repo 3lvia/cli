@@ -3,12 +3,14 @@ package command
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/3lvia/cli/pkg/style"
 )
 
 type Output struct {
@@ -48,7 +50,10 @@ func Run(cmd exec.Cmd, options *RunOptions) Output {
 		}
 	}
 
-	log.Print(cmd.String())
+	style.Print(
+		fmt.Sprintf("%s\n", cmd.String()),
+		&style.PrintOptions{Color: "cyan"},
+	)
 
 	var errBuf, outBuf bytes.Buffer
 	cmd.Stderr = io.MultiWriter(os.Stderr, &errBuf)

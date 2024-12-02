@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+
+	"github.com/3lvia/cli/pkg/style"
 )
 
 func RemoveZeroValues(slice []string) []string {
@@ -112,4 +114,23 @@ func WriteFileWithTemplate(
 	}
 
 	return filePath, nil
+}
+
+// Will only return false if the response is "n"
+func PromptYesNo(question string, nonInteractive bool) (bool, error) {
+	style.Print(
+		fmt.Sprintf("%s (y/n): ", question),
+		nil,
+	)
+	if nonInteractive {
+		return true, nil
+	}
+
+	var response string
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		return false, fmt.Errorf("Failed to read response: %s", err)
+	}
+
+	return strings.ToLower(response) == "y", nil
 }
