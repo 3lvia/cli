@@ -1,6 +1,7 @@
 package run
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"os"
@@ -10,7 +11,7 @@ import (
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"gopkg.in/yaml.v3"
 )
 
@@ -36,9 +37,9 @@ var Command *cli.Command = &cli.Command{
 	Action: Run,
 }
 
-func Run(c *cli.Context) error {
+func Run(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
-		return cli.ShowCommandHelp(c, commandName)
+		return cli.ShowAppHelp(c)
 	}
 
 	applicationName := c.Args().First()

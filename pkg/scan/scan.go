@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -11,10 +12,8 @@ import (
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
-
-const commandName = "scan"
 
 var Command *cli.Command = &cli.Command{
 	Name:    "scan",
@@ -28,16 +27,16 @@ var Command *cli.Command = &cli.Command{
 	Action: Scan,
 }
 
-func Scan(c *cli.Context) error {
+func Scan(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
-		return cli.ShowCommandHelp(c, commandName)
+		return cli.ShowAppHelp(c)
 	}
 
 	// Required args
 	imageName := c.Args().First()
 	if imageName == "" {
 		log.Println("Image name not provided")
-		return cli.ShowCommandHelp(c, commandName)
+		return cli.ShowAppHelp(c)
 	}
 
 	// Optional args
