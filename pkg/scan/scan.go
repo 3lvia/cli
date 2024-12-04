@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"slices"
 
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/shared"
+	"github.com/3lvia/cli/pkg/style"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v3"
 )
@@ -35,7 +35,10 @@ func Scan(ctx context.Context, c *cli.Command) error {
 	// Required args
 	imageName := c.Args().First()
 	if imageName == "" {
-		log.Println("Image name not provided")
+		style.Print(
+			"Image name not provided.",
+			&style.PrintOptions{Color: "red"},
+		)
 		return cli.ShowAppHelp(c)
 	}
 
@@ -143,7 +146,10 @@ func ScanImage(
 
 	if _, err := os.Stat("trivy.json"); errors.Is(err, os.ErrNotExist) {
 		if disableError {
-			log.Println("Trivy did not produce any output")
+			style.Print(
+				"Trivy did not produce any output.",
+				&style.PrintOptions{Color: "yellow"},
+			)
 			return nil
 		}
 
@@ -151,7 +157,10 @@ func ScanImage(
 	}
 
 	if slices.Contains(formats, "table") {
-		log.Println("Converting results to table format")
+		style.Print(
+			"Converted results to table format.",
+			nil,
+		)
 
 		convertOutput := convertCommand(
 			"table",
@@ -163,7 +172,10 @@ func ScanImage(
 	}
 
 	if slices.Contains(formats, "sarif") {
-		log.Println("Converting results to SARIF format")
+		style.Print(
+			"Converted results to SARIF format.",
+			nil,
+		)
 
 		convertOutput := convertCommand(
 			"sarif",
@@ -175,7 +187,10 @@ func ScanImage(
 	}
 
 	if slices.Contains(formats, "markdown") {
-		log.Println("Converting results to Markdown format")
+		style.Print(
+			"Converting results to markdown format.",
+			nil,
+		)
 
 		result, err := parseJSONOutput()
 		if err != nil {
@@ -187,7 +202,10 @@ func ScanImage(
 			return err
 		}
 		if len(markdown) == 0 {
-			log.Println("Markdown output is empty, will write to empty file")
+			style.Print(
+				"Markdown output is empty, will write to empty file",
+				&style.PrintOptions{Color: "yellow"},
+			)
 		}
 
 		err = os.WriteFile("trivy.md", markdown, 0644)
@@ -202,7 +220,10 @@ func ScanImage(
 			return err
 		}
 	} else {
-		log.Println("Keeping pre-existing JSON output")
+		style.Print(
+			"Keeping pre-existing JSON output.",
+			nil,
+		)
 	}
 
 	if command.IsError(scanImageOutput) {

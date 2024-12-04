@@ -3,7 +3,6 @@ package build
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/scan"
 	"github.com/3lvia/cli/pkg/shared"
+	"github.com/3lvia/cli/pkg/style"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v3"
 )
@@ -133,7 +133,10 @@ func Build(ctx context.Context, c *cli.Command) error {
 		possibleSystemName := c.String("system-name")
 
 		if possibleSystemName == "" {
-			log.Println("System name not provided, will try to use the current git repository name")
+			style.Print(
+				"System name not provided, will try to use the current git repository name.",
+				nil,
+			)
 
 			repositoryName, err := utils.ResolveRepositoryName("")
 			if err != nil {
@@ -166,7 +169,10 @@ func Build(ctx context.Context, c *cli.Command) error {
 	}
 
 	if c.Bool("generate-only") {
-		log.Printf("Dockerfile generated at %s\n", dockerfilePath)
+		style.Print(
+			fmt.Sprintf("Dockerfile generated at %s\n", dockerfilePath),
+			nil,
+		)
 		return nil
 	}
 
@@ -177,7 +183,7 @@ func Build(ctx context.Context, c *cli.Command) error {
 	skipAuthentication := c.Bool("skip-authentication") || !push
 
 	if strings.Contains(registry, "azurecr.io") && !skipAuthentication {
-		log.Println("Azure registry detected, will try to authenticate with Azure")
+		style.Print("Azure registry detected, will try to authenticate with Azure.", nil)
 
 		azureTenantID := utils.StringWithDefault(
 			c.String("azure-tenant-id"),

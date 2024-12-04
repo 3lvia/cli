@@ -3,15 +3,18 @@ package main
 import (
 	"context"
 	"embed"
+	"fmt"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/3lvia/cli/pkg/build"
+	"github.com/3lvia/cli/pkg/create"
 	"github.com/3lvia/cli/pkg/deploy"
 	"github.com/3lvia/cli/pkg/githubactions"
 	"github.com/3lvia/cli/pkg/run"
 	"github.com/3lvia/cli/pkg/scan"
+	"github.com/3lvia/cli/pkg/style"
 	"github.com/google/go-github/v66/github"
 	"github.com/urfave/cli/v3"
 	"golang.org/x/mod/semver"
@@ -34,10 +37,20 @@ func main() {
 		Usage:                 "Command Line Interface tool for developing, building and securing Elvia applications ⚡",
 		Version:               version,
 		EnableShellCompletion: true,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "non-interactive",
+				Usage:   "Run in non-interactive mode. Accepts all default values without prompting for confirmation.",
+				Sources: cli.EnvVars("3LV_NON_INTERACTIVE"),
+			},
+		},
 		After: func(ctx context.Context, c *cli.Command) error {
 			latestVersion, _ := getLatestVersion(ctx)
 			if semver.Compare("v"+version, "v"+latestVersion) == -1 {
-				log.Printf("\n\nA new version of 3lv is available! %s -> %s", version, latestVersion)
+				style.Print(
+					fmt.Sprintf("\n\nA new version of 3lv is available! %s -> %s", version, latestVersion),
+					&style.PrintOptions{Color: "yellow"},
+				)
 			}
 
 			return nil
@@ -48,6 +61,7 @@ func main() {
 			scan.Command,
 			githubactions.Command,
 			run.Command,
+			create.Command,
 		},
 	}
 

@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/3lvia/cli/pkg/style"
 	"github.com/samber/lo"
 )
 
@@ -113,7 +113,10 @@ func addGrafanaDeploymentAnnotation(
 		},
 	}
 
-	log.Printf("Sending deploy annotation to Grafana: %v\n", grafanaAnnotation)
+	style.Print(
+		fmt.Sprintf("Sending deploy annotation to Grafana: %v\n", grafanaAnnotation),
+		nil,
+	)
 	body, err := json.Marshal(grafanaAnnotation)
 	if err != nil {
 		return err
@@ -127,7 +130,10 @@ func addGrafanaDeploymentAnnotation(
 		RETRY_ATTEMPTS,
 		RETRY_DELAY,
 		func(i int, duration time.Duration) error {
-			log.Printf("Sending deploy annotation to Grafana, attempt %d\n", i)
+			style.Print(
+				fmt.Sprintf("Sending deploy annotation to Grafana, attempt %d\n\n", i),
+				nil,
+			)
 
 			statusCode, err := sendRequest(
 				grafanaURL+"annotations/graphite",
@@ -146,11 +152,14 @@ func addGrafanaDeploymentAnnotation(
 		},
 	)
 	if err != nil {
-		log.Printf("Failed to send deploy annotation to Grafana after %d attempts\n", RETRY_ATTEMPTS)
+		style.Print(
+			fmt.Sprintf("Failed to send deploy annotation to Grafana after %d attempts\n", RETRY_ATTEMPTS),
+			&style.PrintOptions{Color: "red"},
+		)
 		return err
 	}
 
-	log.Println("Deploy annotation sent to Grafana!")
+	style.Print("Deploy annotation sent to Grafana!\n", &style.PrintOptions{Color: "green"})
 
 	return nil
 }

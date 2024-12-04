@@ -1,0 +1,64 @@
+## This is a minimal values file for the elvia-deployment chart.
+## An example of all possible usages can be found here:
+## https://github.com/3lvia/kubernetes-charts/blob/master/elvia-deployment/values.yaml
+
+name: {{ .ApplicationName }}
+namespace: {{ .SystemName }}
+microserviceType: webapi
+
+replicaCount: 1
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+env:
+- name: ASPNETCORE_URLS
+  value: http://+:8080
+
+service:
+ port: 80
+ targetPort: 8080
+
+## Subdomains are created in https://github.com/3lvia/dns-terraform.
+## The CLI does not currently support creating subdomains automatically.
+# ingress:
+#   subdomain: my-subdomain
+#   path: "/"
+
+readinessProbe:
+  failureThreshold: 3
+  httpGet:
+    path: /health
+    port: 8080
+    scheme: HTTP
+  initialDelaySeconds: 15
+  periodSeconds: 15
+  successThreshold: 1
+  timeoutSeconds: 3
+
+livenessProbe:
+  failureThreshold: 5
+  httpGet:
+    path: /health
+    port: 8080
+    scheme: HTTP
+  initialDelaySeconds: 15
+  periodSeconds: 15
+  successThreshold: 1
+  timeoutSeconds: 3
+
+startupProbe:
+  failureThreshold: 30
+  httpGet:
+    path: /health
+    port: 8080
+    scheme: HTTP
+  initialDelaySeconds: 15
+  periodSeconds: 3
+  successThreshold: 1
+  timeoutSeconds: 2

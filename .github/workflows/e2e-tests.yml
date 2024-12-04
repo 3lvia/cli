@@ -12,7 +12,10 @@ jobs:
     runs-on: elvia-runner
     strategy:
       matrix:
-        command: [build, scan]
+        command:
+          - build
+          - scan
+          - create
       fail-fast: false
     steps:
       - name: Checkout repository
@@ -36,3 +39,5 @@ jobs:
 
       - name: 'Run tests for ${{ matrix.command }} command'
         run: './tests/${{ matrix.command }}/run_tests.sh'
+        env:
+          3LV_NON_INTERACTIVE: 'true'

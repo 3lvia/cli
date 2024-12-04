@@ -168,8 +168,7 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 
 	applicationName := c.Args().First()
 	if applicationName == "" {
-		log.Println("Application name not provided")
-		return cli.ShowAppHelp(c)
+		return cli.Exit("Application name not provided.", 1)
 	}
 
 	systemName := c.String("system-name")
