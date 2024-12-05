@@ -216,9 +216,11 @@ func installCookiecutterCommand(
 ) command.Output {
 	return command.Run(
 		*exec.Command(
+			"sudo",
 			"pipx",
 			"install",
 			"cookiecutter",
+			"--global",
 		),
 		options,
 	)
