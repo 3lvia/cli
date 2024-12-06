@@ -4,7 +4,8 @@ LABEL maintainer="elvia@elvia.no"
 WORKDIR /app
 COPY . .
 
-RUN dotnet restore {{ .CsprojFile }} && \
+RUN dotnet tool restore && \
+    dotnet restore {{ .CsprojFile }} && \
     dotnet publish \
       {{ .CsprojFile }} \
       --configuration Release \
