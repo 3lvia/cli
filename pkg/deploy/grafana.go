@@ -78,11 +78,27 @@ type PostGrafanaAnnotationOptions struct {
 	RunID string
 }
 
+func resolveEnvironment(
+	environment string,
+	runtimeCloudProvider string,
+) string {
+	if runtimeCloudProvider == "gke" {
+		return fmt.Sprintf("%s_gke", environment)
+	}
+
+	if runtimeCloudProvider == "iss" {
+		return fmt.Sprintf("%s_iss", environment)
+	}
+
+	return environment
+}
+
 func addGrafanaDeploymentAnnotation(
 	wasSuccessful bool,
 	applicationName string,
 	systemName string,
 	environment string,
+	runtimeCloudProvider string,
 	repositoryName string,
 	commitMessage string,
 	grafanaURL string,
@@ -108,7 +124,7 @@ func addGrafanaDeploymentAnnotation(
 		Tags: []string{
 			"app:" + applicationName,
 			"system:" + systemName,
-			"env:" + environment,
+			"env:" + resolveEnvironment(environment, runtimeCloudProvider),
 			"event:deploy",
 		},
 	}
