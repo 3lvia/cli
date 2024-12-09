@@ -40,3 +40,18 @@ Download the MSI file (and optionally the MD5 checksum) from the [releases page]
 ```pwsh
 certutil -hashfile 3lv-windows-amd64.msi MD5
 ```
+### Upgrades
+
+To upgrade the CLI, simply run this command:
+
+```bash
+3lv upgrade
+```
+
+This will download the latest version and replace the existing binary.
+
+You can also download the new binary manually and replace the old one using the same steps as in the installation section.
+
+#### Upgrade on Windows
+
+If you are on Windows (not WSL), the `3lv upgrade` command will not work. You have to download a new MSI installer manually and run it.

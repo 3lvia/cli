@@ -15,7 +15,7 @@ import (
 	"github.com/3lvia/cli/pkg/run"
 	"github.com/3lvia/cli/pkg/scan"
 	"github.com/3lvia/cli/pkg/style"
-	"github.com/google/go-github/v66/github"
+	"github.com/3lvia/cli/pkg/upgrade"
 	"github.com/urfave/cli/v3"
 	"golang.org/x/mod/semver"
 )
@@ -45,7 +45,7 @@ func main() {
 			},
 		},
 		After: func(ctx context.Context, c *cli.Command) error {
-			latestVersion, _ := getLatestVersion(ctx)
+			latestVersion, _ := upgrade.GetLatestCLIVersion(ctx)
 			if semver.Compare("v"+version, "v"+latestVersion) == -1 {
 				style.Print(
 					fmt.Sprintf("\n\nA new version of 3lv is available! %s -> %s", version, latestVersion),
@@ -62,22 +62,16 @@ func main() {
 			githubactions.Command,
 			run.Command,
 			create.Command,
+			// special case since it needs the version
+			upgrade.Command(version),
 		},
 	}
 
 	ctx := context.Background()
 	if err := app.Run(ctx, os.Args); err != nil {
-		log.Fatalf("\n\nERROR: %v", err)
+		style.Print(
+			fmt.Sprintf("\n\nERROR: %s", err),
+			&style.PrintOptions{Color: "red"},
+		)
 	}
-}
-
-func getLatestVersion(ctx context.Context) (string, error) {
-	client := github.NewClient(nil)
-
-	release, _, err := client.Repositories.GetLatestRelease(ctx, "3lvia", "cli")
-	if err != nil {
-		return "", err
-	}
-
-	return strings.TrimPrefix(*release.TagName, "v"), nil
 }
