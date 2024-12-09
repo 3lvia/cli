@@ -13,12 +13,28 @@ import (
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/style"
 	"github.com/3lvia/cli/pkg/utils"
+	"github.com/orsinium-labs/enum"
 	"github.com/urfave/cli/v3"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
 const commandName = "create"
+
+type Template enum.Member[string]
+
+var (
+	Dotnet8WebApi Template = Template{"dotnet8-webapi"}
+	// Dotnet8WebApp Template = Template{"dotnet8-webapp"}
+	Dotnet8Worker Template = Template{"dotnet8-worker"}
+	// Go            Template = Template{"go"}
+	Templates = enum.New(
+		Dotnet8WebApi,
+		//	Dotnet8WebApp,
+		Dotnet8Worker,
+		// Go,
+	)
+)
 
 var Command *cli.Command = &cli.Command{
 	Name:    commandName,
@@ -36,8 +52,27 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "template",
 			Aliases: []string{"t"},
-			Usage:   "The template to use for the project",
-			Value:   "dotnet",
+			Usage: fmt.Sprintf(
+				"The template to use for the project. Supported templates are: %s",
+				strings.Join(Templates.Values(), ", "),
+			),
+			Value: Dotnet8WebApi.Value,
+			Action: func(ctx context.Context, c *cli.Command, template string) error {
+				parsed := Templates.Parse(template)
+
+				if parsed == nil {
+					return cli.Exit(
+						fmt.Sprintf(
+							"Template '%s' is not supported. Supported templates are: %s",
+							template,
+							Templates.Values(),
+						),
+						1,
+					)
+				}
+
+				return nil
+			},
 		},
 		&cli.StringFlag{
 			Name:    "default-branch",
@@ -76,7 +111,13 @@ func Create(ctx context.Context, c *cli.Command) error {
 		return cli.Exit("Application name not provided", 1)
 	}
 
-	templateName := c.String("template")
+	template := func() Template {
+		parsed := Templates.Parse(c.String("template"))
+		if parsed == nil {
+			return Template{"dotnet"}
+		}
+		return *parsed
+	}()
 	defaultBranch := c.String("default-branch")
 
 	checkCoooiecutterInstalledOutput := checkCookiecutterInstalledCommand(nil)
@@ -110,13 +151,10 @@ func Create(ctx context.Context, c *cli.Command) error {
 		}
 	}
 
-	applicationNamePascalCase := strings.ReplaceAll(cases.Title(language.English).String(applicationName), "-", "")
-
 	cookiecutterOutput := cookiecutterCommand(
-		templateName,
+		template,
 		outputDirectory,
 		applicationName,
-		applicationNamePascalCase,
 		systemName,
 		nil,
 	)
@@ -125,8 +163,14 @@ func Create(ctx context.Context, c *cli.Command) error {
 		return cli.Exit("Failed to create project.", 1)
 	}
 
-	// TODO: depend on template
-	projectDirectory := path.Join(outputDirectory, applicationNamePascalCase)
+	projectDirectory, err := getProjectDirectoryForTemplate(
+		template,
+		outputDirectory,
+		applicationName,
+	)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
 
 	githubActionsDirectory := func() string {
 		if c.IsSet("github-actions-directory") {
@@ -135,10 +179,14 @@ func Create(ctx context.Context, c *cli.Command) error {
 		return projectDirectory
 	}()
 
-	err := githubactions.CreateDeployWorkflow(
+	projectFile, err := getProjectFileForTemplate(template, applicationName)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	err = githubactions.CreateDeployWorkflow(
 		githubActionsDirectory,
-		// TODO: depend on template
-		path.Join(projectDirectory, applicationNamePascalCase+".csproj"),
+		projectFile,
 		c.String("runtime-cloud-provider"),
 		systemName,
 		applicationName,
@@ -158,11 +206,53 @@ func Create(ctx context.Context, c *cli.Command) error {
 	return nil
 }
 
-func cookiecutterCommand(
-	templateName string,
+func toPascalCaseWithoutHyphens(s string) string {
+	return strings.ReplaceAll(cases.Title(language.English).String(s), "-", "")
+}
+
+func getProjectDirectoryForTemplate(
+	template Template,
 	outputDirectory string,
 	applicationName string,
-	applicationNamePascalCase string,
+) (string, error) {
+	switch template {
+	case Dotnet8WebApi /*Dotnet8WebApp,*/, Dotnet8Worker:
+		return path.Join(
+			outputDirectory,
+			toPascalCaseWithoutHyphens(applicationName),
+		), nil
+	/*
+		case Go:
+			return path.Join(outputDirectory, applicationName), nil
+	*/
+	default:
+		return "", fmt.Errorf("Could not find project directory for template '%s'", template)
+	}
+}
+
+func getProjectFileForTemplate(
+	template Template,
+	applicationName string,
+) (string, error) {
+	switch template {
+	case Dotnet8WebApi /*Dotnet8WebApp,*/, Dotnet8Worker:
+		return fmt.Sprintf(
+			"%s.csproj",
+			toPascalCaseWithoutHyphens(applicationName),
+		), nil
+	/*
+		case Go:
+			return "go.mod", nil
+	*/
+	default:
+		return "", fmt.Errorf("Could not find project file for template '%s'", template)
+	}
+}
+
+func cookiecutterCommand(
+	template Template,
+	outputDirectory string,
+	applicationName string,
 	systemName string,
 	options *command.RunOptions,
 ) command.Output {
@@ -171,16 +261,14 @@ func cookiecutterCommand(
 			"cookiecutter",
 			"gh:3lvia/application-templates",
 			"--directory",
-			templateName,
+			template.Value,
 			"--output-dir",
 			outputDirectory,
 			"--no-input",
 			"application_name="+applicationName,
-			"application_name_pascal_case="+applicationNamePascalCase,
+			"application_name_pascal_case="+toPascalCaseWithoutHyphens(applicationName),
 			"system_name="+systemName,
-			"bff_client_name="+applicationName,
-			"sub_domain_name="+applicationName,
-			"domain_path=/api",
+			// TODO: is this needed?
 			"base_dir=./",
 		),
 		options,

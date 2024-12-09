@@ -39,5 +39,3 @@ jobs:
 
       - name: 'Run tests for ${{ matrix.command }} command'
         run: './tests/${{ matrix.command }}/run_tests.sh'
-        env:
-          3LV_NON_INTERACTIVE: 'true'
