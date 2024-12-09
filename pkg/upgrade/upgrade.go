@@ -169,7 +169,13 @@ func decompress(src, dest string) error {
 			return err
 		}
 
-		target := filepath.Join(dest, header.Name)
+		// Clean the path and ensure it is within the destination directory
+		cleanedPath := filepath.Clean(header.Name)
+		target := filepath.Join(dest, cleanedPath)
+		if !strings.HasPrefix(target, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("invalid file path: %s", header.Name)
+		}
+
 		if header.Typeflag == tar.TypeDir {
 			err := os.MkdirAll(target, 0755)
 			if err != nil {
