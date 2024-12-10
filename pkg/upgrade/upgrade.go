@@ -16,7 +16,7 @@ import (
 
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/style"
-	"github.com/google/go-github/v66/github"
+	"github.com/google/go-github/v67/github"
 	"github.com/urfave/cli/v3"
 	"golang.org/x/mod/semver"
 )
