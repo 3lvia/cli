@@ -30,8 +30,7 @@ RUN addgroup application-group --gid 1001 && \
 
 WORKDIR /app
 
-COPY --from=build /app/out .{{ if .IncludeFiles }}
-COPY {{ range .IncludeFiles }}{{ $.ModuleDirectory }}/{{ . }} {{ end }} ./{{ end }}{{ range .IncludeDirectories }}COPY {{ $.ModuleDirectory }}{{ . }} ./{{ end }}
+COPY --from=build /app/out .
 
 RUN chown --recursive application-user .
 USER application-user

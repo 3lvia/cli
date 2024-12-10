@@ -79,18 +79,6 @@ var Command *cli.Command = &cli.Command{
 			Usage:   "Additional tags to use when pushing the image to the registry.",
 			Sources: cli.EnvVars("3LV_ADDITIONAL_TAGS"),
 		},
-		&cli.StringSliceFlag{
-			Name:    "include-files",
-			Aliases: []string{"i"},
-			Usage:   "A list of files to include in the Docker image. Currently only supported for Go applications.",
-			Sources: cli.EnvVars("3LV_INCLUDE_FILES"),
-		},
-		&cli.StringSliceFlag{
-			Name:    "include-directories",
-			Aliases: []string{"I"},
-			Usage:   "A list of directories to include in the Docker image. Currently only supported for Go applications.",
-			Sources: cli.EnvVars("3LV_INCLUDE_DIRECTORIES"),
-		},
 		&cli.BoolFlag{
 			Name:    "push",
 			Aliases: []string{"p"},
@@ -155,8 +143,6 @@ func Build(ctx context.Context, c *cli.Command) error {
 	generateOptions := GenerateDockerfileOptions{
 		GoMainPackageDirectory: c.String("go-main-package-directory"),
 		BuildContext:           c.String("build-context"),
-		IncludeFiles:           utils.RemoveZeroValues(c.StringSlice("include-files")),
-		IncludeDirectories:     utils.RemoveZeroValues(c.StringSlice("include-directories")),
 	}
 
 	dockerfilePath, buildContext, err := generateDockerfile(
