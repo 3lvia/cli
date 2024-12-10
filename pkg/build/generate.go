@@ -19,8 +19,6 @@ var dockerfileTemplates embed.FS
 type GenerateDockerfileOptions struct {
 	GoMainPackageDirectory string
 	BuildContext           string
-	IncludeFiles           []string
-	IncludeDirectories     []string
 }
 
 func generateDockerfile(
@@ -130,8 +128,6 @@ type DockerfileVariablesGo struct {
 	ModuleDirectory      string // required
 	BuildContext         string // required
 	MainPackageDirectory string // required
-	IncludeFiles         []string
-	IncludeDirectories   []string
 }
 
 func generateDockerfileForGo(
@@ -157,8 +153,6 @@ func generateDockerfileForGo(
 		ModuleDirectory:      moduleDirectory,
 		BuildContext:         buildContext,
 		MainPackageDirectory: mainPackageDirectory,
-		IncludeFiles:         options.IncludeFiles,
-		IncludeDirectories:   options.IncludeDirectories,
 	}
 
 	const templateFile = "Dockerfile.go.tmpl"
