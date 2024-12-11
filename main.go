@@ -43,6 +43,7 @@ func main() {
 			run.Command,
 			create.Command,
 		},
+		version,
 	)
 
 	app := &cli.Command{
