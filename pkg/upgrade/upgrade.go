@@ -22,12 +22,33 @@ import (
 )
 
 const commandName = "upgrade"
+const defaultInstallLocation = "/usr/local/bin"
 
 func Command(version string) *cli.Command {
 	return &cli.Command{
 		Name:    commandName,
 		Aliases: []string{"u"},
 		Usage:   "Upgrade the Elvia CLI",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "install-location",
+				Usage:   "Where to install the new 3lv binary. If set, the use-existing-binary-location flag will be ignored.",
+				Aliases: []string{"l"},
+				Value:   defaultInstallLocation,
+			},
+			&cli.BoolFlag{
+				Name:    "use-existing-binary-location",
+				Usage:   "Install the new 3lv binary to where the existing 3lv binary is located.",
+				Aliases: []string{"e"},
+				Value:   true,
+			},
+			&cli.BoolFlag{
+				Name:    "force-reinstall",
+				Usage:   "Force the reinstallation of the 3lv binary, even if the version is the same.",
+				Aliases: []string{"f"},
+				Value:   false,
+			},
+		},
 		Action: func(ctx context.Context, c *cli.Command) error {
 			return Upgrade(ctx, c, version)
 		},
@@ -35,6 +56,27 @@ func Command(version string) *cli.Command {
 }
 
 func Upgrade(ctx context.Context, c *cli.Command, version string) error {
+	installLocation := func() string {
+		if c.IsSet("install-location") {
+			return c.String("install-location")
+		}
+
+		if c.Bool("use-existing-binary-location") {
+			currentBinary, err := os.Executable()
+			if err != nil {
+				style.Print(
+					fmt.Sprintf("Could not determine the current binary location, will install to %s", defaultInstallLocation),
+					&style.PrintOptions{Color: "red"},
+				)
+				return defaultInstallLocation
+			}
+
+			return path.Dir(currentBinary)
+		}
+
+		return c.String("install-location")
+	}()
+
 	latestVersion, err := GetLatestCLIVersion(ctx)
 	if err != nil {
 		return cli.Exit(err, 1)
@@ -45,6 +87,13 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 			fmt.Sprintf("You are already using the latest version of 3lv: %s", version),
 			&style.PrintOptions{Color: "green"},
 		)
+		if !c.Bool("force-reinstall") {
+			style.Print(
+				"Use the --force-reinstall flag to force the reinstallation of the 3lv binary.",
+				&style.PrintOptions{Color: "yellow"},
+			)
+			return cli.Exit("", 0)
+		}
 	}
 
 	binaryURL, err := getLatestBinaryURL()
@@ -85,7 +134,11 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 		return cli.Exit(err, 1)
 	}
 
-	installCommandOutput := installCommand(nil, path.Join(tempDir, "3lv"))
+	installCommandOutput := installCommand(
+		nil,
+		path.Join(tempDir, "3lv"),
+		installLocation,
+	)
 	if command.IsError(installCommandOutput) {
 		return cli.Exit(installCommandOutput.Error, 1)
 	}
@@ -199,6 +252,7 @@ func decompress(src, dest string) error {
 func installCommand(
 	options *command.RunOptions,
 	binaryFile string,
+	installLocation string,
 ) command.Output {
 	return command.Run(
 		*exec.Command(
@@ -206,7 +260,7 @@ func installCommand(
 			"install",
 			"-Dm755",
 			"-t",
-			"/usr/local/bin",
+			installLocation,
 			binaryFile,
 		),
 		options,
