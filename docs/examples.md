@@ -81,13 +81,24 @@ The CLI assumes that you are in the git repository of the project you are workin
 ### Generate GitHub Actions workflow for Kubernetes deploy
 
 ```bash
-3lv github-actions --system-name core --application-name my-cool-application --runtime-cloud-provider aks --helm-values-file CI/values.yml
+3lv github-actions --system-name core --application-name my-cool-application --project-file src/MyProject.csproj
 # or use shorthand
-3lv gha -s core -a my-cool-application -r aks -f CI/values.yml
+3lv gha -s core -a my-cool-application -f src/MyProject.csproj
 ```
 
 Remember to also add your repository to [github-repositories-terraform](https://github.com/3lvia/github-repositories-terraform)
 to enable access from GitHub Actions to Kubernetes.
+
+### Generate GitHub Actions workflow for Kubernetes deploy with existing Helm values file on ISS
+
+```bash
+3lv github-actions --system-name core --application-name my-cool-application --runtime-cloud-provider iss --helm-values-file CI/values.yml --project-file src/MyProject.csproj
+# or use shorthand
+3lv gha -s core -a my-cool-application -r iss -F CI/values.yml -f src/MyProject.csproj
+```
+
+Remember to also add your repository to the list of repositories in the `github-actions-deploy`-module
+in [iss-terraform](https://github.com/3lvia/iss-terraform) to enable access from GitHub Actions to ISS.
 
 </details>
 

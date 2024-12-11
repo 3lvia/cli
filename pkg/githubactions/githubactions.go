@@ -39,6 +39,7 @@ var Command *cli.Command = &cli.Command{
 		),
 		shared.RuntimeCloudProviderFlag(),
 		shared.HelmValuesFileFlag(),
+		shared.ProjectFileFlag(),
 		&cli.StringFlag{
 			Name:    "default-branch",
 			Aliases: []string{"b"},
@@ -95,7 +96,7 @@ func CreateDeployWorkflow(
 		}
 	}
 
-	language, err := getLanguageFromProjectFile(projectFile)
+	language, err := getLanguageFromProjectFile(path.Base(projectFile))
 	if err != nil {
 		return err
 	}

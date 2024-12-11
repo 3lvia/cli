@@ -67,7 +67,7 @@ func ApplicationNameFlag(usage string) *cli.StringFlag {
 func HelmValuesFileFlag() *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:    "helm-values-file",
-		Aliases: []string{"f"},
+		Aliases: []string{"F"},
 		Usage:   "The Helm values file used for deploying.",
 		Value:   ".github/deploy/values.yml",
 	}

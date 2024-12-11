@@ -7,7 +7,7 @@ Supported platforms:
 - **Windows**
 
 We stronlgy recommend using [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install) if you are on Windows.
-This is because we depend on software tools (see [requirements](docs/requirements.md)) that are much easier to install on a Linux distribution than on Windows.
+This is because we depend on software tools (see [requirements](requirements.md)) that are much easier to install on a Linux distribution than on Windows.
 
 Note however that the CLI works perfectly fine on Windows, as long as you manage to install the aforementioned required software yourself.
 
