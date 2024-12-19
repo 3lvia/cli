@@ -21,9 +21,10 @@ const commandName = "run"
 var composeTemplates embed.FS
 
 var Command *cli.Command = &cli.Command{
-	Name:    commandName,
-	Aliases: []string{"r"},
-	Usage:   "Run your application with Docker Compose",
+	Name:      commandName,
+	Aliases:   []string{"r"},
+	Usage:     "Run your application with Docker Compose.",
+	UsageText: "3lv run [options] <application-name>",
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
 			"The name of your system.",
@@ -39,7 +40,7 @@ var Command *cli.Command = &cli.Command{
 
 func Run(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
-		return cli.ShowAppHelp(c)
+		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
 
 	applicationName := c.Args().First()

@@ -19,9 +19,10 @@ import (
 const commandName = "build"
 
 var Command *cli.Command = &cli.Command{
-	Name:    commandName,
-	Aliases: []string{"b"},
-	Usage:   "Build a Docker image from a project file.",
+	Name:      commandName,
+	Aliases:   []string{"b"},
+	Usage:     "Build a Docker image from a project file.",
+	UsageText: "3lv build [options] <application-name>",
 	Flags: []cli.Flag{
 		shared.ProjectFileFlag(),
 		shared.SystemNameFlag(
@@ -105,7 +106,7 @@ var Command *cli.Command = &cli.Command{
 
 func Build(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
-		return cli.ShowAppHelp(c)
+		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
 
 	// Required args

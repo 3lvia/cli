@@ -26,9 +26,10 @@ const defaultInstallLocation = "/usr/local/bin"
 
 func Command(version string) *cli.Command {
 	return &cli.Command{
-		Name:    commandName,
-		Aliases: []string{"u"},
-		Usage:   "Upgrade the Elvia CLI",
+		Name:      commandName,
+		Aliases:   []string{"u"},
+		Usage:     "Upgrade the Elvia CLI to the latest version.",
+		UsageText: "3lv upgrade [options]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "install-location",

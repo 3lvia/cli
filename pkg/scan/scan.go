@@ -16,9 +16,10 @@ import (
 )
 
 var Command *cli.Command = &cli.Command{
-	Name:    "scan",
-	Aliases: []string{"s"},
-	Usage:   "Scan image using Trivy.",
+	Name:      "scan",
+	Aliases:   []string{"s"},
+	Usage:     "Scan a container image using Trivy.",
+	UsageText: "3lv scan [options] <image-name>",
 	Flags: []cli.Flag{
 		shared.SeverityFlag("severity"),
 		shared.FormatsFlag("formats"),
@@ -29,7 +30,7 @@ var Command *cli.Command = &cli.Command{
 
 func Scan(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
-		return cli.ShowAppHelp(c)
+		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
 
 	// Required args
