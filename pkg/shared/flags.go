@@ -15,10 +15,9 @@ func nameToEnvVar(name string) string {
 
 func ProjectFileFlag() *cli.StringFlag {
 	return &cli.StringFlag{
-		Name:     "project-file",
-		Aliases:  []string{"f"},
-		Usage:    "The project file to use. We currently support .NET (*.csproj), Go (go.mod) or a generic project (Dockerfile).",
-		Required: true,
+		Name:    "project-file",
+		Aliases: []string{"f"},
+		Usage:   "The project file to use. We currently support .NET (*.csproj), Go (go.mod) or a generic project (Dockerfile).",
 	}
 }
 
@@ -47,20 +46,18 @@ func RuntimeCloudProviderFlag() *cli.StringFlag {
 
 func SystemNameFlag(usage string, required bool) *cli.StringFlag {
 	return &cli.StringFlag{
-		Name:     "system-name",
-		Aliases:  []string{"s"},
-		Usage:    usage,
-		Required: required,
-		Sources:  cli.EnvVars("3LV_SYSTEM_NAME"),
+		Name:    "system-name",
+		Aliases: []string{"s"},
+		Usage:   usage,
+		Sources: cli.EnvVars("3LV_SYSTEM_NAME"),
 	}
 }
 
 func ApplicationNameFlag(usage string) *cli.StringFlag {
 	return &cli.StringFlag{
-		Name:     "application-name",
-		Aliases:  []string{"a"},
-		Usage:    usage,
-		Required: true,
+		Name:    "application-name",
+		Aliases: []string{"a"},
+		Usage:   usage,
 	}
 }
 

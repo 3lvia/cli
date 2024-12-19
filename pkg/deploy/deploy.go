@@ -16,10 +16,11 @@ import (
 )
 
 var Command *cli.Command = &cli.Command{
-	Name:    "deploy",
-	Aliases: []string{"d"},
-	Usage:   "Deploy an application to a Kubernetes cluster",
-	Hidden:  true,
+	Name:      "deploy",
+	Aliases:   []string{"d"},
+	Usage:     "Deploy an application to a one of Atlas' Kubernetes clusters.",
+	UsageText: "3lv deploy [options] <application-name>",
+	Hidden:    true,
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
 			"The name of the system (Kubernetes namespace) to deploy to.",
@@ -28,10 +29,9 @@ var Command *cli.Command = &cli.Command{
 		shared.RuntimeCloudProviderFlag(),
 		shared.HelmValuesFileFlag(),
 		&cli.StringFlag{
-			Name:     "image-tag",
-			Aliases:  []string{"i"},
-			Usage:    "The image tag to deploy.",
-			Required: true,
+			Name:    "image-tag",
+			Aliases: []string{"i"},
+			Usage:   "The image tag to deploy.",
 		},
 		&cli.StringFlag{
 			Name:    "environment",
@@ -159,7 +159,7 @@ var Command *cli.Command = &cli.Command{
 
 func Deploy(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
-		return cli.ShowAppHelp(c)
+		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
 
 	if !c.Bool("allow-deploy") {

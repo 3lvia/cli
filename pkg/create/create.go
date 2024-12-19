@@ -37,9 +37,10 @@ var (
 )
 
 var Command *cli.Command = &cli.Command{
-	Name:    commandName,
-	Aliases: []string{"c"},
-	Usage:   "Create a new project",
+	Name:      commandName,
+	Aliases:   []string{"c"},
+	Usage:     "Create a new project from one of Elvia's templates.",
+	UsageText: "3lv create [options] <output-directory>",
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
 			"The name of your system (Kubernetes namespace) you want to create your application in.",
@@ -91,10 +92,8 @@ var Command *cli.Command = &cli.Command{
 
 func Create(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
-		return cli.ShowAppHelp(c)
+		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
-
-	nonInteractive := c.Bool("non-interactive")
 
 	outputDirectory := c.Args().First()
 	if outputDirectory == "" {
@@ -118,7 +117,9 @@ func Create(ctx context.Context, c *cli.Command) error {
 		}
 		return *parsed
 	}()
+
 	defaultBranch := c.String("default-branch")
+	nonInteractive := c.Bool("non-interactive")
 
 	checkCoooiecutterInstalledOutput := checkCookiecutterInstalledCommand(nil)
 	if command.IsError(checkCoooiecutterInstalledOutput) {

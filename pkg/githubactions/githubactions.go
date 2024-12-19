@@ -26,9 +26,10 @@ const (
 var helmValuesFileTemplate embed.FS
 
 var Command *cli.Command = &cli.Command{
-	Name:    commandName,
-	Aliases: []string{"gha"},
-	Usage:   "Add GitHub Actions to a project",
+	Name:      commandName,
+	Aliases:   []string{"gha"},
+	Usage:     "Add build and deploy with GitHub Actions to an exisiting project.",
+	UsageText: "3lv build [options] <project-directory>",
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
 			"The name of your system (Kubernetes namespace) you want to deploy to.",
@@ -51,8 +52,21 @@ var Command *cli.Command = &cli.Command{
 }
 
 func GitHubActions(ctx context.Context, c *cli.Command) error {
+	if c.NArg() <= 0 {
+		cli.ShowSubcommandHelpAndExit(c, 1)
+	}
+
+	projectDirectory := func() string {
+		first := c.Args().First()
+		if first == "" {
+			return "."
+		}
+
+		return first
+	}()
+
 	err := CreateDeployWorkflow(
-		".",
+		projectDirectory,
 		c.String("project-file"),
 		c.String("runtime-cloud-provider"),
 		c.String("system-name"),
