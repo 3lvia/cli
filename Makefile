@@ -27,6 +27,12 @@ lint:
 	golangci-lint run ./...
 
 
+## lint-fix: Run linter (golangci-lint) with auto-fix.
+.PHONY: lint-fix
+lint-fix:
+	golangci-lint run --fix ./...
+
+
 ## build: Build the binary (tries to guess the OS and architecture).
 .PHONY: build
 build:

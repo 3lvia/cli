@@ -8,10 +8,14 @@ import (
 )
 
 func TestGcloudGetCredentialsCommand1(t *testing.T) {
-	const clusterName = "my-sick-cluster"
-	const clusterLocation = "europe-west1"
-	const projectID = "my-cool-project"
-	const environment = "this-will-not-be-used"
+	t.Parallel()
+
+	const (
+		clusterName     = "my-sick-cluster"
+		clusterLocation = "europe-west1"
+		projectID       = "my-cool-project"
+		environment     = "this-will-not-be-used"
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -46,10 +50,14 @@ func TestGcloudGetCredentialsCommand1(t *testing.T) {
 }
 
 func TestGcloudGetCredentialsCommand2(t *testing.T) {
-	const clusterName = "my-sick-cluster"
-	const clusterLocation = "europe-west1"
-	const projectID = "my-cool-project"
-	const environment = "this-will-not-be-used"
+	t.Parallel()
+
+	const (
+		clusterName     = "my-sick-cluster"
+		clusterLocation = "europe-west1"
+		projectID       = "my-cool-project"
+		environment     = "this-will-not-be-used"
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -84,10 +92,14 @@ func TestGcloudGetCredentialsCommand2(t *testing.T) {
 }
 
 func TestGcloudGetCredentialsCommand3(t *testing.T) {
-	const clusterName = "my-sick-cluster"
-	const clusterLocation = "europe-west1"
-	const projectID = "my-cool-project"
-	const environment = "this-will-not-be-used"
+	t.Parallel()
+
+	const (
+		clusterName     = "my-sick-cluster"
+		clusterLocation = "europe-west1"
+		projectID       = "my-cool-project"
+		environment     = "this-will-not-be-used"
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -122,6 +134,8 @@ func TestGcloudGetCredentialsCommand3(t *testing.T) {
 }
 
 func TestGcloudGetCredentialsCommand4(t *testing.T) {
+	t.Parallel()
+
 	const environment = "dev"
 
 	expectedCommandString := strings.Join(

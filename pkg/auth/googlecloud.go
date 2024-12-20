@@ -7,7 +7,6 @@ func AuthenticateGoogle() error {
 			return fmt.Errorf("Failed to authenticate to Google Cloud: %w", gcloudAuthLoginOutput.Error)
 		}
 	*/
-
 	return nil
 }
 

@@ -119,6 +119,7 @@ func toTrivyVulnerabilityResultsWithArtifactName(
 	result TrivyResult,
 ) TrivyVulnerabilityResultsWithArtifactName {
 	var trivyVulnerabilityResults []TrivyVulnerabilityResult
+
 	for _, result := range result.Results {
 		if len(result.Vulnerabilities) > 0 {
 			trivyVulnerabilityResults = append(trivyVulnerabilityResults, result)
@@ -149,6 +150,7 @@ func parseJSONOutput() (TrivyVulnerabilityResultsWithArtifactName, error) {
 	}
 
 	var trivyResult TrivyResult
+
 	err = json.Unmarshal(byteValue, &trivyResult)
 	if err != nil {
 		return TrivyVulnerabilityResultsWithArtifactName{}, err
@@ -164,13 +166,14 @@ func toMarkdown(results TrivyVulnerabilityResultsWithArtifactName) ([]byte, erro
 
 	markdownTemplate, err := template.New(templateFile).ParseFS(trivyMarkdownTemplate, templateFile)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse markdown template: %v", err)
+		return nil, fmt.Errorf("Failed to parse markdown template: %w", err)
 	}
 
 	var markdownBuffer bytes.Buffer
+
 	err = markdownTemplate.Execute(&markdownBuffer, results)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to execute markdown template: %v", err)
+		return nil, fmt.Errorf("Failed to execute markdown template: %w", err)
 	}
 
 	return markdownBuffer.Bytes(), nil

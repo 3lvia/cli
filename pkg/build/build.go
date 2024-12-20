@@ -2,6 +2,7 @@ package build
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -26,8 +27,8 @@ var Command *cli.Command = &cli.Command{
 	Flags: []cli.Flag{
 		shared.ProjectFileFlag(),
 		shared.SystemNameFlag(
-			"The system name to prefix the image name with. If not provided, we will try to use the current git repository name.",
-			false,
+			"The system name to prefix the image name with." +
+				" If not provided, we will try to use the current git repository name.",
 		),
 		shared.SeverityFlag("scan-severity"),
 		shared.FormatsFlag("scan-formats"),
@@ -36,7 +37,9 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "build-context",
 			Aliases: []string{"c"},
-			Usage:   "The directory to use as the build context for Docker, i.e. what files Docker will know about when building. We default to the directory of the project file. This means that if you need files outside of the directory of the project file, you need to specify this flag.",
+			Usage: "The directory to use as the Docker build context, i.e. what files Docker will know about when building." +
+				" We default to the directory of the project file. This means that if you need files outside of the directory of" +
+				" the project file, you need to specify this flag.",
 			Sources: cli.EnvVars("3LV_BUILD_CONTEXT"),
 		},
 		&cli.StringFlag{
@@ -63,14 +66,16 @@ var Command *cli.Command = &cli.Command{
 			Sources: cli.EnvVars("3LV_AZURE_SUBSCRIPTION_ID"),
 		},
 		&cli.StringFlag{
-			Name:    "azure-client-id",
-			Usage:   "The client ID to use when authenticating with the Azure Container registry. Must be combined with --azure-federated-token.",
+			Name: "azure-client-id",
+			Usage: "The client ID to use when authenticating with the Azure Container registry." +
+				" Must be combined with --azure-federated-token.",
 			Hidden:  true,
 			Sources: cli.EnvVars("3LV_AZURE_CLIENT_ID"),
 		},
 		&cli.StringFlag{
-			Name:    "azure-federated-token",
-			Usage:   "The federated token to use when authenticating with the Azure Container Registry. Must be combined with --client-id.",
+			Name: "azure-federated-token",
+			Usage: "The federated token to use when authenticating with the Azure Container Registry." +
+				" Must be combined with --client-id.",
 			Hidden:  true,
 			Sources: cli.EnvVars("3LV_AZURE_FEDERATED_TOKEN"),
 		},
@@ -104,7 +109,7 @@ var Command *cli.Command = &cli.Command{
 	Action: Build,
 }
 
-func Build(ctx context.Context, c *cli.Command) error {
+func Build(_ context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
@@ -114,10 +119,12 @@ func Build(ctx context.Context, c *cli.Command) error {
 	if applicationName == "" {
 		return cli.Exit("Application name not provided", 1)
 	}
+
 	projectFile := c.String("project-file")
 	if projectFile == "" {
 		return cli.Exit("Project file not provided", 1)
 	}
+
 	systemName, err := func() (string, error) {
 		possibleSystemName := c.String("system-name")
 
@@ -160,6 +167,7 @@ func Build(ctx context.Context, c *cli.Command) error {
 			fmt.Sprintf("Dockerfile generated at %s\n", dockerfilePath),
 			nil,
 		)
+
 		return nil
 	}
 
@@ -200,6 +208,7 @@ func Build(ctx context.Context, c *cli.Command) error {
 			if len(split) <= 0 {
 				return "", fmt.Errorf("Invalid registry name: %s", registry)
 			}
+
 			return split[0], nil
 		}()
 		if err != nil {
@@ -219,7 +228,6 @@ func Build(ctx context.Context, c *cli.Command) error {
 				1,
 			)
 		}
-
 	}
 
 	imageName, err := GetImageName(
@@ -279,13 +287,16 @@ func Build(ctx context.Context, c *cli.Command) error {
 		)
 
 		if command.IsError(pushImageOutput) {
-			return fmt.Errorf("Failed to push Docker image. If using GHCR, please login using the command `gh auth login` first. %w", err)
+			return fmt.Errorf(
+				"Failed to push Docker image. If using GHCR, please login using the command `gh auth login` first. %w",
+				err,
+			)
 		}
 	}
 
 	outputDirectory := os.TempDir() + "/3lv-cli-output"
 	if _, err := os.Stat(outputDirectory); os.IsNotExist(err) {
-		err := os.Mkdir(outputDirectory, 0700)
+		err := os.Mkdir(outputDirectory, 0o700)
 		if err != nil {
 			return cli.Exit(err, 1)
 		}
@@ -304,7 +315,7 @@ func Build(ctx context.Context, c *cli.Command) error {
 	err = os.WriteFile(
 		outputDirectory+"/image-name",
 		[]byte(imageName+":"+firstAdditionalTagThatsNotCacheTag),
-		0700,
+		0o700,
 	)
 	if err != nil {
 		return cli.Exit(err, 1)
@@ -319,18 +330,21 @@ func GetImageName(
 	applicationName string,
 ) (string, error) {
 	if registry == "" {
-		return "", fmt.Errorf("Registry not provided")
+		return "", errors.New("Registry not provided")
 	}
+
 	if systemName == "" {
-		return "", fmt.Errorf("System name not provided")
+		return "", errors.New("System name not provided")
 	}
+
 	if applicationName == "" {
-		return "", fmt.Errorf("Application name not provided")
+		return "", errors.New("Application name not provided")
 	}
 
 	if strings.Contains(registry, "azurecr.io") || strings.Contains(registry, "gcr.io") {
 		return strings.ToLower(fmt.Sprintf("%s/%s-%s", registry, systemName, applicationName)), nil
 	}
+
 	return strings.ToLower(fmt.Sprintf("%s/%s/%s", registry, systemName, applicationName)), nil
 }
 
@@ -350,7 +364,7 @@ func buildImageCommand(
 		return append(additionalTags, cacheTag)
 	}()
 
-	var tagArguments []string
+	tagArguments := make([]string, 0, len(tags)*2)
 	for _, tag := range tags {
 		tagArguments = append(tagArguments, "-t")
 		tagArguments = append(tagArguments, imageName+":"+tag)

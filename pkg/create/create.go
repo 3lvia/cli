@@ -24,12 +24,12 @@ const commandName = "create"
 type Template enum.Member[string]
 
 var (
-	Dotnet8WebApi Template = Template{"dotnet8-webapi"}
-	// Dotnet8WebApp Template = Template{"dotnet8-webapp"}
-	Dotnet8Worker Template = Template{"dotnet8-worker"}
-	// Go            Template = Template{"go"}
+	Dotnet8WebAPI = Template{"dotnet8-webapi"}
+	// Dotnet8WebApp = Template{"dotnet8-webapp"}.
+	Dotnet8Worker = Template{"dotnet8-worker"}
+	// Go           Template = Template{"go"}.
 	Templates = enum.New(
-		Dotnet8WebApi,
+		Dotnet8WebAPI,
 		//	Dotnet8WebApp,
 		Dotnet8Worker,
 		// Go,
@@ -44,7 +44,6 @@ var Command *cli.Command = &cli.Command{
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
 			"The name of your system (Kubernetes namespace) you want to create your application in.",
-			true,
 		),
 		shared.ApplicationNameFlag(
 			"The name of the application you want to create.",
@@ -53,12 +52,9 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "template",
 			Aliases: []string{"t"},
-			Usage: fmt.Sprintf(
-				"The template to use for the project. Supported templates are: %s",
-				strings.Join(Templates.Values(), ", "),
-			),
-			Value: Dotnet8WebApi.Value,
-			Action: func(ctx context.Context, c *cli.Command, template string) error {
+			Usage:   "The template to use for the project. Supported templates are: " + strings.Join(Templates.Values(), ", "),
+			Value:   Dotnet8WebAPI.Value,
+			Action: func(_ context.Context, _ *cli.Command, template string) error {
 				parsed := Templates.Parse(template)
 
 				if parsed == nil {
@@ -84,7 +80,8 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "github-actions-directory",
 			Aliases: []string{"G"},
-			Usage:   "The root directory of your GitHub repository. The path specified will be prepended to '.github/workflows'.",
+			Usage: "The root directory of your GitHub repository." +
+				" The path specified will be prepended to '.github/workflows'.",
 		},
 	},
 	Action: Create,
@@ -115,6 +112,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 		if parsed == nil {
 			return Template{"dotnet"}
 		}
+
 		return *parsed
 	}()
 
@@ -129,7 +127,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 		}
 
 		if yes {
-			checkPipxInstalledOutput := checkPipxÌnstalledCommand(nil)
+			checkPipxInstalledOutput := checkPipxInstalledCommand(nil)
 			if command.IsError(checkPipxInstalledOutput) {
 				log.Fatal("pipx, which is required for installing cookiecutter, is not installed. Please install it first.")
 			}
@@ -138,6 +136,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 				"Installing cookiecutter...",
 				nil,
 			)
+
 			installCookiecutterOutput := installCookiecutterCommand(nil)
 			if command.IsError(installCookiecutterOutput) {
 				return cli.Exit("Failed to install cookiecutter.", 1)
@@ -177,6 +176,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 		if c.IsSet("github-actions-directory") {
 			return c.String("github-actions-directory")
 		}
+
 		return projectDirectory
 	}()
 
@@ -186,6 +186,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 	}
 
 	err = githubactions.CreateDeployWorkflow(
+		ctx,
 		githubActionsDirectory,
 		projectFile,
 		c.String("runtime-cloud-provider"),
@@ -200,7 +201,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 	}
 
 	style.Print(
-		fmt.Sprintf("Succesfully created project at '%s'!", projectDirectory),
+		fmt.Sprintf("Successfully created project at '%s'!", projectDirectory),
 		&style.PrintOptions{Color: "green"},
 	)
 
@@ -217,7 +218,7 @@ func getProjectDirectoryForTemplate(
 	applicationName string,
 ) (string, error) {
 	switch template {
-	case Dotnet8WebApi /*Dotnet8WebApp,*/, Dotnet8Worker:
+	case Dotnet8WebAPI /*Dotnet8WebApp,*/, Dotnet8Worker:
 		return path.Join(
 			outputDirectory,
 			toPascalCaseWithoutHyphens(applicationName),
@@ -236,11 +237,8 @@ func getProjectFileForTemplate(
 	applicationName string,
 ) (string, error) {
 	switch template {
-	case Dotnet8WebApi /*Dotnet8WebApp,*/, Dotnet8Worker:
-		return fmt.Sprintf(
-			"%s.csproj",
-			toPascalCaseWithoutHyphens(applicationName),
-		), nil
+	case Dotnet8WebAPI /*Dotnet8WebApp,*/, Dotnet8Worker:
+		return toPascalCaseWithoutHyphens(applicationName) + ".csproj", nil
 	/*
 		case Go:
 			return "go.mod", nil
@@ -288,7 +286,7 @@ func checkCookiecutterInstalledCommand(
 	)
 }
 
-func checkPipxÌnstalledCommand(
+func checkPipxInstalledCommand(
 	options *command.RunOptions,
 ) command.Output {
 	return command.Run(

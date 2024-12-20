@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -8,9 +9,11 @@ import (
 	"github.com/3lvia/cli/pkg/command"
 )
 
-const ElviaTenantID = "2186a6ec-c227-4291-9806-d95340bf439d"
-const ElviaDefaultRuntimeSubscriptionID = "9edbf217-b7c1-4f6a-ae76-d046cf932ff0"
-const ElviaDefaultRuntimeDevTestSubscriptionID = "ceb9518c-528f-4c91-9b5a-c051d383e7a8"
+const (
+	ElviaTenantID                            = "2186a6ec-c227-4291-9806-d95340bf439d"
+	ElviaDefaultRuntimeSubscriptionID        = "9edbf217-b7c1-4f6a-ae76-d046cf932ff0"
+	ElviaDefaultRuntimeDevTestSubscriptionID = "ceb9518c-528f-4c91-9b5a-c051d383e7a8"
+)
 
 func GetElviaDefaultRuntimeSubscriptionID(
 	environment string,
@@ -44,11 +47,12 @@ func AuthenticateAzure(
 		if command.IsError(azLoginCommandOutput) {
 			return fmt.Errorf("Failed to authenticate to Azure: %w", azLoginCommandOutput.Error)
 		}
+
 		return nil
 	}
 
 	if tenantID := strings.TrimSpace(azAccountShowCommandOutput.Output); tenantID != "" {
-		azAccountShowCmdOutputString := strings.TrimSpace(string(tenantID))
+		azAccountShowCmdOutputString := strings.TrimSpace(tenantID)
 		if azAccountShowCmdOutputString != tenantID {
 			azLoginTenantCommandOutput := azLoginCommand(
 				tenantID,
@@ -117,7 +121,7 @@ func azLoginCommand(
 	}
 
 	if tenantID == "" {
-		return command.Error(fmt.Errorf("Tenant ID is required"))
+		return command.Error(errors.New("Tenant ID is required"))
 	}
 
 	cmd := exec.Command(
@@ -129,7 +133,7 @@ func azLoginCommand(
 
 	if options.FederatedToken != "" {
 		if options.ClientID == "" {
-			return command.Error(fmt.Errorf("Client ID is required when federated token is provided"))
+			return command.Error(errors.New("Client ID is required when federated token is provided"))
 		}
 
 		cmd.Args = append(cmd.Args, "--service-principal")

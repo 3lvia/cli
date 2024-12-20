@@ -7,8 +7,12 @@ import (
 )
 
 func TestGetProjectFileAndBuildContext1(t *testing.T) {
-	const expectedCsprojFileName = "demo-api.csproj"
-	const expectedBuildContext = "."
+	t.Parallel()
+
+	const (
+		expectedCsprojFileName = "demo-api.csproj"
+		expectedBuildContext   = "."
+	)
 
 	csprojFileName, buildContext := getProjectFileAndBuildContext(
 		"demo-api.csproj",
@@ -25,8 +29,12 @@ func TestGetProjectFileAndBuildContext1(t *testing.T) {
 }
 
 func TestGetProjectFileAndBuildContext2(t *testing.T) {
-	const expectedCsprojFileName = "demo-api.csproj"
-	const expectedBuildContext = "src/Things/DemoApi"
+	t.Parallel()
+
+	const (
+		expectedCsprojFileName = "demo-api.csproj"
+		expectedBuildContext   = "src/Things/DemoApi"
+	)
 
 	csprojFileName, buildContext := getProjectFileAndBuildContext(
 		"demo-api.csproj",
@@ -43,8 +51,12 @@ func TestGetProjectFileAndBuildContext2(t *testing.T) {
 }
 
 func TestGetProjectFileAndBuildContext3(t *testing.T) {
-	const expectedCsprojFileName = "demo-api.csproj"
-	const expectedBuildContext = "src/Things/DemoApi"
+	t.Parallel()
+
+	const (
+		expectedCsprojFileName = "demo-api.csproj"
+		expectedBuildContext   = "src/Things/DemoApi"
+	)
 
 	csprojFileName, buildContext := getProjectFileAndBuildContext(
 		"src/Things/DemoApi/demo-api.csproj",
@@ -61,8 +73,12 @@ func TestGetProjectFileAndBuildContext3(t *testing.T) {
 }
 
 func TestGetProjectFileAndBuildContext4(t *testing.T) {
-	const expectedCsprojFileName = "DemoApi/demo-api.csproj"
-	const expectedBuildContext = "src/Things"
+	t.Parallel()
+
+	const (
+		expectedCsprojFileName = "DemoApi/demo-api.csproj"
+		expectedBuildContext   = "src/Things"
+	)
 
 	csprojFileName, buildContext := getProjectFileAndBuildContext(
 		"src/Things/DemoApi/demo-api.csproj",
@@ -79,8 +95,12 @@ func TestGetProjectFileAndBuildContext4(t *testing.T) {
 }
 
 func TestGetProjectFileAndBuildContext5(t *testing.T) {
-	const expectedCsprojFileName = "Things/DemoApi/demo-api.csproj"
-	const expectedBuildContext = "src"
+	t.Parallel()
+
+	const (
+		expectedCsprojFileName = "Things/DemoApi/demo-api.csproj"
+		expectedBuildContext   = "src"
+	)
 
 	csprojFileName, buildContext := getProjectFileAndBuildContext(
 		"src/Things/DemoApi/demo-api.csproj",
@@ -97,8 +117,12 @@ func TestGetProjectFileAndBuildContext5(t *testing.T) {
 }
 
 func TestFindAssemblyName1(t *testing.T) {
-	const projectFile = "_test/no-assembly-name.csproj"
-	const expectedAssemblyName = "no-assembly-name.dll"
+	t.Parallel()
+
+	const (
+		projectFile          = "_test/no-assembly-name.csproj"
+		expectedAssemblyName = "no-assembly-name.dll"
+	)
 
 	actualAssemblyName, err := findAssemblyName(
 		projectFile,
@@ -114,8 +138,12 @@ func TestFindAssemblyName1(t *testing.T) {
 }
 
 func TestFindAssemblyName2(t *testing.T) {
-	const projectFile = "_test/assembly-name.csproj"
-	const expectedAssemblyName = "SelfDefinedAssemblyName.dll"
+	t.Parallel()
+
+	const (
+		projectFile          = "_test/assembly-name.csproj"
+		expectedAssemblyName = "SelfDefinedAssemblyName.dll"
+	)
 
 	actualAssemblyName, err := findAssemblyName(
 		projectFile,
@@ -131,6 +159,8 @@ func TestFindAssemblyName2(t *testing.T) {
 }
 
 func TestFindRuntimeBaseImage1(t *testing.T) {
+	t.Parallel()
+
 	const projectFile = "_test/no-sdk.csproj"
 
 	_, err := findRuntimeBaseImage(projectFile)
@@ -140,8 +170,12 @@ func TestFindRuntimeBaseImage1(t *testing.T) {
 }
 
 func TestFindRuntimeBaseImage2(t *testing.T) {
-	const projectFile = "_test/dotnet-runtime.csproj"
-	const expectedBaseImage = "mcr.microsoft.com/dotnet/runtime"
+	t.Parallel()
+
+	const (
+		projectFile       = "_test/dotnet-runtime.csproj"
+		expectedBaseImage = "mcr.microsoft.com/dotnet/runtime"
+	)
 
 	actualBaseImage, err := findRuntimeBaseImage(projectFile)
 	if err != nil {
@@ -154,7 +188,10 @@ func TestFindRuntimeBaseImage2(t *testing.T) {
 }
 
 func TestFindRuntimeBaseImage3(t *testing.T) {
+	t.Parallel()
+
 	const expectedBaseImage = "mcr.microsoft.com/dotnet/aspnet"
+
 	projectFiles := []string{
 		"_test/dotnet-aspnet-web.csproj",
 		"_test/dotnet-aspnet-blazor-web-assembly.csproj",
@@ -175,6 +212,8 @@ func TestFindRuntimeBaseImage3(t *testing.T) {
 }
 
 func TestFindBaseImageTag1(t *testing.T) {
+	t.Parallel()
+
 	const projectFile = "_test/this-does-not-exists.csproj"
 
 	_, err := findBaseImageTag(projectFile)
@@ -184,6 +223,8 @@ func TestFindBaseImageTag1(t *testing.T) {
 }
 
 func TestFindBaseImageTag2(t *testing.T) {
+	t.Parallel()
+
 	const projectFile = "_test/no-target-framework.csproj"
 
 	_, err := findBaseImageTag(projectFile)
@@ -193,6 +234,8 @@ func TestFindBaseImageTag2(t *testing.T) {
 }
 
 func TestFindBaseImageTag3(t *testing.T) {
+	t.Parallel()
+
 	dotnetFrameworkVersions := []string{
 		"6.0",
 		"7.0",
@@ -216,14 +259,19 @@ func TestFindBaseImageTag3(t *testing.T) {
 }
 
 func TestGenerateGoDockerfile1(t *testing.T) {
+	t.Parallel()
+
 	expectedDockerfile, err := os.ReadFile("_test/Dockerfile.test1")
 	if err != nil {
 		t.Errorf("Error reading file: %v", err)
 	}
+
 	expectedBuildContext := "."
 
-	const projectFile = "go.mod"
-	const applicationName = "demo-api"
+	const (
+		projectFile     = "go.mod"
+		applicationName = "demo-api"
+	)
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 		projectFile,
@@ -249,8 +297,12 @@ func TestGenerateGoDockerfile1(t *testing.T) {
 }
 
 func TestGenerateDockerfileWithDockerfile1(t *testing.T) {
-	const projectFile = "Dockerfile.test" // doesn't need to exist
-	const expectedBuildContext = "."
+	t.Parallel()
+
+	const (
+		projectFile          = "Dockerfile.test" // doesn't need to exist
+		expectedBuildContext = "."
+	)
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 		projectFile,
@@ -271,8 +323,12 @@ func TestGenerateDockerfileWithDockerfile1(t *testing.T) {
 }
 
 func TestGenerateDockerfileWithDockerfile2(t *testing.T) {
-	const projectFile = "src/Project/Dockerfile.test" // doesn't need to exist
-	const expectedBuildContext = "src/Project"
+	t.Parallel()
+
+	const (
+		projectFile          = "src/Project/Dockerfile.test" // doesn't need to exist
+		expectedBuildContext = "src/Project"
+	)
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 		projectFile,
@@ -293,8 +349,12 @@ func TestGenerateDockerfileWithDockerfile2(t *testing.T) {
 }
 
 func TestGenerateDockerfileWithDockerfile3(t *testing.T) {
-	const projectFile = "src/Project/Dockerfile.test" // doesn't need to exist
-	const expectedBuildContext = "src/Project"
+	t.Parallel()
+
+	const (
+		projectFile          = "src/Project/Dockerfile.test" // doesn't need to exist
+		expectedBuildContext = "src/Project"
+	)
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 		projectFile,
@@ -315,7 +375,10 @@ func TestGenerateDockerfileWithDockerfile3(t *testing.T) {
 }
 
 func TestDotIfEmpty1(t *testing.T) {
+	t.Parallel()
+
 	const expected = "value"
+
 	actual := dotIfEmpty("value")
 
 	if expected != actual {
@@ -324,7 +387,10 @@ func TestDotIfEmpty1(t *testing.T) {
 }
 
 func TestDotIfEmpty2(t *testing.T) {
+	t.Parallel()
+
 	const expected = "."
+
 	actual := dotIfEmpty("")
 
 	if expected != actual {
@@ -333,13 +399,15 @@ func TestDotIfEmpty2(t *testing.T) {
 }
 
 func TestDotIfEmpty3(t *testing.T) {
+	t.Parallel()
+
 	const expected = "."
 
 	type testStruct struct {
 		value string
 	}
-	test := testStruct{}
 
+	test := testStruct{}
 	actual := dotIfEmpty(test.value)
 
 	if expected != actual {

@@ -30,6 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	version := strings.TrimSpace(string(versionFile))
 
 	// Check for a new version of the CLI after all these commands.

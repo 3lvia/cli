@@ -1,0 +1,62 @@
+linters:
+  enable-all: true
+  disable:
+    - depguard
+    - testpackage
+    - mnd
+    - exportloopref
+    - tagliatelle
+    - exhaustruct
+    # TODO: fix issues and enable these
+    - funlen
+    - err113
+    - wrapcheck
+    - cyclop
+    - nestif
+    - gocritic
+    - goconst
+    - gosec
+    - godox
+    - gocognit
+linters-settings:
+  stylecheck:
+    checks:
+      - ST1000
+      - ST1001
+      - ST1003
+      - ST1006
+      - ST1008
+      - ST1011
+      - ST1012
+      - ST1013
+      - ST1015
+      - ST1016
+      - ST1017
+      - ST1018
+      - ST1019
+      - ST1020
+      - ST1021
+      - ST1022
+      - ST1023
+issues:
+  exclude-rules:
+    - linters:
+      - varnamelen
+      text: "parameter name 'c' is too short for the scope of its usage"
+    - linters:
+      - gochecknoglobals
+      text: "Command is a global variable"
+    - linters:
+      - gochecknoglobals
+      text: "Dotnet.* is a global variable"
+    - linters:
+      - gochecknoglobals
+      text: "Templates is a global variable"
+    - linters:
+      - revive
+      text: "exported: func name will be used as scan.ScanImage by other packages, and that stutters; consider calling this Image"
+    - linters:
+      - forbidigo
+      text: "use of `fmt.Println` forbidden by pattern"
+output:
+  show-stats: true

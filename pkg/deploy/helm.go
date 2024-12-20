@@ -29,6 +29,7 @@ func helmRepoAddCommand(
 	if helmChartRepositoryURL != "" {
 		url = helmChartRepositoryURL
 	}
+
 	return command.Run(
 		*exec.Command(
 			"helm",
@@ -77,10 +78,11 @@ func helmDeployCommand(
 		if useISSChart {
 			if workloadType == "deployment" {
 				return "iss-" + workloadType, nil
-			} else {
-				return "", fmt.Errorf("%s is not supported with ISS chart", workloadType)
 			}
+
+			return "", fmt.Errorf("%s is not supported with ISS chart", workloadType)
 		}
+
 		return "elvia-" + workloadType, nil
 	}()
 	if err != nil {

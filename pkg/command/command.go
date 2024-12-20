@@ -3,7 +3,6 @@ package command
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -51,7 +50,7 @@ func Run(cmd exec.Cmd, options *RunOptions) Output {
 	}
 
 	style.Print(
-		fmt.Sprintf("%s\n", cmd.String()),
+		cmd.String()+"\n",
 		&style.PrintOptions{Color: "cyan"},
 	)
 
@@ -74,6 +73,8 @@ func Run(cmd exec.Cmd, options *RunOptions) Output {
 }
 
 func ExpectedCommandStringEqualsActualCommand(t *testing.T, expectedCommandString string, actualCommand Output) {
+	t.Helper()
+
 	if IsError(actualCommand) {
 		t.Errorf("Expected no error, got %s", actualCommand.Error)
 	}

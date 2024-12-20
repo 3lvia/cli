@@ -1,16 +1,19 @@
 package command
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 )
 
 func TestIsError1(t *testing.T) {
+	t.Parallel()
+
 	output := Output{
 		Error: nil,
 	}
 
 	actual := IsError(output)
+
 	const expected = false
 
 	if actual != expected {
@@ -19,11 +22,14 @@ func TestIsError1(t *testing.T) {
 }
 
 func TestIsError2(t *testing.T) {
+	t.Parallel()
+
 	output := Output{
-		Error: fmt.Errorf("error"),
+		Error: errors.New("error"),
 	}
 
 	actual := IsError(output)
+
 	const expected = true
 
 	if actual != expected {

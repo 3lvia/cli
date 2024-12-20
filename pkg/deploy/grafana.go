@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -35,18 +36,20 @@ func formatDeploymentMessage(
 		if options.RunID == "" {
 			return "Manually deployed with CLI"
 		}
-		return fmt.Sprintf("Deployed from GitHub Actions run %s", options.RunID)
+
+		return "Deployed from GitHub Actions run " + options.RunID
 	}()
 
 	deployLink := func() string {
-		const GITHUB_OWNER = "3lvia"
+		const GitHubOwner = "3lvia"
 
 		if options.RunID == "" {
 			return ""
 		}
+
 		return fmt.Sprintf(
 			"<a href=\"https://github.com/%s/%s/actions/runs/%s\">Link</a>",
-			GITHUB_OWNER,
+			GitHubOwner,
 			repositoryName,
 			options.RunID,
 		)
@@ -83,17 +86,18 @@ func resolveEnvironment(
 	runtimeCloudProvider string,
 ) string {
 	if runtimeCloudProvider == "gke" {
-		return fmt.Sprintf("%s_gke", environment)
+		return environment + "_gke"
 	}
 
 	if runtimeCloudProvider == "iss" {
-		return fmt.Sprintf("%s_iss", environment)
+		return environment + "_iss"
 	}
 
 	return environment
 }
 
 func addGrafanaDeploymentAnnotation(
+	ctx context.Context,
 	wasSuccessful bool,
 	applicationName string,
 	systemName string,
@@ -109,6 +113,7 @@ func addGrafanaDeploymentAnnotation(
 		if wasSuccessful {
 			return "Deploy successful."
 		}
+
 		return "Deploy failed."
 	}()
 
@@ -133,25 +138,29 @@ func addGrafanaDeploymentAnnotation(
 		fmt.Sprintf("Sending deploy annotation to Grafana: %v\n", grafanaAnnotation),
 		nil,
 	)
+
 	body, err := json.Marshal(grafanaAnnotation)
 	if err != nil {
 		return err
 	}
 
 	// TODO: actually find out why Grafana is returning 429 instead of just retrying
-	const RETRY_ATTEMPTS = 5
-	const RETRY_DELAY = 5 * time.Second
+	const (
+		RetryAttempts = 5
+		RetryDelay    = 5 * time.Second
+	)
 
 	_, _, err = lo.AttemptWithDelay(
-		RETRY_ATTEMPTS,
-		RETRY_DELAY,
-		func(i int, duration time.Duration) error {
+		RetryAttempts,
+		RetryDelay,
+		func(i int, _ time.Duration) error {
 			style.Print(
 				fmt.Sprintf("Sending deploy annotation to Grafana, attempt %d\n\n", i),
 				nil,
 			)
 
 			statusCode, err := sendRequest(
+				ctx,
 				grafanaURL+"annotations/graphite",
 				grafanaSecret,
 				body,
@@ -169,9 +178,10 @@ func addGrafanaDeploymentAnnotation(
 	)
 	if err != nil {
 		style.Print(
-			fmt.Sprintf("Failed to send deploy annotation to Grafana after %d attempts\n", RETRY_ATTEMPTS),
+			fmt.Sprintf("Failed to send deploy annotation to Grafana after %d attempts\n", RetryAttempts),
 			&style.PrintOptions{Color: "red"},
 		)
+
 		return err
 	}
 
@@ -181,14 +191,16 @@ func addGrafanaDeploymentAnnotation(
 }
 
 func sendRequest(
+	ctx context.Context,
 	url string,
 	secret string,
 	body []byte,
 ) (int, error) {
 	client := &http.Client{}
 
-	req, err := http.NewRequest(
-		"POST",
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
 		url,
 		bytes.NewBuffer(body),
 	)
@@ -204,6 +216,7 @@ func sendRequest(
 	if err != nil {
 		return 0, err
 	}
+	defer resp.Body.Close()
 
 	return resp.StatusCode, nil
 }
