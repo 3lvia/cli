@@ -9,7 +9,7 @@ COPY ./go.mod ./go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -o ./out/executable ./cmd/demo-api
+RUN go build -o ./out/executable ./cmd/demo-api-go
 
 
 FROM alpine:3.20

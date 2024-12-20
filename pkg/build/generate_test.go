@@ -258,10 +258,10 @@ func TestFindBaseImageTag3(t *testing.T) {
 	}
 }
 
-func TestGenerateGoDockerfile1(t *testing.T) {
+func TestGenerateGoDockerfile(t *testing.T) {
 	t.Parallel()
 
-	expectedDockerfile, err := os.ReadFile("_test/Dockerfile.test1")
+	expectedDockerfile, err := os.ReadFile("_test/Dockerfile.go.test")
 	if err != nil {
 		t.Errorf("Error reading file: %v", err)
 	}
@@ -270,7 +270,45 @@ func TestGenerateGoDockerfile1(t *testing.T) {
 
 	const (
 		projectFile     = "go.mod"
-		applicationName = "demo-api"
+		applicationName = "demo-api-go"
+	)
+
+	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
+		projectFile,
+		applicationName,
+		GenerateDockerfileOptions{},
+	)
+	if err != nil {
+		t.Errorf("Error generating Dockerfile: %v", err)
+	}
+
+	actualDockerfile, err := os.ReadFile(actualDockerfilePath)
+	if err != nil {
+		t.Errorf("Error reading file: %v", err)
+	}
+
+	if string(expectedDockerfile) != string(actualDockerfile) {
+		t.Errorf("Dockerfile mismatch: expected %s, got %s", expectedDockerfile, actualDockerfile)
+	}
+
+	if expectedBuildContext != actualBuildContext {
+		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, actualBuildContext)
+	}
+}
+
+func TestGeneratePythonDockerfile(t *testing.T) {
+	t.Parallel()
+
+	expectedDockerfile, err := os.ReadFile("_test/Dockerfile.python.test")
+	if err != nil {
+		t.Errorf("Error reading file: %v", err)
+	}
+
+	expectedBuildContext := "."
+
+	const (
+		projectFile     = "uv.lock"
+		applicationName = "demo-api-python"
 	)
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
