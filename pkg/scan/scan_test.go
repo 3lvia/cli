@@ -8,9 +8,13 @@ import (
 )
 
 func TestScanImageCommandNormal(t *testing.T) {
-	const imageName = "test-image:latest"
-	const severity = "CRITICAL,HIGH"
-	const disableError = false
+	t.Parallel()
+
+	const (
+		imageName    = "test-image:latest"
+		severity     = "CRITICAL,HIGH"
+		disableError = false
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -53,9 +57,13 @@ func TestScanImageCommandNormal(t *testing.T) {
 }
 
 func TestScanImageDisableErrorAndMoreSeverities(t *testing.T) {
-	const imageName = "test-image:latest"
-	const severity = "CRITICAL,HIGH,MEDIUM"
-	const disableError = true
+	t.Parallel()
+
+	const (
+		imageName    = "test-image:latest"
+		severity     = "CRITICAL,HIGH,MEDIUM"
+		disableError = true
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -97,9 +105,13 @@ func TestScanImageDisableErrorAndMoreSeverities(t *testing.T) {
 }
 
 func TestScanImageCommandDisableErrorAndLessSeverities(t *testing.T) {
-	const imageName = "test-image:latest"
-	const severity = "CRITICAL"
-	const disableError = true
+	t.Parallel()
+
+	const (
+		imageName    = "test-image:latest"
+		severity     = "CRITICAL"
+		disableError = true
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -141,9 +153,13 @@ func TestScanImageCommandDisableErrorAndLessSeverities(t *testing.T) {
 }
 
 func TestScanImageCommandEventMoreSeverities(t *testing.T) {
-	const imageName = "test-image:latest"
-	const severity = "CRITICAL,HIGH,MEDIUM,LOW"
-	const disableError = true
+	t.Parallel()
+
+	const (
+		imageName    = "test-image:latest"
+		severity     = "CRITICAL,HIGH,MEDIUM,LOW"
+		disableError = true
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -185,9 +201,13 @@ func TestScanImageCommandEventMoreSeverities(t *testing.T) {
 }
 
 func TestScanImageCommandAllSeveritiesAndVersionTag(t *testing.T) {
-	const imageName = "test-image:v42"
-	const severity = "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
-	const disableError = false
+	t.Parallel()
+
+	const (
+		imageName    = "test-image:v42"
+		severity     = "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
+		disableError = false
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{

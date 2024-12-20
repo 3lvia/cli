@@ -8,6 +8,8 @@ import (
 )
 
 func TestCheckKubeloginInstalledCommand(t *testing.T) {
+	t.Parallel()
+
 	expectedCommandString := strings.Join(
 		[]string{
 			"kubelogin",
@@ -26,6 +28,8 @@ func TestCheckKubeloginInstalledCommand(t *testing.T) {
 }
 
 func TestKubeloginConvertCommand(t *testing.T) {
+	t.Parallel()
+
 	expectedCommandString := strings.Join(
 		[]string{
 			"kubelogin",
@@ -46,10 +50,14 @@ func TestKubeloginConvertCommand(t *testing.T) {
 }
 
 func TestAzGetCredentialsCommand(t *testing.T) {
-	const aksResourceGroupName = "test-aks-resource-group-name"
-	const aksClusterName = "test-aks-cluster-name"
-	const aksSubscriptionID = "1234-5678-9012-3456"
-	const contextName = "test-context-name"
+	t.Parallel()
+
+	const (
+		aksResourceGroupName = "test-aks-resource-group-name"
+		aksClusterName       = "test-aks-cluster-name"
+		aksSubscriptionID    = "1234-5678-9012-3456"
+		contextName          = "test-context-name"
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{

@@ -28,7 +28,7 @@ func generateDockerfile(
 ) (string, string, error) {
 	directory, err := os.MkdirTemp("", "3lv-build-*")
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to create temporary directory: %s", err)
+		return "", "", fmt.Errorf("Failed to create temporary directory: %w", err)
 	}
 
 	if strings.HasSuffix(projectFile, ".csproj") {
@@ -38,7 +38,7 @@ func generateDockerfile(
 			options,
 		)
 		if err != nil {
-			return "", "", fmt.Errorf("Failed to generate Dockerfile for .NET project: %s", err)
+			return "", "", fmt.Errorf("Failed to generate Dockerfile for .NET project: %w", err)
 		}
 
 		return dockerfile, buildContext, nil
@@ -50,22 +50,25 @@ func generateDockerfile(
 			options,
 		)
 		if err != nil {
-			return "", "", fmt.Errorf("Failed to generate Dockerfile for Go project: %s", err)
+			return "", "", fmt.Errorf("Failed to generate Dockerfile for Go project: %w", err)
 		}
 
 		return dockerfile, buildContext, nil
-	} else if strings.HasPrefix(projectFile, "Dockerfile") || strings.HasSuffix(projectFile, "Dockerfile") || strings.Contains(projectFile, "Dockerfile") {
+	} else if strings.HasPrefix(projectFile, "Dockerfile") ||
+		strings.HasSuffix(projectFile, "Dockerfile") ||
+		strings.Contains(projectFile, "Dockerfile") {
 		if options.BuildContext == "" {
 			return projectFile, path.Dir(projectFile), nil
-		} else {
-			return projectFile, options.BuildContext, nil
 		}
-	} else {
-		return "", "", fmt.Errorf(
-			"Unsupported project file: %s. If you want to use a Dockerfile directly, ensure the name of the Dockerfile contains the string 'Dockerfile'.",
-			projectFile,
-		)
+
+		return projectFile, options.BuildContext, nil
 	}
+
+	return "", "", fmt.Errorf(
+		"Unsupported project file: %s. If you want to use a Dockerfile directly,"+
+			" ensure the name of the Dockerfile contains the string 'Dockerfile'",
+		projectFile,
+	)
 }
 
 type DockerfileVariablesDotnet struct {
@@ -156,6 +159,7 @@ func generateDockerfileForGo(
 	}
 
 	const templateFile = "Dockerfile.go.tmpl"
+
 	dockerfilePath, err := utils.WriteFileWithTemplate(
 		dir,
 		"Dockerfile",
@@ -171,31 +175,32 @@ func generateDockerfileForGo(
 }
 
 type CSharpProjectFile struct {
-	XMLName       xml.Name `xml:"Project"`
-	SDK           string   `xml:"Sdk,attr"`
-	PropertyGroup PropertyGroup
+	XMLName       xml.Name      `xml:"Project"`
+	SDK           string        `xml:"Sdk,attr"`
+	PropertyGroup PropertyGroup `xml:"PropertyGroup"`
 }
 
 type PropertyGroup struct {
-	AssemblyName    string
-	TargetFramework string
+	AssemblyName    string `xml:"AssemblyName"`
+	TargetFramework string `xml:"TargetFramework"`
 }
 
 func getXMLFromFile(fileName string) (*CSharpProjectFile, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("getXMLFromFile: Failed to open file: %s", err)
+		return nil, fmt.Errorf("getXMLFromFile: Failed to open file: %w", err)
 	}
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		return nil, fmt.Errorf("getXMLFromFile: Failed to read file: %s", err)
+		return nil, fmt.Errorf("getXMLFromFile: Failed to read file: %w", err)
 	}
 
 	var project CSharpProjectFile
+
 	err = xml.Unmarshal(bytes, &project)
 	if err != nil {
-		return nil, fmt.Errorf("getXMLFromFile: Failed to unmarshal file: %s", err)
+		return nil, fmt.Errorf("getXMLFromFile: Failed to unmarshal file: %w", err)
 	}
 
 	return &project, nil
@@ -206,12 +211,13 @@ func findAssemblyName(
 	csprojFileName string,
 ) (string, error) {
 	var assemblyName string
-	csprojXml, err := getXMLFromFile(csprojFileRelativePath)
+
+	csprojXML, err := getXMLFromFile(csprojFileRelativePath)
 	if err != nil {
 		return "", err
 	}
 
-	assemblyName = csprojXml.PropertyGroup.AssemblyName
+	assemblyName = csprojXML.PropertyGroup.AssemblyName
 
 	if len(assemblyName) == 0 {
 		basename := filepath.Base(csprojFileName)
@@ -224,12 +230,12 @@ func findAssemblyName(
 }
 
 func findBaseImageTag(csprojFileRelativePath string) (string, error) {
-	csprojXml, err := getXMLFromFile(csprojFileRelativePath)
+	csprojXML, err := getXMLFromFile(csprojFileRelativePath)
 	if err != nil {
 		return "", err
 	}
 
-	targetFramework := csprojXml.PropertyGroup.TargetFramework
+	targetFramework := csprojXML.PropertyGroup.TargetFramework
 	if len(targetFramework) == 0 {
 		return "", fmt.Errorf(
 			"findBaseImageTag: TargetFramework not found in csproj file: %s",
@@ -238,16 +244,15 @@ func findBaseImageTag(csprojFileRelativePath string) (string, error) {
 	}
 
 	return targetFramework[3:] + "-alpine", nil
-
 }
 
 func findRuntimeBaseImage(csprojFileRelativePath string) (string, error) {
-	csprojXml, err := getXMLFromFile(csprojFileRelativePath)
+	csprojXML, err := getXMLFromFile(csprojFileRelativePath)
 	if err != nil {
 		return "", err
 	}
 
-	sdk := csprojXml.SDK
+	sdk := csprojXML.SDK
 	if len(sdk) == 0 {
 		return "", fmt.Errorf(
 			"SDK not found in csproj file: %s",

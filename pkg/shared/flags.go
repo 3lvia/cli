@@ -10,14 +10,15 @@ import (
 )
 
 func nameToEnvVar(name string) string {
-	return fmt.Sprintf("3LV_%s", strings.ToUpper(strings.ReplaceAll(name, "-", "_")))
+	return "3LV_" + strings.ToUpper(strings.ReplaceAll(name, "-", "_"))
 }
 
 func ProjectFileFlag() *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:    "project-file",
 		Aliases: []string{"f"},
-		Usage:   "The project file to use. We currently support .NET (*.csproj), Go (go.mod) or a generic project (Dockerfile).",
+		Usage: "The project file to use. We currently support .NET (*.csproj), Go (go.mod)" +
+			" or a generic project (Dockerfile).",
 	}
 }
 
@@ -27,7 +28,7 @@ func RuntimeCloudProviderFlag() *cli.StringFlag {
 		Aliases: []string{"r"},
 		Usage:   "The runtime cloud provider to use (aks, gke, iss).",
 		Value:   "aks",
-		Action: func(ctx context.Context, c *cli.Command, runtimeCloudProvider string) error {
+		Action: func(_ context.Context, _ *cli.Command, runtimeCloudProvider string) error {
 			allowedRuntimeCloudProviders := []string{"aks", "gke", "iss"}
 			if !slices.Contains(allowedRuntimeCloudProviders, strings.ToLower(runtimeCloudProvider)) {
 				return cli.Exit(
@@ -44,7 +45,7 @@ func RuntimeCloudProviderFlag() *cli.StringFlag {
 	}
 }
 
-func SystemNameFlag(usage string, required bool) *cli.StringFlag {
+func SystemNameFlag(usage string) *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:    "system-name",
 		Aliases: []string{"s"},
@@ -74,7 +75,8 @@ func SeverityFlag(name string) *cli.StringFlag {
 	return &cli.StringFlag{
 		Name:    name,
 		Aliases: []string{"S"},
-		Usage:   "The severity to use when scanning the image: can be any combination of CRITICAL, HIGH, MEDIUM, LOW, or UNKNOWN separated by commas",
+		Usage: "The severity to use when scanning the image: can be any combination of" +
+			" CRITICAL, HIGH, MEDIUM, LOW, or UNKNOWN separated by commas",
 		Value:   "CRITICAL,HIGH",
 		Sources: cli.EnvVars(nameToEnvVar(name)),
 	}
@@ -86,7 +88,7 @@ func FormatsFlag(name string) *cli.StringSliceFlag {
 		Aliases: []string{"F"},
 		Usage:   "The formats to use when outputting the Trivy scan results: can be table, json, sarif or markdown.",
 		Value:   []string{"table"},
-		Action: func(ctx context.Context, c *cli.Command, formats []string) error {
+		Action: func(_ context.Context, _ *cli.Command, formats []string) error {
 			for _, format := range formats {
 				if format != "table" && format != "json" && format != "sarif" && format != "markdown" {
 					return cli.Exit("Invalid format provided", 1)

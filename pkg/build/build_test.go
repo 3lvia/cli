@@ -8,9 +8,13 @@ import (
 )
 
 func TestGetImageName(t *testing.T) {
-	const registry = "containerregistryelvia.azurecr.io"
-	const systemName = "core"
-	const imageName = "demo-api"
+	t.Parallel()
+
+	const (
+		registry   = "containerregistryelvia.azurecr.io"
+		systemName = "core"
+		imageName  = "demo-api"
+	)
 
 	expectedImageName := registry + "/" + systemName + "-" + imageName
 
@@ -25,9 +29,13 @@ func TestGetImageName(t *testing.T) {
 }
 
 func TestGetImageNameGHCR(t *testing.T) {
-	const registry = "ghcr.io"
-	const systemName = "core"
-	const imageName = "demo-api"
+	t.Parallel()
+
+	const (
+		registry   = "ghcr.io"
+		systemName = "core"
+		imageName  = "demo-api"
+	)
 
 	expectedImageName := registry + "/" + systemName + "/" + imageName
 
@@ -42,9 +50,13 @@ func TestGetImageNameGHCR(t *testing.T) {
 }
 
 func TestGetImageNameOtherRegistry(t *testing.T) {
-	const registry = "quay.io"
-	const systemName = "core"
-	const imageName = "demo-api"
+	t.Parallel()
+
+	const (
+		registry   = "quay.io"
+		systemName = "core"
+		imageName  = "demo-api"
+	)
 
 	expectedImageName := registry + "/" + systemName + "/" + imageName
 
@@ -59,10 +71,14 @@ func TestGetImageNameOtherRegistry(t *testing.T) {
 }
 
 func TestBuildCommand1(t *testing.T) {
-	const dockerfilePath = "build/Dockerfile"
-	const buildContext = "src/app"
-	const imageName = "containerregistryelvia.azurecr.io/test-image"
-	const cacheTag = "latest"
+	t.Parallel()
+
+	const (
+		dockerfilePath = "build/Dockerfile"
+		buildContext   = "src/app"
+		imageName      = "containerregistryelvia.azurecr.io/test-image"
+		cacheTag       = "latest"
+	)
 
 	imageNameWithCacheTag := imageName + ":" + cacheTag
 
@@ -102,10 +118,14 @@ func TestBuildCommand1(t *testing.T) {
 }
 
 func TestBuildCommand2(t *testing.T) {
-	const dockerfilePath = "Dockerfile"
-	const buildContext = "."
-	const imageName = "ghcr.io/test-image"
-	const cacheTag = "latest-cache"
+	t.Parallel()
+
+	const (
+		dockerfilePath = "Dockerfile"
+		buildContext   = "."
+		imageName      = "ghcr.io/test-image"
+		cacheTag       = "latest-cache"
+	)
 
 	imageNameWithCacheTag := imageName + ":" + cacheTag
 
@@ -145,10 +165,14 @@ func TestBuildCommand2(t *testing.T) {
 }
 
 func TestBuildCommand3(t *testing.T) {
-	const dockerfilePath = "Dockerfile"
-	const buildContext = "."
-	const imageName = "ghcr.io/test-image"
-	const cacheTag = "latest-cache"
+	t.Parallel()
+
+	const (
+		dockerfilePath = "Dockerfile"
+		buildContext   = "."
+		imageName      = "ghcr.io/test-image"
+		cacheTag       = "latest-cache"
+	)
 
 	imageNameWithCacheTag := imageName + ":" + cacheTag
 	additionalTags := []string{"latest", "v42.0.1", "v420alpha"}

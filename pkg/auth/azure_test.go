@@ -8,6 +8,8 @@ import (
 )
 
 func TestAzLoginTenantCommand(t *testing.T) {
+	t.Parallel()
+
 	const tenantID = "test-tenant-id"
 
 	expectedCommandString := strings.Join(
@@ -35,9 +37,13 @@ func TestAzLoginTenantCommand(t *testing.T) {
 }
 
 func TestAzLoginTenantCommandOIDC(t *testing.T) {
-	const tenantID = "test-tenant-id"
-	const clientID = "test-client-id"
-	const federatedToken = "test-federated-token"
+	t.Parallel()
+
+	const (
+		tenantID       = "test-tenant-id"
+		clientID       = "test-client-id"
+		federatedToken = "test-federated-token"
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -71,6 +77,8 @@ func TestAzLoginTenantCommandOIDC(t *testing.T) {
 }
 
 func TestAzAccountShowCommand(t *testing.T) {
+	t.Parallel()
+
 	expectedCommandString := strings.Join(
 		[]string{
 			"az",

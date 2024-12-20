@@ -8,8 +8,13 @@ import (
 const repositoryOwner = "3lvia"
 
 func TestFormatDeploymentMessage1(t *testing.T) {
-	const repositoryName = "test-repo"
-	const commitMessage = "Did something very important"
+	t.Parallel()
+
+	const (
+		repositoryName = "test-repo"
+		commitMessage  = "Did something very important"
+	)
+
 	options := &FormatDeploymentMessageOptions{
 		RunID: "123",
 	}
@@ -31,8 +36,13 @@ func TestFormatDeploymentMessage1(t *testing.T) {
 }
 
 func TestFormatDeploymentMessage2(t *testing.T) {
-	const repositoryName = "core-very-important-repo"
-	const commitMessage = "Did something very important"
+	t.Parallel()
+
+	const (
+		repositoryName = "core-very-important-repo"
+		commitMessage  = "Did something very important"
+	)
+
 	options := &FormatDeploymentMessageOptions{
 		RunID: "1237757570",
 	}
@@ -54,8 +64,13 @@ func TestFormatDeploymentMessage2(t *testing.T) {
 }
 
 func TestFormatDeploymentMessage3(t *testing.T) {
-	const repositoryName = "core-very-important-repo"
-	const commitMessage = "Did something very important"
+	t.Parallel()
+
+	const (
+		repositoryName = "core-very-important-repo"
+		commitMessage  = "Did something very important"
+	)
+
 	options := &FormatDeploymentMessageOptions{
 		RunID: "",
 	}
@@ -73,8 +88,12 @@ func TestFormatDeploymentMessage3(t *testing.T) {
 }
 
 func TestFormatDeploymentMessage4(t *testing.T) {
-	const repositoryName = "core-not-important-repo"
-	const commitMessage = "Not very pretty"
+	t.Parallel()
+
+	const (
+		repositoryName = "core-not-important-repo"
+		commitMessage  = "Not very pretty"
+	)
 
 	expected := fmt.Sprintf(
 		"Manually deployed with CLI - %s - %s",

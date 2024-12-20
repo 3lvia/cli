@@ -28,7 +28,7 @@ var Command *cli.Command = &cli.Command{
 	Action: Scan,
 }
 
-func Scan(ctx context.Context, c *cli.Command) error {
+func Scan(_ context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
@@ -40,7 +40,8 @@ func Scan(ctx context.Context, c *cli.Command) error {
 			"Image name not provided.",
 			&style.PrintOptions{Color: "red"},
 		)
-		return cli.ShowAppHelp(c)
+
+		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
 
 	// Optional args
@@ -151,10 +152,11 @@ func ScanImage(
 				"Trivy did not produce any output.",
 				&style.PrintOptions{Color: "yellow"},
 			)
+
 			return nil
 		}
 
-		return fmt.Errorf("Trivy did not produce any output")
+		return errors.New("Trivy did not produce any output")
 	}
 
 	if slices.Contains(formats, "table") {
@@ -202,6 +204,7 @@ func ScanImage(
 		if err != nil {
 			return err
 		}
+
 		if len(markdown) == 0 {
 			style.Print(
 				"Markdown output is empty, will write to empty file",
@@ -209,7 +212,7 @@ func ScanImage(
 			)
 		}
 
-		err = os.WriteFile("trivy.md", markdown, 0644)
+		err = os.WriteFile("trivy.md", markdown, 0o644)
 		if err != nil {
 			return err
 		}

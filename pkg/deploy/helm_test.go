@@ -8,6 +8,8 @@ import (
 )
 
 func TestCheckHelmInstalledCommand(t *testing.T) {
+	t.Parallel()
+
 	expectedCommandString := "helm version"
 
 	actualCommand := checkHelmInstalledCommand(
@@ -22,6 +24,8 @@ func TestCheckHelmInstalledCommand(t *testing.T) {
 }
 
 func TestHelmRepoAddCommand(t *testing.T) {
+	t.Parallel()
+
 	expectedCommandString := strings.Join(
 		[]string{
 			"helm",
@@ -46,6 +50,8 @@ func TestHelmRepoAddCommand(t *testing.T) {
 }
 
 func TestHelmRepoAddCommandWithUrl(t *testing.T) {
+	t.Parallel()
+
 	expectedCommandString := strings.Join(
 		[]string{
 			"helm",
@@ -70,6 +76,8 @@ func TestHelmRepoAddCommandWithUrl(t *testing.T) {
 }
 
 func TestHelmRepoUpdateCommand(t *testing.T) {
+	t.Parallel()
+
 	expectedCommandString := "helm repo update"
 
 	actualCommand := helmRepoUpdateCommand(
@@ -84,14 +92,18 @@ func TestHelmRepoUpdateCommand(t *testing.T) {
 }
 
 func TestHelmDeployCommand1(t *testing.T) {
-	const systemName = "core"
-	const helmValuesFile = ".github/deploy/values.yml"
-	const applicationName = "demo-api"
-	const environment = "dev"
-	const workloadType = "deployment"
-	const imageTag = "v12"
-	const repositoryName = "core"
-	const commitHash = "123456"
+	t.Parallel()
+
+	const (
+		systemName      = "core"
+		helmValuesFile  = ".github/deploy/values.yml"
+		applicationName = "demo-api"
+		environment     = "dev"
+		workloadType    = "deployment"
+		imageTag        = "v12"
+		repositoryName  = "core"
+		commitHash      = "123456"
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -139,14 +151,18 @@ func TestHelmDeployCommand1(t *testing.T) {
 }
 
 func TestHelmDeployCommand2(t *testing.T) {
-	const systemName = "core"
-	const helmValuesFile = ".github/deploy/values.yml"
-	const applicationName = "demo-api"
-	const environment = "prod"
-	const workloadType = "statefulset"
-	const imageTag = "v420"
-	const repositoryName = "core-not-monorepo"
-	const commitHash = "abcdef"
+	t.Parallel()
+
+	const (
+		systemName      = "core"
+		helmValuesFile  = ".github/deploy/values.yml"
+		applicationName = "demo-api"
+		environment     = "prod"
+		workloadType    = "statefulset"
+		imageTag        = "v420"
+		repositoryName  = "core-not-monorepo"
+		commitHash      = "abcdef"
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -194,14 +210,18 @@ func TestHelmDeployCommand2(t *testing.T) {
 }
 
 func TestHelmDeployCommand3(t *testing.T) {
-	const systemName = "core"
-	const helmValuesFile = ".github/deploy/values.yml"
-	const applicationName = "demo-api"
-	const environment = "prod"
-	const workloadType = "job"
-	const imageTag = "v420"
-	const repositoryName = "core-not-monorepo"
-	const commitHash = "abcdef"
+	t.Parallel()
+
+	const (
+		systemName      = "core"
+		helmValuesFile  = ".github/deploy/values.yml"
+		applicationName = "demo-api"
+		environment     = "prod"
+		workloadType    = "job"
+		imageTag        = "v420"
+		repositoryName  = "core-not-monorepo"
+		commitHash      = "abcdef"
+	)
 
 	commandOutput := helmDeployCommand(
 		applicationName,
@@ -223,14 +243,18 @@ func TestHelmDeployCommand3(t *testing.T) {
 }
 
 func TestHelmDeployCommand4(t *testing.T) {
-	const systemName = "core"
-	const helmValuesFile = ".github/deploy/values.yml"
-	const applicationName = "demo-api"
-	const environment = "prod"
-	const workloadType = "deployment"
-	const imageTag = "v420"
-	const repositoryName = "iss-demo-api"
-	const commitHash = "abcdef"
+	t.Parallel()
+
+	const (
+		systemName      = "core"
+		helmValuesFile  = ".github/deploy/values.yml"
+		applicationName = "demo-api"
+		environment     = "prod"
+		workloadType    = "deployment"
+		imageTag        = "v420"
+		repositoryName  = "iss-demo-api"
+		commitHash      = "abcdef"
+	)
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -278,14 +302,18 @@ func TestHelmDeployCommand4(t *testing.T) {
 }
 
 func TestHelmDeployCommand5(t *testing.T) {
-	const systemName = "core"
-	const helmValuesFile = ".github/deploy/values.yml"
-	const applicationName = "demo-api"
-	const environment = "prod"
-	const workloadType = "statefulset"
-	const imageTag = "v420"
-	const repositoryName = "iss-demo-api"
-	const commitHash = "abcdef"
+	t.Parallel()
+
+	const (
+		systemName      = "core"
+		helmValuesFile  = ".github/deploy/values.yml"
+		applicationName = "demo-api"
+		environment     = "prod"
+		workloadType    = "statefulset"
+		imageTag        = "v420"
+		repositoryName  = "iss-demo-api"
+		commitHash      = "abcdef"
+	)
 
 	commandOutput := helmDeployCommand(
 		applicationName,

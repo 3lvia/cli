@@ -15,6 +15,7 @@ import (
 
 func RemoveZeroValues(slice []string) []string {
 	var result []string
+
 	for _, value := range slice {
 		if value != "" {
 			result = append(result, value)
@@ -33,7 +34,8 @@ func ResolveCommitHash(possibleCommitHash string) (string, error) {
 	if err != nil {
 		return "",
 			fmt.Errorf(
-				"Failed to resolve commit hash: %w. Please verify you are currently in a Git repository, or manually specify the commit hash with --commit-hash.",
+				"Failed to resolve commit hash: %w."+
+					" Please verify you are currently in a Git repository, or manually specify the commit hash with --commit-hash",
 				err,
 			)
 	}
@@ -50,7 +52,8 @@ func ResolveRepositoryName(possibleRepositoryName string) (string, error) {
 	if err != nil {
 		return "",
 			fmt.Errorf(
-				"Failed to resolve repository name: %w. Please verify you are currently in a Git repository, or manually specify the repository with --repository-name.",
+				"Failed to resolve repository name: %w."+
+					" Please verify you are currently in a Git repository, or manually specify the repository with --repository-name",
 				err,
 			)
 	}
@@ -67,7 +70,9 @@ func ResolveCommitMessage(possibleCommitMessage string) (string, error) {
 	if err != nil {
 		return "",
 			fmt.Errorf(
-				"Failed to resolve commit message: %w. Please verify you are currently in a Git repository, or manually specify the commit message with --commit-message.",
+				"Failed to resolve commit message: %w."+
+					" Please verify you are currently in a Git repository,"+
+					" or manually specify the commit message with --commit-message",
 				err,
 			)
 	}
@@ -91,45 +96,49 @@ func WriteFileWithTemplate(
 	variables any,
 ) (string, error) {
 	filePath := path.Join(dir, fileName)
+
 	file, err := os.Create(filePath)
 	if err != nil {
-		return "", fmt.Errorf("Failed to create file: %s", err)
+		return "", fmt.Errorf("Failed to create file: %w", err)
 	}
 
 	defer file.Close()
 
 	template, err := template.New(templateFile).ParseFS(templates, templateFile)
 	if err != nil {
-		return "", fmt.Errorf("Failed to parse template: %s", err)
+		return "", fmt.Errorf("Failed to parse template: %w", err)
 	}
 
 	var fileBuffer bytes.Buffer
+
 	err = template.Execute(&fileBuffer, variables)
 	if err != nil {
-		return "", fmt.Errorf("Failed to execute template: %s", err)
+		return "", fmt.Errorf("Failed to execute template: %w", err)
 	}
 
 	if _, err := file.Write(fileBuffer.Bytes()); err != nil {
-		return "", fmt.Errorf("Failed to write file: %s", err)
+		return "", fmt.Errorf("Failed to write file: %w", err)
 	}
 
 	return filePath, nil
 }
 
-// Will only return false if the response is "n"
+// Will only return false if the response is "n".
 func PromptYesNo(question string, nonInteractive bool) (bool, error) {
 	style.Print(
-		fmt.Sprintf("%s (y/n): ", question),
+		question+" (y/n): ",
 		nil,
 	)
+
 	if nonInteractive {
 		return true, nil
 	}
 
 	var response string
+
 	_, err := fmt.Scanln(&response)
 	if err != nil {
-		return false, fmt.Errorf("Failed to read response: %s", err)
+		return false, fmt.Errorf("Failed to read response: %w", err)
 	}
 
 	return strings.ToLower(response) == "y", nil

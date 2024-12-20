@@ -28,7 +28,6 @@ var Command *cli.Command = &cli.Command{
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
 			"The name of your system.",
-			true,
 		),
 		shared.HelmValuesFileFlag(),
 		shared.RegistryFlag(
@@ -38,7 +37,7 @@ var Command *cli.Command = &cli.Command{
 	Action: Run,
 }
 
-func Run(ctx context.Context, c *cli.Command) error {
+func Run(_ context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
@@ -92,7 +91,7 @@ func generateComposeFile(
 ) (string, error) {
 	directory, err := os.MkdirTemp("", "3lv-run-*")
 	if err != nil {
-		return "", fmt.Errorf("Failed to create temporary directory: %s", err)
+		return "", fmt.Errorf("Failed to create temporary directory: %w", err)
 	}
 
 	imageName, err := build.GetImageName(registry, systemName, applicationName)
@@ -125,6 +124,7 @@ func (v HelmValues) GetEnvironmentVariablesMap() map[string]string {
 	for _, e := range v.Env {
 		env[e.Name] = e.Value
 	}
+
 	return env
 }
 

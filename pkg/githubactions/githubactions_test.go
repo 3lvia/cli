@@ -3,6 +3,8 @@ package githubactions
 import "testing"
 
 func TestGetExampleWorkflowFileURL(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		language             string
 		runtimeCloudProvider string
@@ -40,22 +42,27 @@ func TestGetExampleWorkflowFileURL(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.language+"-"+tt.runtimeCloudProvider, func(t *testing.T) {
-			got, err := getExampleWorkflowFileURL(tt.language, tt.runtimeCloudProvider)
+	for _, testCase := range tests {
+		t.Run(testCase.language+"-"+testCase.runtimeCloudProvider, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := getExampleWorkflowFileURL(testCase.language, testCase.runtimeCloudProvider)
 			if err != nil {
 				t.Errorf("getExampleWorkflowFileURL() error = %v", err)
+
 				return
 			}
 
-			if got != tt.want {
-				t.Errorf("getExampleWorkflowFileURL() = %v, want %v", got, tt.want)
+			if got != testCase.want {
+				t.Errorf("getExampleWorkflowFileURL() = %v, want %v", got, testCase.want)
 			}
 		})
 	}
 }
 
 func TestGetExampleWorkflowFileURLInvalidLanguage(t *testing.T) {
+	t.Parallel()
+
 	_, err := getExampleWorkflowFileURL("invalid", "aks")
 	if err == nil {
 		t.Errorf("getExampleWorkflowFileURL() error = %v, want not nil", err)
@@ -63,6 +70,8 @@ func TestGetExampleWorkflowFileURLInvalidLanguage(t *testing.T) {
 }
 
 func TestGetExampleWorkflowFileURLInvalidRuntimeCloudProvider(t *testing.T) {
+	t.Parallel()
+
 	_, err := getExampleWorkflowFileURL("dotnet", "invalid")
 	if err == nil {
 		t.Errorf("getExampleWorkflowFileURL() error = %v, want not nil", err)
@@ -70,6 +79,8 @@ func TestGetExampleWorkflowFileURLInvalidRuntimeCloudProvider(t *testing.T) {
 }
 
 func TestGetExampleWorkflowFileURLInvalidLanguageAndRuntimeCloudProvider(t *testing.T) {
+	t.Parallel()
+
 	_, err := getExampleWorkflowFileURL("invalid", "invalid")
 	if err == nil {
 		t.Errorf("getExampleWorkflowFileURL() error = %v, want not nil", err)

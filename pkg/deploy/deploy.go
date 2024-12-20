@@ -24,7 +24,6 @@ var Command *cli.Command = &cli.Command{
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
 			"The name of the system (Kubernetes namespace) to deploy to.",
-			true,
 		),
 		shared.RuntimeCloudProviderFlag(),
 		shared.HelmValuesFileFlag(),
@@ -38,7 +37,7 @@ var Command *cli.Command = &cli.Command{
 			Aliases: []string{"e"},
 			Usage:   "The environment to deploy to: sandbox, dev, test or prod",
 			Value:   "dev",
-			Action: func(ctx context.Context, c *cli.Command, environment string) error {
+			Action: func(_ context.Context, _ *cli.Command, environment string) error {
 				allowedEnvironments := []string{"sandbox", "dev", "test", "prod"}
 				if !slices.Contains(allowedEnvironments, environment) {
 					return cli.Exit(fmt.Sprintf("Invalid environment provided: must be one of %v", allowedEnvironments), 1)
@@ -52,7 +51,7 @@ var Command *cli.Command = &cli.Command{
 			Aliases: []string{"w"},
 			Usage:   "The Kubernetes workload type to use: deployment or statefulset",
 			Value:   "deployment",
-			Action: func(ctx context.Context, c *cli.Command, workloadType string) error {
+			Action: func(_ context.Context, _ *cli.Command, workloadType string) error {
 				allowedWorkloadTypes := []string{"deployment", "statefulset"}
 				if !slices.Contains(allowedWorkloadTypes, workloadType) {
 					return cli.Exit(fmt.Sprintf("Invalid workload type provided: must be one of %v", allowedWorkloadTypes), 1)
@@ -64,17 +63,22 @@ var Command *cli.Command = &cli.Command{
 		&cli.StringFlag{
 			Name:    "commit-hash",
 			Aliases: []string{"c"},
-			Usage:   "The commit hash of the commit being deployed. Used for deployment annotations. If you are running this command from a git repository, the commit hash of the latest commit in the currently checked out branch will be used by default.",
+			Usage: "The commit hash of the commit being deployed. Used for deployment annotations." +
+				" If you are running this command from a git repository," +
+				" the commit hash of the latest commit in the currently checked out branch will be used by default.",
 		},
 		&cli.StringFlag{
 			Name:    "commit-message",
 			Aliases: []string{"m"},
-			Usage:   "The commit message of the commit being deployed. Used for deployment annotations. If you are running this command from a git repository, the commit message of the latest commit in the currently checked out branch will be used by default.",
+			Usage: "The commit message of the commit being deployed. Used for deployment annotations." +
+				" If you are running this command from a git repository," +
+				" the commit message of the latest commit in the currently checked out branch will be used by default.",
 		},
 		&cli.StringFlag{
 			Name:    "repository-name",
 			Aliases: []string{"n"},
-			Usage:   "Name of the repository the code of the application is stored in. Used for deployment annotations. If you are running this command from a git repository, that repository name will be used by default.",
+			Usage: "Name of the repository the code of the application is stored in. Used for deployment annotations." +
+				" If you are running this command from a git repository, that repository name will be used by default.",
 		},
 		&cli.BoolFlag{
 			Name:    "dry-run",
@@ -87,13 +91,15 @@ var Command *cli.Command = &cli.Command{
 			Sources: cli.EnvVars("3LV_AZURE_TENANT_ID"),
 		},
 		&cli.StringFlag{
-			Name:    "azure-client-id",
-			Usage:   "The client ID to use when authenticating with the registry. Must be combined with --azure-federated-token.",
+			Name: "azure-client-id",
+			Usage: "The client ID to use when authenticating with the registry." +
+				" Must be combined with --azure-federated-token.",
 			Sources: cli.EnvVars("3LV_AZURE_CLIENT_ID"),
 		},
 		&cli.StringFlag{
-			Name:    "azure-federated-token",
-			Usage:   "The federated token to use when authenticating with the Azure Container Registry. Must be combined with --client-id.",
+			Name: "azure-federated-token",
+			Usage: "The federated token to use when authenticating with the Azure Container Registry." +
+				" Must be combined with --client-id.",
 			Sources: cli.EnvVars("3LV_AZURE_FEDERATED_TOKEN"),
 		},
 		&cli.StringFlag{
@@ -144,8 +150,10 @@ var Command *cli.Command = &cli.Command{
 			Usage: "The GitHub Actions run ID to use for deployment annotations.",
 		},
 		&cli.StringFlag{
-			Name:    "helm-chart-repository-url",
-			Usage:   "Override the helm chart repository where the elvia-charts are located. Useful for testing feature branches. For instance 'https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts'",
+			Name: "helm-chart-repository-url",
+			Usage: "Override the helm chart repository where the elvia-charts are located." +
+				" Useful for testing feature branches." +
+				" For instance 'https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts'.",
 			Sources: cli.EnvVars("3LV_HELM_CHART_REPOSITORY_URL"),
 		},
 		&cli.BoolFlag{
@@ -187,12 +195,14 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 
 	addDeploymentAnnotation := c.Bool("add-deployment-annotation")
 	commitMessage, err := utils.ResolveCommitMessage(c.String("commit-message"))
+
 	if err != nil && addDeploymentAnnotation {
 		return cli.Exit(err, 1)
 	}
 
 	grafanaURL := c.String("grafana-url")
 	grafanaAPIKey := c.String("grafana-api-key")
+
 	if addDeploymentAnnotation && (grafanaURL == "" || grafanaAPIKey == "") {
 		return cli.Exit("Grafana URL and API key must be set when adding a deployment annotation", 1)
 	}
@@ -237,7 +247,6 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		); err != nil {
 			return cli.Exit(err, 1)
 		}
-
 	} else if runtimeCloudProvider == "gke" {
 		authOptions := &SetupGKEOptions{
 			ProjectID:       c.String("gke-project-id"),
@@ -250,7 +259,7 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		); err != nil {
 			return cli.Exit(err, 1)
 		}
-	} else if runtimeCloudProvider == "iss" {
+	} else if runtimeCloudProvider == "iss" { //nolint:revive
 		// do nothing
 	} else {
 		// This should never happen, as the runtimeCloudProvider flag is validated in the cli.Action function.
@@ -268,6 +277,7 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 	}
 
 	useISSChart := runtimeCloudProvider == "iss"
+
 	helmDeployOutput := helmDeployCommand(
 		applicationName,
 		systemName,
@@ -283,8 +293,10 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 	)
 	if command.IsError(helmDeployOutput) {
 		if !dryRun {
-			// If the deployment failed, we still want to post the Grafana annotation, but we add a failure message to the annotation.
+			// If the deployment failed, we still want to post the Grafana annotation,
+			// but we add a failure message to the annotation.
 			if err := addGrafanaDeploymentAnnotation(
+				ctx,
 				false,
 				applicationName,
 				systemName,
@@ -335,6 +347,7 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 
 	if addDeploymentAnnotation && !dryRun {
 		if err := addGrafanaDeploymentAnnotation(
+			ctx,
 			true,
 			applicationName,
 			systemName,

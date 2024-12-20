@@ -23,6 +23,7 @@ func setupAKS(
 	if options == nil {
 		options = &SetupAKSOptions{}
 	}
+
 	if options.AzLoginOptions == nil {
 		options.AzLoginOptions = &auth.AzLoginCommandOptions{}
 	}
@@ -53,6 +54,7 @@ func setupAKS(
 		if options.ClusterName == "" {
 			return "akscluster" + environment
 		}
+
 		return options.ClusterName
 	}()
 
@@ -62,6 +64,7 @@ func setupAKS(
 		if options.ResourceGroupName == "" {
 			return "RUNTIMESERVICE-RG" + environment
 		}
+
 		return options.ResourceGroupName
 	}()
 

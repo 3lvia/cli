@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,8 +22,10 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-const commandName = "upgrade"
-const defaultInstallLocation = "/usr/local/bin"
+const (
+	commandName            = "upgrade"
+	defaultInstallLocation = "/usr/local/bin"
+)
 
 func Command(version string) *cli.Command {
 	return &cli.Command{
@@ -66,9 +69,10 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 			currentBinary, err := os.Executable()
 			if err != nil {
 				style.Print(
-					fmt.Sprintf("Could not determine the current binary location, will install to %s", defaultInstallLocation),
+					"Could not determine the current binary location, will install to "+defaultInstallLocation,
 					&style.PrintOptions{Color: "red"},
 				)
+
 				return defaultInstallLocation
 			}
 
@@ -85,19 +89,21 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 
 	if semver.Compare("v"+version, "v"+latestVersion) != -1 {
 		style.Print(
-			fmt.Sprintf("You are already using the latest version of 3lv: %s", version),
+			"You are already using the latest version of 3lv: "+version,
 			&style.PrintOptions{Color: "green"},
 		)
+
 		if !c.Bool("force-reinstall") {
 			style.Print(
 				"Use the --force-reinstall flag to force the reinstallation of the 3lv binary.",
 				&style.PrintOptions{Color: "yellow"},
 			)
+
 			return cli.Exit("", 0)
 		}
 	}
 
-	binaryURL, err := getLatestBinaryURL()
+	binaryURL, err := getLatestBinaryURL(ctx)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -119,9 +125,19 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 	}
 	defer out.Close()
 
-	response, err := http.Get(binaryURL)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		binaryURL,
+		nil,
+	)
 	if err != nil {
-		return cli.Exit(err, 1)
+		return err
+	}
+
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
 	}
 	defer response.Body.Close()
 
@@ -152,41 +168,45 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 	return nil
 }
 
-func getLatestBinaryURL() (string, error) {
+func getLatestBinaryURL(ctx context.Context) (string, error) {
 	if runtime.GOOS == "windows" {
-		return "", fmt.Errorf("Auto-upgrade is not supported on Windows. Please download the MSI installer from the GitHub releases page.")
+		return "",
+			errors.New(
+				"Auto-upgrade is not supported on Windows. Please download the MSI installer from the GitHub releases page",
+			)
 	}
 
 	if runtime.GOOS != "darwin" && runtime.GOOS != "linux" {
-		return "", fmt.Errorf("Auto-upgrade is not supported on %s.", runtime.GOOS)
+		return "", fmt.Errorf("Auto-upgrade is not supported on %s", runtime.GOOS)
 	}
 
 	if runtime.GOARCH != "amd64" && (runtime.GOOS != "darwin" || runtime.GOARCH != "arm64") {
-		return "", fmt.Errorf("Auto-upgrade is not supported on %s.", runtime.GOARCH)
+		return "", fmt.Errorf("Auto-upgrade is not supported on %s", runtime.GOARCH)
 	}
 
 	client := github.NewClient(nil)
 
-	release, _, err := client.Repositories.GetLatestRelease(context.Background(), "3lvia", "cli")
+	release, _, err := client.Repositories.GetLatestRelease(ctx, "3lvia", "cli")
 	if err != nil {
 		return "", err
 	}
 
 	for _, asset := range release.Assets {
-		os_ := func() string {
+		goos := func() string {
 			if runtime.GOOS == "darwin" {
 				return "macos"
 			}
+
 			return runtime.GOOS
 		}()
 
 		if strings.HasPrefix(*asset.Name, "3lv-") &&
-			strings.HasSuffix(*asset.Name, fmt.Sprintf("-%s-%s.tar.gz", os_, runtime.GOARCH)) {
+			strings.HasSuffix(*asset.Name, fmt.Sprintf("-%s-%s.tar.gz", goos, runtime.GOARCH)) {
 			return *asset.BrowserDownloadURL, nil
 		}
 	}
 
-	return "", fmt.Errorf("No binary found for the latest release")
+	return "", errors.New("No binary found for the latest release")
 }
 
 func GetLatestCLIVersion(ctx context.Context) (string, error) {
@@ -201,24 +221,26 @@ func GetLatestCLIVersion(ctx context.Context) (string, error) {
 }
 
 func decompress(src, dest string) error {
-	f, err := os.Open(src)
+	file, err := os.Open(src)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer file.Close()
 
-	gzr, err := gzip.NewReader(f)
+	gzr, err := gzip.NewReader(file)
 	if err != nil {
 		return err
 	}
 	defer gzr.Close()
 
-	tr := tar.NewReader(gzr)
+	tarReader := tar.NewReader(gzr)
+
 	for {
-		header, err := tr.Next()
+		header, err := tarReader.Next()
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
 			return err
 		}
@@ -226,12 +248,13 @@ func decompress(src, dest string) error {
 		// Clean the path and ensure it is within the destination directory
 		cleanedPath := filepath.Clean(header.Name)
 		target := filepath.Join(dest, cleanedPath)
+
 		if !strings.HasPrefix(target, filepath.Clean(dest)+string(os.PathSeparator)) {
 			return fmt.Errorf("invalid file path: %s", header.Name)
 		}
 
 		if header.Typeflag == tar.TypeDir {
-			err := os.MkdirAll(target, 0755)
+			err := os.MkdirAll(target, 0o755)
 			if err != nil {
 				return err
 			}
@@ -240,13 +263,17 @@ func decompress(src, dest string) error {
 			if err != nil {
 				return err
 			}
-			if _, err := io.Copy(file, tr); err != nil {
+
+			if _, err := io.Copy(file, tarReader); err != nil {
 				file.Close()
+
 				return err
 			}
+
 			file.Close()
 		}
 	}
+
 	return nil
 }
 

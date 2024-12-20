@@ -3,6 +3,7 @@ package githubactions
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -33,7 +34,6 @@ var Command *cli.Command = &cli.Command{
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
 			"The name of your system (Kubernetes namespace) you want to deploy to.",
-			true,
 		),
 		shared.ApplicationNameFlag(
 			"The name of the application you want to build and deploy.",
@@ -66,6 +66,7 @@ func GitHubActions(ctx context.Context, c *cli.Command) error {
 	}()
 
 	err := CreateDeployWorkflow(
+		ctx,
 		projectDirectory,
 		c.String("project-file"),
 		c.String("runtime-cloud-provider"),
@@ -88,6 +89,7 @@ func GitHubActions(ctx context.Context, c *cli.Command) error {
 }
 
 func CreateDeployWorkflow(
+	ctx context.Context,
 	outputDirectory string,
 	projectFile string,
 	runtimeCloudProvider string,
@@ -105,8 +107,9 @@ func CreateDeployWorkflow(
 			fmt.Sprintf("Creating directory '%s'.\n", githubActionsDir),
 			nil,
 		)
-		if err := os.MkdirAll(fullGithubActionsDir, 0755); err != nil {
-			return fmt.Errorf("Failed to create directory '%s'.", fullGithubActionsDir)
+
+		if err := os.MkdirAll(fullGithubActionsDir, 0o755); err != nil {
+			return fmt.Errorf("Failed to create directory '%s'", fullGithubActionsDir)
 		}
 	}
 
@@ -115,7 +118,7 @@ func CreateDeployWorkflow(
 		return err
 	}
 
-	helmValuesFile_, err := resolveHelmValuesFile(
+	resolvedHelmValuesFile, err := resolveHelmValuesFile(
 		applicationName,
 		systemName,
 		&ResolveHelmValuesFileOptions{
@@ -136,7 +139,7 @@ func CreateDeployWorkflow(
 	workflowFileName := fmt.Sprintf("build-deploy-%s.yml", applicationName)
 	workflowFilePath := filepath.Join(fullGithubActionsDir, workflowFileName)
 
-	if err := downloadFile(exampleWorkflowFileURL, workflowFilePath); err != nil {
+	if err := downloadFile(ctx, exampleWorkflowFileURL, workflowFilePath); err != nil {
 		return err
 	}
 
@@ -147,10 +150,11 @@ func CreateDeployWorkflow(
 		),
 		&style.PrintOptions{Color: "yellow"},
 	)
+
 	replaceWorkflowPlaceholdersOptions := &ReplaceWorkflowPlaceholdersOptions{
 		SystemName:      systemName,
 		ApplicationName: applicationName,
-		HelmValuesFile:  helmValuesFile_,
+		HelmValuesFile:  resolvedHelmValuesFile,
 		DefaultBranch:   defaultBranch,
 	}
 	if err := replaceWorkflowPlaceholders(
@@ -163,12 +167,15 @@ func CreateDeployWorkflow(
 
 	terraformReminder := func() string {
 		if runtimeCloudProvider == "iss" {
-			return "NOTE: if you have not done so already, you will need to add your repository to the Terraform module 'github-actions-deploy' at https://github.com/3lvia/iss-terraform to enable deployments from GitHub Actions."
+			return "NOTE: if you have not done so already, you will need to add your repository to the Terraform module" +
+				" 'github-actions-deploy' at https://github.com/3lvia/iss-terraform to enable deployments from GitHub Actions."
 		}
-		return "NOTE: if you have not done so already, you will need to add your system/repository to https://github.com/3lvia/github-repositories-terraform to enable deployments from GitHub Actions."
+
+		return "NOTE: if you have not done so already, you will need to add your system/repository to" +
+			" https://github.com/3lvia/github-repositories-terraform to enable deployments from GitHub Actions."
 	}()
 	style.Print(
-		fmt.Sprintf("%s\n", terraformReminder),
+		terraformReminder+"\n",
 		&style.PrintOptions{Color: "yellow"},
 	)
 
@@ -241,11 +248,13 @@ func replaceWorkflowPlaceholders(
 	contentsString = strings.ReplaceAll(
 		contentsString,
 		fmt.Sprintf(
-			"# This can be set to a more specific path if you want to analyze only a part of the repository.\n%sworking-directory: '.'",
+			"# This can be set to a more specific path if you want to analyze only a part of the repository."+
+				"\n%sworking-directory: '.'",
 			strings.Repeat(" ", 10),
 		),
 		fmt.Sprintf(
-			"# This can be set to a more specific path if you want to analyze only a part of the repository.\n%sworking-directory: '%s'",
+			"# This can be set to a more specific path if you want to analyze only a part of the repository."+
+				"\n%sworking-directory: '%s'",
 			strings.Repeat(" ", 10),
 			path.Dir(projectFile),
 		),
@@ -255,36 +264,45 @@ func replaceWorkflowPlaceholders(
 	contentsString = strings.ReplaceAll(
 		contentsString,
 		fmt.Sprintf(
-			"# This can be set to a more specific path if you want to search for tests in only a part of the repository.\n%sworking-directory: '.'",
+			"# This can be set to a more specific path if you want to search for tests in only a part of the repository."+
+				"\n%sworking-directory: '.'",
 			strings.Repeat(" ", 10),
 		),
 		fmt.Sprintf(
-			"# This can be set to a more specific path if you want to search for tests in only a part of the repository.\n%sworking-directory: '%s'",
+			"# This can be set to a more specific path if you want to search for tests in only a part of the repository."+
+				"\n%sworking-directory: '%s'",
 			strings.Repeat(" ", 10),
 			path.Dir(projectFile),
 		),
 	)
 
-	contentsString = fmt.Sprintf(
-		"# This file was generated by the 3lvia CLI: https://github.com/3lvia/cli\n\n%s",
-		contentsString,
-	)
+	contentsString = "# This file was generated by the 3lvia CLI: https://github.com/3lvia/cli\n\n" + contentsString
 
-	if err := os.WriteFile(workflowFilePath, []byte(contentsString), 0644); err != nil {
+	if err := os.WriteFile(workflowFilePath, []byte(contentsString), 0o644); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func downloadFile(url string, outputFilePath string) error {
+func downloadFile(ctx context.Context, url string, outputFilePath string) error {
 	outputFile, err := os.Create(outputFilePath)
 	if err != nil {
 		return err
 	}
 	defer outputFile.Close()
 
-	response, err := http.Get(url)
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		url,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	response, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -317,22 +335,26 @@ func getLanguageFromProjectFile(projectFile string) (string, error) {
 func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (string, error) {
 	// .NET
 	if language == "dotnet" && runtimeCloudProvider == "aks" {
-		return fmt.Sprintf("%s/build-deploy-dotnet.yml", exampleWorkflowBaseURL), nil
+		return exampleWorkflowBaseURL + "/build-deploy-dotnet.yml", nil
 	}
+
 	if language == "dotnet" && runtimeCloudProvider == "gke" {
-		return fmt.Sprintf("%s/build-deploy-dotnet-google.yml", exampleWorkflowBaseURL), nil
+		return exampleWorkflowBaseURL + "/build-deploy-dotnet-google.yml", nil
 	}
+
 	if language == "dotnet" && runtimeCloudProvider == "iss" {
-		return fmt.Sprintf("%s/build-deploy-dotnet-iss.yml", exampleWorkflowBaseURL), nil
+		return exampleWorkflowBaseURL + "/build-deploy-dotnet-iss.yml", nil
 	}
 
 	// Go
 	if language == "go" && runtimeCloudProvider == "aks" {
-		return fmt.Sprintf("%s/build-deploy-go.yml", exampleWorkflowBaseURL), nil
+		return exampleWorkflowBaseURL + "/build-deploy-go.yml", nil
 	}
+
 	if language == "go" && runtimeCloudProvider == "gke" {
-		return fmt.Sprintf("%s/build-deploy-go-google.yml", exampleWorkflowBaseURL), nil
+		return exampleWorkflowBaseURL + "/build-deploy-go-google.yml", nil
 	}
+
 	if language == "go" && runtimeCloudProvider == "iss" {
 		return "",
 			fmt.Errorf("Example workflow is not implemented yet for language '%s' and runtime cloud provider '%s'",
@@ -343,11 +365,13 @@ func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (st
 
 	// Dockerfile
 	if language == "dockerfile" && runtimeCloudProvider == "aks" {
-		return fmt.Sprintf("%s/build-deploy-dockerfile.yml", exampleWorkflowBaseURL), nil
+		return exampleWorkflowBaseURL + "/build-deploy-dockerfile.yml", nil
 	}
+
 	if language == "dockerfile" && runtimeCloudProvider == "gke" {
-		return fmt.Sprintf("%s/build-deploy-dockerfile-google.yml", exampleWorkflowBaseURL), nil
+		return exampleWorkflowBaseURL + "/build-deploy-dockerfile-google.yml", nil
 	}
+
 	if language == "dockerfile" && runtimeCloudProvider == "iss" {
 		return "",
 			fmt.Errorf("Example workflow is not implemented yet for language '%s' and runtime cloud provider '%s'",
@@ -378,11 +402,13 @@ func resolveHelmValuesFile(
 	if options == nil {
 		options = &ResolveHelmValuesFileOptions{}
 	}
+
 	if options.HelmValuesFile == "" {
 		defaultHelmValuesFile := fmt.Sprintf(".github/deploy/values-%s.yml", applicationName)
 
 		yes, err := utils.PromptYesNo(
-			"You have not provided a Helm values file, which is required for the deployment. Do you want to create a default Helm values file?",
+			"You have not provided a Helm values file, which is required for the deployment."+
+				" Do you want to create a default Helm values file?",
 			options.NonInteractive,
 		)
 		if err != nil {
@@ -390,19 +416,20 @@ func resolveHelmValuesFile(
 		}
 
 		if !yes {
-			return "", fmt.Errorf("Helm values file is required for the deployment.")
+			return "", errors.New("Helm values file is required for the deployment")
 		}
 
 		if err := os.MkdirAll(
 			filepath.Dir(
 				filepath.Join(options.OutputDirectory, defaultHelmValuesFile),
 			),
-			0755,
+			0o755,
 		); err != nil {
 			return "", fmt.Errorf("Failed to create directory for Helm values file: %w", err)
 		}
 
 		const templateFile = "values.yml.tmpl"
+
 		newHelmValuesFile, err := utils.WriteFileWithTemplate(
 			options.OutputDirectory,
 			defaultHelmValuesFile,
