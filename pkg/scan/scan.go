@@ -36,10 +36,7 @@ func Scan(_ context.Context, c *cli.Command) error {
 	// Required args
 	imageName := c.Args().First()
 	if imageName == "" {
-		style.Print(
-			"Image name not provided.",
-			&style.PrintOptions{Color: "red"},
-		)
+		style.PrintError("Image name not provided.")
 
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
@@ -148,10 +145,7 @@ func ScanImage(
 
 	if _, err := os.Stat("trivy.json"); errors.Is(err, os.ErrNotExist) {
 		if disableError {
-			style.Print(
-				"Trivy did not produce any output.",
-				&style.PrintOptions{Color: "yellow"},
-			)
+			style.PrintWarning("Trivy did not produce any output.")
 
 			return nil
 		}
@@ -160,10 +154,7 @@ func ScanImage(
 	}
 
 	if slices.Contains(formats, "table") {
-		style.Print(
-			"Converted results to table format.",
-			nil,
-		)
+		style.PrintInfo("Converted results to table format.")
 
 		convertOutput := convertCommand(
 			"table",
@@ -175,10 +166,7 @@ func ScanImage(
 	}
 
 	if slices.Contains(formats, "sarif") {
-		style.Print(
-			"Converted results to SARIF format.",
-			nil,
-		)
+		style.PrintInfo("Converted results to SARIF format.")
 
 		convertOutput := convertCommand(
 			"sarif",
@@ -190,10 +178,7 @@ func ScanImage(
 	}
 
 	if slices.Contains(formats, "markdown") {
-		style.Print(
-			"Converting results to markdown format.",
-			nil,
-		)
+		style.PrintInfo("Converting results to markdown format.")
 
 		result, err := parseJSONOutput()
 		if err != nil {
@@ -206,10 +191,7 @@ func ScanImage(
 		}
 
 		if len(markdown) == 0 {
-			style.Print(
-				"Markdown output is empty, will write to empty file",
-				&style.PrintOptions{Color: "yellow"},
-			)
+			style.PrintWarning("Markdown output is empty, will write to empty file")
 		}
 
 		err = os.WriteFile("trivy.md", markdown, 0o644)
@@ -224,10 +206,7 @@ func ScanImage(
 			return err
 		}
 	} else {
-		style.Print(
-			"Keeping pre-existing JSON output.",
-			nil,
-		)
+		style.PrintInfo("Keeping pre-existing JSON output.")
 	}
 
 	if command.IsError(scanImageOutput) {

@@ -80,10 +80,7 @@ func GitHubActions(ctx context.Context, c *cli.Command) error {
 		return cli.Exit(err, 1)
 	}
 
-	style.Print(
-		"Successfully added GitHub Actions to the project!\n",
-		&style.PrintOptions{Color: "green"},
-	)
+	style.PrintSuccess("Successfully added GitHub Actions to the project!\n")
 
 	return nil
 }
@@ -103,10 +100,7 @@ func CreateDeployWorkflow(
 	fullGithubActionsDir := path.Join(outputDirectory, githubActionsDir)
 
 	if _, err := os.Stat(fullGithubActionsDir); os.IsNotExist(err) {
-		style.Print(
-			fmt.Sprintf("Creating directory '%s'.\n", githubActionsDir),
-			nil,
-		)
+		style.PrintInfo(fmt.Sprintf("Creating directory '%s'.\n", githubActionsDir))
 
 		if err := os.MkdirAll(fullGithubActionsDir, 0o755); err != nil {
 			return fmt.Errorf("Failed to create directory '%s'", fullGithubActionsDir)
@@ -143,12 +137,11 @@ func CreateDeployWorkflow(
 		return err
 	}
 
-	style.Print(
+	style.PrintWarning(
 		fmt.Sprintf(
 			"Replacing placeholders in workflow file '%s'.\nYou may need to manually fill in some values yourself.\n",
 			workflowFilePath,
 		),
-		&style.PrintOptions{Color: "yellow"},
 	)
 
 	replaceWorkflowPlaceholdersOptions := &ReplaceWorkflowPlaceholdersOptions{
@@ -174,10 +167,7 @@ func CreateDeployWorkflow(
 		return "NOTE: if you have not done so already, you will need to add your system/repository to" +
 			" https://github.com/3lvia/github-repositories-terraform to enable deployments from GitHub Actions."
 	}()
-	style.Print(
-		terraformReminder+"\n",
-		&style.PrintOptions{Color: "yellow"},
-	)
+	style.PrintWarning(terraformReminder + "\n")
 
 	return nil
 }
@@ -456,10 +446,7 @@ func resolveHelmValuesFile(
 			return "", err
 		}
 
-		style.Print(
-			fmt.Sprintf("Created Helm values file at '%s'.\n", newHelmValuesFile),
-			nil,
-		)
+		style.PrintInfo(fmt.Sprintf("Created Helm values file at '%s'.\n", newHelmValuesFile))
 
 		return defaultHelmValuesFile, nil
 	}

@@ -132,20 +132,14 @@ func Create(ctx context.Context, c *cli.Command) error {
 				log.Fatal("pipx, which is required for installing cookiecutter, is not installed. Please install it first.")
 			}
 
-			style.Print(
-				"Installing cookiecutter...",
-				nil,
-			)
+			style.PrintInfo("Installing cookiecutter...")
 
 			installCookiecutterOutput := installCookiecutterCommand(nil)
 			if command.IsError(installCookiecutterOutput) {
 				return cli.Exit("Failed to install cookiecutter.", 1)
 			}
 
-			style.Print(
-				"Cookiecutter installed!",
-				&style.PrintOptions{Color: "green"},
-			)
+			style.PrintSuccess("Cookiecutter installed!")
 		} else {
 			return cli.Exit("Cookiecutter is required for creating a new project. Please install it first.", 1)
 		}
@@ -200,10 +194,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 		return cli.Exit(err, 1)
 	}
 
-	style.Print(
-		fmt.Sprintf("Successfully created project at '%s'!", projectDirectory),
-		&style.PrintOptions{Color: "green"},
-	)
+	style.PrintSuccess(fmt.Sprintf("Successfully created project at '%s'!", projectDirectory))
 
 	return nil
 }

@@ -68,9 +68,8 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 		if c.Bool("use-existing-binary-location") {
 			currentBinary, err := os.Executable()
 			if err != nil {
-				style.Print(
-					"Could not determine the current binary location, will install to "+defaultInstallLocation,
-					&style.PrintOptions{Color: "red"},
+				style.PrintError(
+					"Could not determine the current binary location, will install to " + defaultInstallLocation,
 				)
 
 				return defaultInstallLocation
@@ -88,15 +87,13 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 	}
 
 	if semver.Compare("v"+version, "v"+latestVersion) != -1 {
-		style.Print(
-			"You are already using the latest version of 3lv: "+version,
-			&style.PrintOptions{Color: "green"},
+		style.PrintSuccess(
+			"You are already using the latest version of 3lv: " + version,
 		)
 
 		if !c.Bool("force-reinstall") {
-			style.Print(
+			style.PrintInfo(
 				"Use the --force-reinstall flag to force the reinstallation of the 3lv binary.",
-				&style.PrintOptions{Color: "yellow"},
 			)
 
 			return cli.Exit("", 0)
@@ -108,9 +105,8 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 		return cli.Exit(err, 1)
 	}
 
-	style.Print(
+	style.PrintInfo(
 		fmt.Sprintf("Upgrading 3lv from %s to %s...", version, latestVersion),
-		&style.PrintOptions{Color: "yellow"},
 	)
 
 	tempDir, err := os.MkdirTemp("", "3lv-upgrade")
@@ -160,9 +156,8 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 		return cli.Exit(installCommandOutput.Error, 1)
 	}
 
-	style.Print(
+	style.PrintSuccess(
 		fmt.Sprintf("Successfully upgraded 3lv to %s!", latestVersion),
-		&style.PrintOptions{Color: "green"},
 	)
 
 	return nil
