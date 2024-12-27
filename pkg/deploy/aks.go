@@ -21,7 +21,7 @@ func setupAKS(
 	options *SetupAKSOptions,
 ) error {
 	if options == nil {
-		options = &SetupAKSOptions{}
+		options = &SetupAKSOptions{} //nolint:exhaustruct
 	}
 
 	if options.AzLoginOptions == nil {

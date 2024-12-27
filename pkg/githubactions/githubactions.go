@@ -195,7 +195,7 @@ func replaceWorkflowPlaceholders(
 	options *ReplaceWorkflowPlaceholdersOptions,
 ) error {
 	if options == nil {
-		options = &ReplaceWorkflowPlaceholdersOptions{}
+		options = &ReplaceWorkflowPlaceholdersOptions{} //nolint:exhaustruct
 	}
 
 	file, err := os.Open(workflowFilePath)
@@ -226,6 +226,15 @@ func replaceWorkflowPlaceholders(
 			"<your application name here>",
 			options.ApplicationName,
 		)
+
+		contentsString = func() string {
+			lines := strings.Split(contentsString, "\n")
+			if len(lines) > 0 {
+				lines[0] = "name: Build and deploy " + options.ApplicationName
+			}
+
+			return strings.Join(lines, "\n")
+		}()
 	}
 
 	if options.SystemName != "" {
@@ -400,7 +409,7 @@ func resolveHelmValuesFile(
 	options *ResolveHelmValuesFileOptions,
 ) (string, error) {
 	if options == nil {
-		options = &ResolveHelmValuesFileOptions{}
+		options = &ResolveHelmValuesFileOptions{} //nolint:exhaustruct
 	}
 
 	if options.HelmValuesFile == "" {

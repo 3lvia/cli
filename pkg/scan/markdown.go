@@ -133,7 +133,7 @@ func toTrivyVulnerabilityResultsWithArtifactName(
 		}
 	}
 
-	return TrivyVulnerabilityResultsWithArtifactName{}
+	return TrivyVulnerabilityResultsWithArtifactName{} //nolint:exhaustruct
 }
 
 func parseJSONOutput() (TrivyVulnerabilityResultsWithArtifactName, error) {

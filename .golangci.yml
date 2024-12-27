@@ -6,7 +6,6 @@ linters:
     - mnd
     - exportloopref
     - tagliatelle
-    - exhaustruct
     # TODO: fix issues and enable these
     - funlen
     - err113
@@ -38,6 +37,11 @@ linters-settings:
       - ST1021
       - ST1022
       - ST1023
+  exhaustruct:
+    exclude:
+      - 'github.com\/urfave\/cli\/v[0-9]+\..+'
+      - 'github.com\/3lvia\/cli\/pkg\/auth\.AzLoginCommandOptions'
+      - 'github.com\/3lvia\/cli\/pkg\/build\.GenerateDockerfileOptions'
 issues:
   exclude-rules:
     - linters:
