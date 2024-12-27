@@ -18,7 +18,7 @@ func ProjectFileFlag() *cli.StringFlag {
 		Name:    "project-file",
 		Aliases: []string{"f"},
 		Usage: "The project file to use. We currently support .NET (*.csproj), Go (go.mod)," +
-			" Python with uv (uv.lock) or a generic Docker project (Dockerfile).",
+			" Python with uv (pyproject.toml) or a generic Docker project (Dockerfile).",
 	}
 }
 

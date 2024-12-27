@@ -324,6 +324,10 @@ func getLanguageFromProjectFile(projectFile string) (string, error) {
 		return "go", nil
 	}
 
+	if projectFile == "pyproject.toml" {
+		return "python", nil
+	}
+
 	if strings.Contains(projectFile, "Dockerfile") {
 		return "dockerfile", nil
 	}
@@ -355,6 +359,23 @@ func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (st
 	}
 
 	if language == "go" && runtimeCloudProvider == "iss" {
+		return "",
+			fmt.Errorf("Example workflow is not implemented yet for language '%s' and runtime cloud provider '%s'",
+				language,
+				runtimeCloudProvider,
+			)
+	}
+
+	// Python
+	if language == "python" && runtimeCloudProvider == "aks" {
+		return exampleWorkflowBaseURL + "/build-deploy-python.yml", nil
+	}
+
+	if language == "python" && runtimeCloudProvider == "gke" {
+		return exampleWorkflowBaseURL + "/build-deploy-python-google.yml", nil
+	}
+
+	if language == "python" && runtimeCloudProvider == "iss" {
 		return "",
 			fmt.Errorf("Example workflow is not implemented yet for language '%s' and runtime cloud provider '%s'",
 				language,
