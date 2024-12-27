@@ -29,7 +29,7 @@ func formatDeploymentMessage(
 	options *FormatDeploymentMessageOptions,
 ) string {
 	if options == nil {
-		options = &FormatDeploymentMessageOptions{}
+		options = &FormatDeploymentMessageOptions{} //nolint:exhaustruct
 	}
 
 	deployedFrom := func() string {
@@ -196,8 +196,6 @@ func sendRequest(
 	secret string,
 	body []byte,
 ) (int, error) {
-	client := &http.Client{}
-
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -212,7 +210,7 @@ func sendRequest(
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	req.Header.Set("Authorization", "Bearer "+secret)
 
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return 0, err
 	}

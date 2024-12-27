@@ -53,7 +53,7 @@ func gcloudGetCredentialsCommand(
 	options *GcloudGetCredentialsCommandOptions,
 ) command.Output {
 	if options == nil {
-		options = &GcloudGetCredentialsCommandOptions{}
+		options = &GcloudGetCredentialsCommandOptions{} //nolint:exhaustruct
 	}
 
 	if environment == "" &&

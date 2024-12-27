@@ -24,13 +24,17 @@ func IsError(output Output) bool {
 
 func Error(err error) Output {
 	return Output{
-		Error: err,
+		CommandString: "",
+		Error:         err,
+		Output:        "",
 	}
 }
 
 func ErrorString(err string) Output {
 	return Output{
-		Error: errors.New(err),
+		CommandString: "",
+		Error:         errors.New(err),
+		Output:        "",
 	}
 }
 
@@ -40,12 +44,14 @@ type RunOptions struct {
 
 func Run(cmd exec.Cmd, options *RunOptions) Output {
 	if options == nil {
-		options = &RunOptions{}
+		options = &RunOptions{} //nolint:exhaustruct
 	}
 
 	if options.DryRun {
 		return Output{
 			CommandString: cmd.String(),
+			Error:         nil,
+			Output:        "",
 		}
 	}
 
@@ -61,13 +67,15 @@ func Run(cmd exec.Cmd, options *RunOptions) Output {
 	err := cmd.Run()
 	if err != nil {
 		return Output{
-			Error:  err,
-			Output: errBuf.String(),
+			CommandString: "",
+			Error:         err,
+			Output:        errBuf.String(),
 		}
 	}
 
 	return Output{
 		CommandString: cmd.String(),
+		Error:         nil,
 		Output:        outBuf.String(),
 	}
 }

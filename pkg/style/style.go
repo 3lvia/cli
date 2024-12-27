@@ -12,7 +12,7 @@ type PrintOptions struct {
 
 func Print(message string, options *PrintOptions) {
 	if options == nil {
-		options = &PrintOptions{}
+		options = &PrintOptions{} //nolint:exhaustruct
 	}
 
 	colorCode := getColorCode(options.Color)

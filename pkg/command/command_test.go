@@ -8,7 +8,7 @@ import (
 func TestIsError1(t *testing.T) {
 	t.Parallel()
 
-	output := Output{
+	output := Output{ //nolint:exhaustruct
 		Error: nil,
 	}
 
@@ -24,7 +24,7 @@ func TestIsError1(t *testing.T) {
 func TestIsError2(t *testing.T) {
 	t.Parallel()
 
-	output := Output{
+	output := Output{ //nolint:exhaustruct
 		Error: errors.New("error"),
 	}
 
