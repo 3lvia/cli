@@ -17,6 +17,7 @@ jobs:
           - build
           - scan
           - create
+          - github-actions
       fail-fast: false
     steps:
       - name: Checkout repository
