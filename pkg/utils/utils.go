@@ -89,13 +89,13 @@ func StringWithDefault(value, defaultValue string) string {
 }
 
 func WriteFileWithTemplate(
-	dir string,
+	directory string,
 	fileName string,
 	templateFile string,
 	templates embed.FS,
 	variables any,
 ) (string, error) {
-	filePath := path.Join(dir, fileName)
+	filePath := path.Join(directory, fileName)
 
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -125,9 +125,8 @@ func WriteFileWithTemplate(
 
 // Will only return false if the response is "n".
 func PromptYesNo(question string, nonInteractive bool) (bool, error) {
-	style.Print(
-		question+" (y/n): ",
-		nil,
+	style.PrintInfo(
+		question + " (y/n): ",
 	)
 
 	if nonInteractive {

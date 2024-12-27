@@ -21,6 +21,22 @@ func Print(message string, options *PrintOptions) {
 	fmt.Println(style.Render(message))
 }
 
+func PrintInfo(message string) {
+	Print(message, &PrintOptions{Color: "blue"})
+}
+
+func PrintSuccess(message string) {
+	Print(message, &PrintOptions{Color: "green"})
+}
+
+func PrintWarning(message string) {
+	Print(message, &PrintOptions{Color: "yellow"})
+}
+
+func PrintError(message string) {
+	Print(message, &PrintOptions{Color: "red"})
+}
+
 func getColorCode(color string) string {
 	switch color {
 	case "red":

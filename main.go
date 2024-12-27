@@ -65,9 +65,6 @@ func main() {
 
 	ctx := context.Background()
 	if err := app.Run(ctx, os.Args); err != nil {
-		style.Print(
-			fmt.Sprintf("\n\nERROR: %s", err),
-			&style.PrintOptions{Color: "red"},
-		)
+		style.PrintError(fmt.Sprintf("\n\nERROR: %s", err))
 	}
 }

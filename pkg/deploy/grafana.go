@@ -134,9 +134,8 @@ func addGrafanaDeploymentAnnotation(
 		},
 	}
 
-	style.Print(
+	style.PrintInfo(
 		fmt.Sprintf("Sending deploy annotation to Grafana: %v\n", grafanaAnnotation),
-		nil,
 	)
 
 	body, err := json.Marshal(grafanaAnnotation)
@@ -154,9 +153,8 @@ func addGrafanaDeploymentAnnotation(
 		RetryAttempts,
 		RetryDelay,
 		func(i int, _ time.Duration) error {
-			style.Print(
+			style.PrintInfo(
 				fmt.Sprintf("Sending deploy annotation to Grafana, attempt %d\n\n", i),
-				nil,
 			)
 
 			statusCode, err := sendRequest(
@@ -177,15 +175,14 @@ func addGrafanaDeploymentAnnotation(
 		},
 	)
 	if err != nil {
-		style.Print(
+		style.PrintError(
 			fmt.Sprintf("Failed to send deploy annotation to Grafana after %d attempts\n", RetryAttempts),
-			&style.PrintOptions{Color: "red"},
 		)
 
 		return err
 	}
 
-	style.Print("Deploy annotation sent to Grafana!\n", &style.PrintOptions{Color: "green"})
+	style.PrintSuccess("Deploy annotation sent to Grafana!\n")
 
 	return nil
 }

@@ -14,14 +14,12 @@ import (
 func checkVersionAfter(ctx context.Context, version string) error {
 	latestVersion, _ := upgrade.GetLatestCLIVersion(ctx)
 	if semver.Compare("v"+version, "v"+latestVersion) == -1 {
-		style.Print(
+		style.PrintWarning(
 			fmt.Sprintf("\n\nA new version of 3lv is available! %s -> %s", version, latestVersion),
-			&style.PrintOptions{Color: "yellow"},
 		)
 
-		style.Print(
+		style.PrintWarning(
 			"Run `3lv upgrade` to update to the latest version.",
-			&style.PrintOptions{Color: "yellow"},
 		)
 	}
 

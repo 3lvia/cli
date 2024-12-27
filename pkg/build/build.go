@@ -129,9 +129,8 @@ func Build(_ context.Context, c *cli.Command) error {
 		possibleSystemName := c.String("system-name")
 
 		if possibleSystemName == "" {
-			style.Print(
+			style.PrintInfo(
 				"System name not provided, will try to use the current git repository name.",
-				nil,
 			)
 
 			repositoryName, err := utils.ResolveRepositoryName("")
@@ -163,9 +162,8 @@ func Build(_ context.Context, c *cli.Command) error {
 	}
 
 	if c.Bool("generate-only") {
-		style.Print(
+		style.PrintSuccess(
 			fmt.Sprintf("Dockerfile generated at %s\n", dockerfilePath),
-			nil,
 		)
 
 		return nil
@@ -178,7 +176,7 @@ func Build(_ context.Context, c *cli.Command) error {
 	skipAuthentication := c.Bool("skip-authentication") || !push
 
 	if strings.Contains(registry, "azurecr.io") && !skipAuthentication {
-		style.Print("Azure registry detected, will try to authenticate with Azure.", nil)
+		style.PrintInfo("Azure registry detected, will try to authenticate with Azure.")
 
 		azureTenantID := utils.StringWithDefault(
 			c.String("azure-tenant-id"),

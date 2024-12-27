@@ -3,6 +3,7 @@ package build
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 )
 
@@ -296,10 +297,10 @@ func TestGenerateGoDockerfile(t *testing.T) {
 	}
 }
 
-func TestGeneratePythonDockerfile(t *testing.T) {
+func TestGeneratePythonDockerfile1(t *testing.T) {
 	t.Parallel()
 
-	expectedDockerfile, err := os.ReadFile("_test/Dockerfile.python.test")
+	expectedDockerfile, err := os.ReadFile("_test/Dockerfile.python.test1")
 	if err != nil {
 		t.Errorf("Error reading file: %v", err)
 	}
@@ -331,6 +332,54 @@ func TestGeneratePythonDockerfile(t *testing.T) {
 
 	if expectedBuildContext != actualBuildContext {
 		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, actualBuildContext)
+	}
+}
+
+func TestGeneratePythonDockerfile2(t *testing.T) {
+	t.Parallel()
+
+	for i, version := range []string{"3.12", "3.10"} {
+		expectedDockerfile, err := os.ReadFile("_test/Dockerfile.python.test" + strconv.FormatInt(int64(i+2), 10))
+		if err != nil {
+			t.Errorf("Error reading file: %v", err)
+		}
+
+		tempDir := t.TempDir()
+		projectFile := filepath.Join(tempDir, "uv.lock")
+		expectedBuildContext := tempDir
+
+		const applicationName = "demo-api-python"
+
+		file, err := os.Create(filepath.Join(tempDir, ".python-version"))
+		if err != nil {
+			t.Errorf("Error creating file: %v", err)
+		}
+
+		if _, err := file.WriteString(version + "\n"); err != nil {
+			t.Errorf("Error writing to file: %v", err)
+		}
+
+		actualDockerfilePath, actualBuildContext, err := generateDockerfile(
+			projectFile,
+			applicationName,
+			GenerateDockerfileOptions{},
+		)
+		if err != nil {
+			t.Errorf("Error generating Dockerfile: %v", err)
+		}
+
+		actualDockerfile, err := os.ReadFile(actualDockerfilePath)
+		if err != nil {
+			t.Errorf("Error reading file: %v", err)
+		}
+
+		if string(expectedDockerfile) != string(actualDockerfile) {
+			t.Errorf("Dockerfile mismatch: expected %s, got %s", expectedDockerfile, actualDockerfile)
+		}
+
+		if expectedBuildContext != actualBuildContext {
+			t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, actualBuildContext)
+		}
 	}
 }
 

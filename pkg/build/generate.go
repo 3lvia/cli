@@ -49,14 +49,6 @@ func generateDockerfile(
 		}
 
 		return dockerfile, buildContext, nil
-	} else if strings.HasPrefix(projectFile, "Dockerfile") ||
-		strings.HasSuffix(projectFile, "Dockerfile") ||
-		strings.Contains(projectFile, "Dockerfile") {
-		if options.BuildContext == "" {
-			return projectFile, path.Dir(projectFile), nil
-		}
-
-		return projectFile, options.BuildContext, nil
 	} else if strings.HasSuffix(projectFile, "uv.lock") {
 		dockerfile, buildContext, err := generateDockerfileForPython(
 			projectFile,
@@ -68,6 +60,14 @@ func generateDockerfile(
 		}
 
 		return dockerfile, buildContext, nil
+	} else if strings.HasPrefix(projectFile, "Dockerfile") ||
+		strings.HasSuffix(projectFile, "Dockerfile") ||
+		strings.Contains(projectFile, "Dockerfile") {
+		if options.BuildContext == "" {
+			return projectFile, path.Dir(projectFile), nil
+		}
+
+		return projectFile, options.BuildContext, nil
 	}
 
 	return "", "", fmt.Errorf(
