@@ -30,7 +30,7 @@ var Command *cli.Command = &cli.Command{
 	Name:      commandName,
 	Aliases:   []string{"gha"},
 	Usage:     "Add build and deploy with GitHub Actions to an exisiting project.",
-	UsageText: "3lv build [options] <project-directory>",
+	UsageText: "3lv github-actions [options] <project-directory>",
 	Flags: []cli.Flag{
 		shared.SystemNameFlag(
 			"The name of your system (Kubernetes namespace) you want to deploy to.",

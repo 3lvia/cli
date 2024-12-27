@@ -49,6 +49,13 @@ Unit tests are written in Go and can be run with the following command:
 make test
 ```
 
+End-to-end tests are written in Bash. They are located in the `tests` directory, where each command has its own folder with a `run_tests.sh` script.
+For example, to run the tests for the `build` command:
+
+```bash
+./tests/build/run_tests.sh
+```
+
 ### Linter
 
 We use the linter [golangci-lint](https://golangci-lint.run) and can be run with the following command:
@@ -57,7 +64,12 @@ We use the linter [golangci-lint](https://golangci-lint.run) and can be run with
 make lint
 ```
 
+Linter configuration can be found in `.golangci.yml`.
+
 ### Releasing a new version
 
-Bump the number in the `VERSION` file and make a pull request.
-When merged, the new version will be released automatically by GitHub Actions.
+Increase the number in the `VERSION` file, adhering to [semver](https://semver.org)
+Before the CLI is stable at `v1.0.0`, breaking changes will happen in minor versions (and possibly also patch versions).
+Therefore, we will not increase the major version until `v1.0.0` is released.
+
+When a commit increasing the version is merged or pushed to `trunk`, a GitHub Action will automatically create a new release with the new version number as the tag.
