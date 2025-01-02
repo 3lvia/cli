@@ -29,13 +29,13 @@ var (
 	// Dotnet8WebApp = Template{"dotnet8-webapp"}.
 	Dotnet8Worker = Template{"dotnet8-worker"}
 	// Go           Template = Template{"go"}.
-	PythonAPI = Template{"python-api"}
-	Templates = enum.New(
+	PythonWebAPI = Template{"python-webapi"}
+	Templates    = enum.New(
 		Dotnet8WebAPI,
 		//	Dotnet8WebApp,
 		Dotnet8Worker,
 		// Go,
-		PythonAPI,
+		PythonWebAPI,
 	)
 )
 
@@ -127,7 +127,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 	nonInteractive := c.Bool("non-interactive")
 	pythonVersion := c.String("python-version")
 
-	if template != PythonAPI && c.IsSet("python-version") {
+	if template != PythonWebAPI && c.IsSet("python-version") {
 		style.PrintWarning("Argument 'python-version' is only applicable for Python templates.")
 	}
 
@@ -178,7 +178,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 		return cli.Exit(err, 1)
 	}
 
-	if template == PythonAPI {
+	if template == PythonWebAPI {
 		checkUvInstalledOutput := checkUvInstalledCommand(nil)
 		if command.IsError(checkUvInstalledOutput) {
 			yes, err := utils.PromptYesNo("uv is not installed. Do you want to install it using pipx?", nonInteractive)
@@ -263,7 +263,7 @@ func getProjectDirectoryForTemplate(
 			outputDirectory,
 			toPascalCaseWithoutHyphens(applicationName),
 		), nil
-	case PythonAPI /*, Go*/ :
+	case PythonWebAPI /*, Go*/ :
 		return path.Join(outputDirectory, applicationName), nil
 	default:
 		return "", fmt.Errorf("Could not find project directory for template '%s'", template)
@@ -281,7 +281,7 @@ func getProjectFileForTemplate(
 		case Go:
 			return "go.mod", nil
 	*/
-	case PythonAPI:
+	case PythonWebAPI:
 		return "pyproject.toml", nil
 	default:
 		return "", fmt.Errorf("Could not find project file for template '%s'", template)
@@ -309,7 +309,7 @@ func cookiecutterCommand(
 		"system_name="+systemName,
 	)
 
-	if template == PythonAPI {
+	if template == PythonWebAPI {
 		if pythonVersion == "" {
 			cmd.Args = append(cmd.Args, "python_version="+build.DefaultPythonVersion)
 		} else {

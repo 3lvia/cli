@@ -108,20 +108,27 @@ in [iss-terraform](https://github.com/3lvia/iss-terraform) to enable access from
 
 <summary>Expand</summary>
 
-#### Create a new Elvia application in the current directory
+#### Create a new .NET 8 API in the current directory
 
 ```bash
-3lv create --system-name core --application-name my-cool-application .
+3lv create --system-name core --application-name my-cool-application --template dotnet8-webapi .
 # or use shorthand
-3lv create -s core -a my-cool-application .
+3lv create -s core -a my-cool-application -t dotnet8-webapi .
 ```
 
-#### Create a new Elvia application in the applications directory of a monorepo, putting the GitHub Actions workflows in the the root of the repository
+#### Create a new Python API in the current directory
 
 ```bash
-3lv create --system-name core --application-name my-cool-application --github-actions-directory . applications
+3lv create --system-name core --application-name my-cool-application --template python-api .
 # or use shorthand
-3lv create -s core -a my-cool-application -G . applications
+3lv create -s core -a my-cool-application -t dotnet8-webapi .
+
+#### Create a new .NET 8 API in the applications directory of a monorepo, putting the GitHub Actions workflows in the the root of the repository
+
+```bash
+3lv create --system-name core --application-name my-cool-application --template dotnet8-webapi --github-actions-directory . applications
+# or use shorthand
+3lv create -s core -a my-cool-application -t dotnet8-webapi -G . applications
 ```
 
 </details>

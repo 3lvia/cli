@@ -45,36 +45,39 @@ test_create_python() {
     app_name='demo-api-python'
     project_dir="$app_name"
 
-    for python_template_type in python-api; do
-        output_dir="$(mktemp -d)"
+    for python_template_type in python-webapi; do
+        for python_version in 3.12 3.13; do
+            output_dir="$(mktemp -d)"
 
-        if ! 3lv create \
-            -s "$system_name" \
-            -a "$app_name" \
-            -t "$python_template_type" \
-            --non-interactive \
-            "$output_dir"; then
-            echo "Failed to create project with template $python_template_type."
-            exit 1
-        fi
+            if ! 3lv create \
+                -s "$system_name" \
+                -a "$app_name" \
+                -t "$python_template_type" \
+                --python-version "$python_version" \
+                --non-interactive \
+                "$output_dir"; then
+                echo "Failed to create project with template $python_template_type and version $python_version."
+                exit 1
+            fi
 
-        if [[ ! -d "$output_dir/$project_dir" ]]; then
-            echo "Project directory does not exist for template $python_template_type."
-            exit 1
-        fi
+            if [[ ! -d "$output_dir/$project_dir" ]]; then
+                echo "Project directory does not exist for template $python_template_type and version $python_version."
+                exit 1
+            fi
 
-        if [[ ! -f "$output_dir/$project_dir/.github/workflows/build-deploy-$app_name.yml" ]]; then
-            echo "Workflow file does not exist for template $python_template_type."
-            exit 1
-        fi
+            if [[ ! -f "$output_dir/$project_dir/.github/workflows/build-deploy-$app_name.yml" ]]; then
+                echo "Workflow file does not exist for template $python_template_type and version $python_version."
+                exit 1
+            fi
 
-        if ! 3lv build \
-            -s "$system_name" \
-            -f "$output_dir/$project_dir/pyproject.toml" \
-            "$app_name"; then
-            echo "Failed to build project for template $python_template_type."
-            exit 1
-        fi
+            if ! 3lv build \
+                -s "$system_name" \
+                -f "$output_dir/$project_dir/pyproject.toml" \
+                "$app_name"; then
+                echo "Failed to build project for template $python_template_type and version $python_version."
+                exit 1
+            fi
+        done
     done
 }
 
