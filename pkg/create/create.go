@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/3lvia/cli/pkg/build"
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/githubactions"
 	"github.com/3lvia/cli/pkg/shared"
@@ -28,11 +29,13 @@ var (
 	// Dotnet8WebApp = Template{"dotnet8-webapp"}.
 	Dotnet8Worker = Template{"dotnet8-worker"}
 	// Go           Template = Template{"go"}.
+	PythonAPI = Template{"python-api"}
 	Templates = enum.New(
 		Dotnet8WebAPI,
 		//	Dotnet8WebApp,
 		Dotnet8Worker,
 		// Go,
+		PythonAPI,
 	)
 )
 
@@ -83,6 +86,10 @@ var Command *cli.Command = &cli.Command{
 			Usage: "The root directory of your GitHub repository." +
 				" The path specified will be prepended to '.github/workflows'.",
 		},
+		&cli.StringFlag{
+			Name:  "python-version",
+			Usage: "The version of Python to use for the project. Only applicable for Python templates.",
+		},
 	},
 	Action: Create,
 }
@@ -118,6 +125,11 @@ func Create(ctx context.Context, c *cli.Command) error {
 
 	defaultBranch := c.String("default-branch")
 	nonInteractive := c.Bool("non-interactive")
+	pythonVersion := c.String("python-version")
+
+	if template != PythonAPI && c.IsSet("python-version") {
+		style.PrintWarning("Argument 'python-version' is only applicable for Python templates.")
+	}
 
 	checkCoooiecutterInstalledOutput := checkCookiecutterInstalledCommand(nil)
 	if command.IsError(checkCoooiecutterInstalledOutput) {
@@ -150,9 +162,9 @@ func Create(ctx context.Context, c *cli.Command) error {
 		outputDirectory,
 		applicationName,
 		systemName,
+		pythonVersion,
 		nil,
 	)
-
 	if command.IsError(cookiecutterOutput) {
 		return cli.Exit("Failed to create project.", 1)
 	}
@@ -164,6 +176,13 @@ func Create(ctx context.Context, c *cli.Command) error {
 	)
 	if err != nil {
 		return cli.Exit(err, 1)
+	}
+
+	if template == PythonAPI {
+		uvSyncOutput := uvSyncCommand(projectDirectory, nil)
+		if command.IsError(uvSyncOutput) {
+			return cli.Exit("Failed to generate uv.lock file.", 1)
+		}
 	}
 
 	githubActionsDirectory := func() string {
@@ -214,10 +233,8 @@ func getProjectDirectoryForTemplate(
 			outputDirectory,
 			toPascalCaseWithoutHyphens(applicationName),
 		), nil
-	/*
-		case Go:
-			return path.Join(outputDirectory, applicationName), nil
-	*/
+	case PythonAPI /*, Go*/ :
+		return path.Join(outputDirectory, applicationName), nil
 	default:
 		return "", fmt.Errorf("Could not find project directory for template '%s'", template)
 	}
@@ -234,6 +251,8 @@ func getProjectFileForTemplate(
 		case Go:
 			return "go.mod", nil
 	*/
+	case PythonAPI:
+		return "pyproject.toml", nil
 	default:
 		return "", fmt.Errorf("Could not find project file for template '%s'", template)
 	}
@@ -244,25 +263,31 @@ func cookiecutterCommand(
 	outputDirectory string,
 	applicationName string,
 	systemName string,
+	pythonVersion string,
 	options *command.RunOptions,
 ) command.Output {
-	return command.Run(
-		*exec.Command(
-			"cookiecutter",
-			"gh:3lvia/application-templates",
-			"--directory",
-			template.Value,
-			"--output-dir",
-			outputDirectory,
-			"--no-input",
-			"application_name="+applicationName,
-			"application_name_pascal_case="+toPascalCaseWithoutHyphens(applicationName),
-			"system_name="+systemName,
-			// TODO: is this needed?
-			"base_dir=./",
-		),
-		options,
+	cmd := *exec.Command(
+		"cookiecutter",
+		"gh:3lvia/application-templates",
+		"--directory",
+		template.Value,
+		"--output-dir",
+		outputDirectory,
+		"--no-input",
+		"application_name="+applicationName,
+		"application_name_pascal_case="+toPascalCaseWithoutHyphens(applicationName),
+		"system_name="+systemName,
 	)
+
+	if template == PythonAPI {
+		if pythonVersion == "" {
+			cmd.Args = append(cmd.Args, "python_version="+build.DefaultPythonVersion)
+		} else {
+			cmd.Args = append(cmd.Args, "python_version="+pythonVersion)
+		}
+	}
+
+	return command.Run(cmd, options)
 }
 
 func checkCookiecutterInstalledCommand(
@@ -299,6 +324,21 @@ func installCookiecutterCommand(
 			"install",
 			"cookiecutter",
 			"--global",
+		),
+		options,
+	)
+}
+
+func uvSyncCommand(
+	projectDirectory string,
+	options *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"uv",
+			"sync",
+			"--directory",
+			projectDirectory,
 		),
 		options,
 	)

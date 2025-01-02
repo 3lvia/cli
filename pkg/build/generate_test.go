@@ -308,7 +308,7 @@ func TestGeneratePythonDockerfile1(t *testing.T) {
 	expectedBuildContext := "."
 
 	const (
-		projectFile     = "uv.lock"
+		projectFile     = "pyproject.toml"
 		applicationName = "demo-api-python"
 	)
 
@@ -341,11 +341,11 @@ func TestGeneratePythonDockerfile2(t *testing.T) {
 	for i, version := range []string{"3.12", "3.10"} {
 		expectedDockerfile, err := os.ReadFile("_test/Dockerfile.python.test" + strconv.FormatInt(int64(i+2), 10))
 		if err != nil {
-			t.Errorf("Error reading file: %v", err)
+			t.Errorf("Error reading expected Dockerfile: %v", err)
 		}
 
 		tempDir := t.TempDir()
-		projectFile := filepath.Join(tempDir, "uv.lock")
+		projectFile := filepath.Join(tempDir, "pyproject.toml")
 		expectedBuildContext := tempDir
 
 		const applicationName = "demo-api-python"
@@ -370,7 +370,7 @@ func TestGeneratePythonDockerfile2(t *testing.T) {
 
 		actualDockerfile, err := os.ReadFile(actualDockerfilePath)
 		if err != nil {
-			t.Errorf("Error reading file: %v", err)
+			t.Errorf("Error reading generated Dockerfile: %v", err)
 		}
 
 		if string(expectedDockerfile) != string(actualDockerfile) {

@@ -12,6 +12,8 @@ import (
 	"github.com/3lvia/cli/pkg/utils"
 )
 
+const DefaultPythonVersion = "3.13"
+
 type DockerfileVariablesPython struct {
 	PythonVersion string
 }
@@ -52,8 +54,6 @@ func generateDockerfileForPython(
 }
 
 func getPythonVersion(directories ...string) string {
-	const defaultPythonVersion = "3.13"
-
 	// removes duplicates
 	slices.Sort(directories)
 	directories = slices.Compact(directories)
@@ -121,9 +121,9 @@ func getPythonVersion(directories ...string) string {
 	style.PrintWarning(
 		fmt.Sprintf(
 			"Did not find any .python-version files, using default version %s.",
-			defaultPythonVersion,
+			DefaultPythonVersion,
 		),
 	)
 
-	return defaultPythonVersion
+	return DefaultPythonVersion
 }

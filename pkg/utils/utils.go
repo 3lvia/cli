@@ -104,14 +104,14 @@ func WriteFileWithTemplate(
 
 	defer file.Close()
 
-	template, err := template.New(templateFile).ParseFS(templates, templateFile)
+	tmpl, err := template.New(templateFile).ParseFS(templates, templateFile)
 	if err != nil {
 		return "", fmt.Errorf("Failed to parse template: %w", err)
 	}
 
 	var fileBuffer bytes.Buffer
 
-	err = template.Execute(&fileBuffer, variables)
+	err = tmpl.ExecuteTemplate(&fileBuffer, path.Base(templateFile), variables)
 	if err != nil {
 		return "", fmt.Errorf("Failed to execute template: %w", err)
 	}
@@ -123,7 +123,6 @@ func WriteFileWithTemplate(
 	return filePath, nil
 }
 
-// Will only return false if the response is "n".
 func PromptYesNo(question string, nonInteractive bool) (bool, error) {
 	style.PrintInfo(
 		question + " (y/n): ",
