@@ -141,3 +141,13 @@ func PromptYesNo(question string, nonInteractive bool) (bool, error) {
 
 	return strings.ToLower(response) == "y", nil
 }
+
+func FirstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+
+	return ""
+}

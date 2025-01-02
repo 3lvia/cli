@@ -10,6 +10,7 @@ import (
 	"github.com/3lvia/cli/pkg/build"
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/shared"
+	"github.com/3lvia/cli/pkg/style"
 	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v3"
 	"gopkg.in/yaml.v3"
@@ -20,24 +21,28 @@ const commandName = "run"
 //go:embed *.tmpl*
 var composeTemplates embed.FS
 
-var Command *cli.Command = &cli.Command{
-	Name:      commandName,
-	Aliases:   []string{"r"},
-	Usage:     "Run your application with Docker Compose.",
-	UsageText: "3lv run [options] <application-name>",
-	Flags: []cli.Flag{
-		shared.SystemNameFlag(
-			"The name of your system.",
-		),
-		shared.HelmValuesFileFlag(),
-		shared.RegistryFlag(
-			"The registry to use for the image. Used for finding the image name.",
-		),
-	},
-	Action: Run,
+func Command(config *shared.Config) *cli.Command {
+	return &cli.Command{
+		Name:      commandName,
+		Aliases:   []string{"r"},
+		Usage:     "Run your application with Docker Compose.",
+		UsageText: "3lv run [options] <application-name>",
+		Flags: []cli.Flag{
+			shared.SystemNameFlag(
+				"The name of your system.",
+			),
+			shared.HelmValuesFileFlag(),
+			shared.RegistryFlag(
+				"The registry to use for the image. Used for finding the image name.",
+			),
+		},
+		Action: func(ctx context.Context, c *cli.Command) error {
+			return Run(ctx, c, config)
+		},
+	}
 }
 
-func Run(_ context.Context, c *cli.Command) error {
+func Run(_ context.Context, c *cli.Command, config *shared.Config) error {
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
@@ -47,8 +52,13 @@ func Run(_ context.Context, c *cli.Command) error {
 		return cli.Exit("Application name not provided", 1)
 	}
 
+	configForApplication, err := config.GetConfigForApplication(applicationName)
+	if err != nil {
+		style.PrintWarning(err.Error())
+	}
+
 	helmValues, err := parseHelmValuesFile(
-		c.String("helm-values-file"),
+		utils.FirstNonEmpty(c.String("helm-values-file"), configForApplication.HelmValuesFile),
 	)
 	if err != nil {
 		return cli.Exit(err.Error(), 1)
@@ -56,7 +66,7 @@ func Run(_ context.Context, c *cli.Command) error {
 
 	composeFile, err := generateComposeFile(
 		utils.StringWithDefault(c.String("registry"), "containerregistryelvia.azurecr.io"),
-		c.String("system-name"),
+		utils.FirstNonEmpty(c.String("system-name"), config.System),
 		applicationName,
 		helmValues,
 	)

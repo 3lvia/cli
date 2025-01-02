@@ -33,15 +33,20 @@ func main() {
 
 	version := strings.TrimSpace(string(versionFile))
 
+	config, err := shared.ReadConfig()
+	if err != nil {
+		style.PrintInfo("No configuration file (3lv.yml) found.")
+	}
+
 	// Check for a new version of the CLI after all these commands.
 	// Any new commands should be added here.
 	commands := shared.WithCheckVersionAfterCommands(
 		[]*cli.Command{
-			build.Command,
-			deploy.Command,
+			build.Command(config),
+			deploy.Command(config),
+			run.Command(config),
 			scan.Command,
 			githubactions.Command,
-			run.Command,
 			create.Command,
 		},
 		version,
@@ -60,6 +65,7 @@ func main() {
 			},
 		},
 		// Don't check for updates when running the upgrade command.
+		// Doesn't need config either.
 		Commands: append(commands, upgrade.Command(version)),
 	}
 

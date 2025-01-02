@@ -40,6 +40,7 @@ Download the MSI file (and optionally the MD5 checksum) from the [releases page]
 ```pwsh
 certutil -hashfile 3lv-windows-amd64.msi MD5
 ```
+
 ### Upgrades
 
 To upgrade the CLI, simply run this command:
