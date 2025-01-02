@@ -179,6 +179,36 @@ func Create(ctx context.Context, c *cli.Command) error {
 	}
 
 	if template == PythonAPI {
+		checkUvInstalledOutput := checkUvInstalledCommand(nil)
+		if command.IsError(checkUvInstalledOutput) {
+			yes, err := utils.PromptYesNo("uv is not installed. Do you want to install it using pipx?", nonInteractive)
+			if err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			checkPipxInstalledOutput := checkPipxInstalledCommand(nil)
+			if command.IsError(checkPipxInstalledOutput) {
+				log.Fatal(
+					"pipx is not installed, cannot automatically install uv." +
+						" Please install uv yourself (https://docs.astral.sh/uv/getting-started/installation)," +
+						" or install pipx and try again.",
+				)
+			}
+
+			if yes {
+				style.PrintInfo("Installing uv...")
+
+				installUvOutput := installUvCommand(nil)
+				if command.IsError(installUvOutput) {
+					return cli.Exit("Failed to install uv.", 1)
+				}
+
+				style.PrintSuccess("uv installed!")
+			} else {
+				return cli.Exit("uv is required for creating a new project. Please install it first.", 1)
+			}
+		}
+
 		uvSyncOutput := uvSyncCommand(projectDirectory, nil)
 		if command.IsError(uvSyncOutput) {
 			return cli.Exit("Failed to generate uv.lock file.", 1)
@@ -324,6 +354,31 @@ func installCookiecutterCommand(
 			"install",
 			"cookiecutter",
 			"--global",
+		),
+		options,
+	)
+}
+
+func checkUvInstalledCommand(
+	options *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"uv",
+			"--version",
+		),
+		options,
+	)
+}
+
+func installUvCommand(
+	options *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"pipx",
+			"install",
+			"uv",
 		),
 		options,
 	)
