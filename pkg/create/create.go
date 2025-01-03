@@ -28,13 +28,13 @@ var (
 	Dotnet8WebAPI = Template{"dotnet8-webapi"}
 	// Dotnet8WebApp = Template{"dotnet8-webapp"}.
 	Dotnet8Worker = Template{"dotnet8-worker"}
-	// Go           Template = Template{"go"}.
-	PythonWebAPI = Template{"python-webapi"}
-	Templates    = enum.New(
+	GoWebAPI      = Template{"go-webapi"}
+	PythonWebAPI  = Template{"python-webapi"}
+	Templates     = enum.New(
 		Dotnet8WebAPI,
 		//	Dotnet8WebApp,
 		Dotnet8Worker,
-		// Go,
+		GoWebAPI,
 		PythonWebAPI,
 	)
 )
@@ -263,7 +263,7 @@ func getProjectDirectoryForTemplate(
 			outputDirectory,
 			toPascalCaseWithoutHyphens(applicationName),
 		), nil
-	case PythonWebAPI /*, Go*/ :
+	case PythonWebAPI, GoWebAPI:
 		return path.Join(outputDirectory, applicationName), nil
 	default:
 		return "", fmt.Errorf("Could not find project directory for template '%s'", template)
@@ -277,10 +277,8 @@ func getProjectFileForTemplate(
 	switch template {
 	case Dotnet8WebAPI /*Dotnet8WebApp,*/, Dotnet8Worker:
 		return toPascalCaseWithoutHyphens(applicationName) + ".csproj", nil
-	/*
-		case Go:
-			return "go.mod", nil
-	*/
+	case GoWebAPI:
+		return "go.mod", nil
 	case PythonWebAPI:
 		return "pyproject.toml", nil
 	default:

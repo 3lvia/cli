@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 test_disabled_deploy() {
     if 3lv deploy \

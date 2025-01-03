@@ -58,6 +58,9 @@ issues:
       text: "Python.* is a global variable"
     - linters:
       - gochecknoglobals
+      text: "Go.* is a global variable"
+    - linters:
+      - gochecknoglobals
       text: "Templates is a global variable"
     - linters:
       - revive
