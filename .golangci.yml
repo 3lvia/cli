@@ -49,9 +49,6 @@ issues:
       text: "parameter name 'c' is too short for the scope of its usage"
     - linters:
       - gochecknoglobals
-      text: "Command is a global variable"
-    - linters:
-      - gochecknoglobals
       text: "Dotnet.* is a global variable"
     - linters:
       - gochecknoglobals

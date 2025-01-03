@@ -16,7 +16,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func Command(config *shared.Config) *cli.Command {
+func Command() *cli.Command {
 	return &cli.Command{
 		Name:      "deploy",
 		Aliases:   []string{"d"},
@@ -164,13 +164,13 @@ func Command(config *shared.Config) *cli.Command {
 				Sources: cli.EnvVars("CI"),
 			},
 		},
-		Action: func(ctx context.Context, c *cli.Command) error {
-			return Deploy(ctx, c, *config)
-		},
+		Action: Deploy,
 	}
 }
 
-func Deploy(ctx context.Context, c *cli.Command, config shared.Config) error {
+func Deploy(ctx context.Context, c *cli.Command) error {
+	config := shared.GetConfig()
+
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}

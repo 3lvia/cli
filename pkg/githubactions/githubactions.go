@@ -26,29 +26,31 @@ const (
 //go:embed values.yml.tmpl
 var helmValuesFileTemplate embed.FS
 
-var Command *cli.Command = &cli.Command{
-	Name:      commandName,
-	Aliases:   []string{"gha"},
-	Usage:     "Add build and deploy with GitHub Actions to an exisiting project.",
-	UsageText: "3lv github-actions [options] <project-directory>",
-	Flags: []cli.Flag{
-		shared.SystemNameFlag(
-			"The name of your system (Kubernetes namespace) you want to deploy to.",
-		),
-		shared.ApplicationNameFlag(
-			"The name of the application you want to build and deploy.",
-		),
-		shared.RuntimeCloudProviderFlag(),
-		shared.HelmValuesFileFlag(),
-		shared.ProjectFileFlag(),
-		&cli.StringFlag{
-			Name:    "default-branch",
-			Aliases: []string{"b"},
-			Usage:   "The default branch of the repository",
-			Value:   "trunk",
+func Command() *cli.Command {
+	return &cli.Command{
+		Name:      commandName,
+		Aliases:   []string{"gha"},
+		Usage:     "Add build and deploy with GitHub Actions to an exisiting project.",
+		UsageText: "3lv github-actions [options] <project-directory>",
+		Flags: []cli.Flag{
+			shared.SystemNameFlag(
+				"The name of your system (Kubernetes namespace) you want to deploy to.",
+			),
+			shared.ApplicationNameFlag(
+				"The name of the application you want to build and deploy.",
+			),
+			shared.RuntimeCloudProviderFlag(),
+			shared.HelmValuesFileFlag(),
+			shared.ProjectFileFlag(),
+			&cli.StringFlag{
+				Name:    "default-branch",
+				Aliases: []string{"b"},
+				Usage:   "The default branch of the repository",
+				Value:   "trunk",
+			},
 		},
-	},
-	Action: GitHubActions,
+		Action: GitHubActions,
+	}
 }
 
 func GitHubActions(ctx context.Context, c *cli.Command) error {

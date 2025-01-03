@@ -39,59 +39,61 @@ var (
 	)
 )
 
-var Command *cli.Command = &cli.Command{
-	Name:      commandName,
-	Aliases:   []string{"c"},
-	Usage:     "Create a new project from one of Elvia's templates.",
-	UsageText: "3lv create [options] <output-directory>",
-	Flags: []cli.Flag{
-		shared.SystemNameFlag(
-			"The name of your system (Kubernetes namespace) you want to create your application in.",
-		),
-		shared.ApplicationNameFlag(
-			"The name of the application you want to create.",
-		),
-		shared.RuntimeCloudProviderFlag(),
-		&cli.StringFlag{
-			Name:    "template",
-			Aliases: []string{"t"},
-			Usage:   "The template to use for the project. Supported templates are: " + strings.Join(Templates.Values(), ", "),
-			Value:   Dotnet8WebAPI.Value,
-			Action: func(_ context.Context, _ *cli.Command, template string) error {
-				parsed := Templates.Parse(template)
+func Command() *cli.Command {
+	return &cli.Command{
+		Name:      commandName,
+		Aliases:   []string{"c"},
+		Usage:     "Create a new project from one of Elvia's templates.",
+		UsageText: "3lv create [options] <output-directory>",
+		Flags: []cli.Flag{
+			shared.SystemNameFlag(
+				"The name of your system (Kubernetes namespace) you want to create your application in.",
+			),
+			shared.ApplicationNameFlag(
+				"The name of the application you want to create.",
+			),
+			shared.RuntimeCloudProviderFlag(),
+			&cli.StringFlag{
+				Name:    "template",
+				Aliases: []string{"t"},
+				Usage:   "The template to use for the project. Supported templates are: " + strings.Join(Templates.Values(), ", "),
+				Value:   Dotnet8WebAPI.Value,
+				Action: func(_ context.Context, _ *cli.Command, template string) error {
+					parsed := Templates.Parse(template)
 
-				if parsed == nil {
-					return cli.Exit(
-						fmt.Sprintf(
-							"Template '%s' is not supported. Supported templates are: %s",
-							template,
-							Templates.Values(),
-						),
-						1,
-					)
-				}
+					if parsed == nil {
+						return cli.Exit(
+							fmt.Sprintf(
+								"Template '%s' is not supported. Supported templates are: %s",
+								template,
+								Templates.Values(),
+							),
+							1,
+						)
+					}
 
-				return nil
+					return nil
+				},
+			},
+			&cli.StringFlag{
+				Name:    "default-branch",
+				Aliases: []string{"b"},
+				Usage:   "The default branch of the repository",
+				Value:   "trunk",
+			},
+			&cli.StringFlag{
+				Name:    "github-actions-directory",
+				Aliases: []string{"G"},
+				Usage: "The root directory of your GitHub repository." +
+					" The path specified will be prepended to '.github/workflows'.",
+			},
+			&cli.StringFlag{
+				Name:  "python-version",
+				Usage: "The version of Python to use for the project. Only applicable for Python templates.",
 			},
 		},
-		&cli.StringFlag{
-			Name:    "default-branch",
-			Aliases: []string{"b"},
-			Usage:   "The default branch of the repository",
-			Value:   "trunk",
-		},
-		&cli.StringFlag{
-			Name:    "github-actions-directory",
-			Aliases: []string{"G"},
-			Usage: "The root directory of your GitHub repository." +
-				" The path specified will be prepended to '.github/workflows'.",
-		},
-		&cli.StringFlag{
-			Name:  "python-version",
-			Usage: "The version of Python to use for the project. Only applicable for Python templates.",
-		},
-	},
-	Action: Create,
+		Action: Create,
+	}
 }
 
 func Create(ctx context.Context, c *cli.Command) error {

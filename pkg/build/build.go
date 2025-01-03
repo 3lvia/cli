@@ -19,7 +19,7 @@ import (
 
 const commandName = "build"
 
-func Command(config *shared.Config) *cli.Command {
+func Command() *cli.Command {
 	return &cli.Command{
 		Name:      commandName,
 		Aliases:   []string{"b"},
@@ -107,13 +107,13 @@ func Command(config *shared.Config) *cli.Command {
 				Sources: cli.EnvVars("3LV_SKIP_AUTHENTICATION"),
 			},
 		},
-		Action: func(ctx context.Context, c *cli.Command) error {
-			return Build(ctx, c, config)
-		},
+		Action: Build,
 	}
 }
 
-func Build(_ context.Context, c *cli.Command, config *shared.Config) error {
+func Build(_ context.Context, c *cli.Command) error {
+	config := shared.GetConfig()
+
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}

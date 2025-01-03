@@ -43,12 +43,21 @@ func ResolveCommitHash(possibleCommitHash string) (string, error) {
 	return strings.TrimSpace(string(hash)), nil
 }
 
+func ResolveGitRepositoryTopLevelPath() (string, error) {
+	gitTopLevel, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(gitTopLevel)), nil
+}
+
 func ResolveRepositoryName(possibleRepositoryName string) (string, error) {
 	if possibleRepositoryName != "" {
 		return possibleRepositoryName, nil
 	}
 
-	gitTopLevel, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	gitTopLevel, err := ResolveGitRepositoryTopLevelPath()
 	if err != nil {
 		return "",
 			fmt.Errorf(
@@ -58,7 +67,7 @@ func ResolveRepositoryName(possibleRepositoryName string) (string, error) {
 			)
 	}
 
-	return path.Base(strings.TrimSpace(string(gitTopLevel))), nil
+	return path.Base(gitTopLevel), nil
 }
 
 func ResolveCommitMessage(possibleCommitMessage string) (string, error) {

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/3lvia/cli/pkg/style"
+	"github.com/3lvia/cli/pkg/utils"
 	"github.com/samber/lo"
 	"github.com/urfave/cli/v3"
 	"gopkg.in/yaml.v3"
@@ -21,21 +23,70 @@ type Application struct {
 	HelmValuesFile string `yaml:"helmValuesFile"`
 }
 
-func ReadConfig() (*Config, error) {
-	// TODO: read from git root
-	file, err := os.ReadFile("3lv.yml")
+const configFileName = "3lv.yml"
+
+func GetConfig() *Config {
+	exists, filePath := ConfigExists()
+	if !exists {
+		style.PrintInfo("No 3lv configuration file found, will proceed without it. You can run `3lv init` to create one.")
+
+		return &Config{} //nolint:exhaustruct
+	}
+
+	file, err := os.ReadFile(filePath)
 	if err != nil {
-		return &Config{}, err
+		style.PrintInfo(fmt.Sprintf("Could not read 3lv configuration file at %s, will proceed without it.", filePath))
+
+		return &Config{} //nolint:exhaustruct
 	}
 
 	var config Config
 
 	err = yaml.Unmarshal(file, &config)
 	if err != nil {
-		return &Config{}, err
+		style.PrintInfo(fmt.Sprintf("Could not parse 3lv configuration file at %s, will proceed without it.", filePath))
+
+		return &Config{} //nolint:exhaustruct
 	}
 
-	return &config, nil
+	style.PrintInfo(fmt.Sprintf("Found 3lv confirguration file at %s.", filePath))
+
+	return &config
+}
+
+func SetConfig(config *Config) error {
+	filePath := func() string {
+		gitTopLevel, err := utils.ResolveGitRepositoryTopLevelPath()
+		if err != nil {
+			return configFileName
+		}
+
+		return gitTopLevel + "/" + configFileName
+	}()
+
+	file, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filePath, file, 0o644)
+
+	return err
+}
+
+func ConfigExists() (bool, string) {
+	filePath := func() string {
+		gitTopLevel, err := utils.ResolveGitRepositoryTopLevelPath()
+		if err != nil {
+			return configFileName
+		}
+
+		return gitTopLevel + "/" + configFileName
+	}()
+
+	_, err := os.Stat(filePath)
+
+	return !os.IsNotExist(err), filePath
 }
 
 func WithConfig(commands [](func(_ *Config) *cli.Command), config *Config) []*cli.Command {
