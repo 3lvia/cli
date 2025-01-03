@@ -102,3 +102,51 @@ func TestPromptYesNo(t *testing.T) {
 		t.Fatalf("Expected %v, but got %v", true, answer)
 	}
 }
+
+func TestFirstNonEmpty1(t *testing.T) {
+	t.Parallel()
+
+	const expected = "a"
+
+	result := FirstNonEmpty("", "a", "", "b", "c", "", "d", "")
+
+	if result != expected {
+		t.Fatalf("Expected %v, but got %v", expected, result)
+	}
+}
+
+func TestFirstNonEmpty2(t *testing.T) {
+	t.Parallel()
+
+	const expected = "a"
+
+	result := FirstNonEmpty("a")
+
+	if result != expected {
+		t.Fatalf("Expected %v, but got %v", expected, result)
+	}
+}
+
+func TestFirstNonEmpty3(t *testing.T) {
+	t.Parallel()
+
+	const expected = ""
+
+	result := FirstNonEmpty("")
+
+	if result != expected {
+		t.Fatalf("Expected %v, but got %v", expected, result)
+	}
+}
+
+func TestFirstNonEmpty4(t *testing.T) {
+	t.Parallel()
+
+	const expected = "g"
+
+	result := FirstNonEmpty("", "", "", "", "g", "a", "f", "", "", "7")
+
+	if result != expected {
+		t.Fatalf("Expected %v, but got %v", expected, result)
+	}
+}

@@ -13,21 +13,13 @@ Command Line Interface tool for developing, building and securing Elvia applicat
 The GitHub composite actions at [core-github-actions-templates](https://github.com/3lvia/core-github-actions-templates) are wrappers around many of the CLI commands.
 Therefore it's useful to use the CLI when debugging or testing Elvias actions, since you can very easily reproduce the same commands locally.
 
-## 💾 Installation
+## 📚 Documentation
 
-See [docs/installation](docs/installation.md).
-
-## 📋 Requirements
-
-See [docs/requirements](docs/requirements.md).
-
-## 📖 Examples
-
-See [docs/examples](docs/examples.md).
-
-## 🧑‍💻 Development
-
-See [docs/development](docs/development.md).
+- **[💾 Installation](docs/installation.md)**
+- **[📋 Requirements](docs/requirements.md)**
+- **[⚙️ Configuration](docs/configuration.md)**
+- **[📖 Examples](docs/examples.md)**
+- **[🧑‍💻 Development](docs/development.md)**
 
 ## 💥 Breaking changes
 

@@ -19,97 +19,101 @@ import (
 
 const commandName = "build"
 
-var Command *cli.Command = &cli.Command{
-	Name:      commandName,
-	Aliases:   []string{"b"},
-	Usage:     "Build a Docker image from a project file.",
-	UsageText: "3lv build [options] <application-name>",
-	Flags: []cli.Flag{
-		shared.ProjectFileFlag(),
-		shared.SystemNameFlag(
-			"The system name to prefix the image name with." +
-				" If not provided, we will try to use the current git repository name.",
-		),
-		shared.SeverityFlag("scan-severity"),
-		shared.FormatsFlag("scan-formats"),
-		shared.DisableErrorFlag("scan-disable-error"),
-		shared.RegistryFlag("The container registry to use. Image name will be prefixed with this value."),
-		&cli.StringFlag{
-			Name:    "build-context",
-			Aliases: []string{"c"},
-			Usage: "The directory to use as the Docker build context, i.e. what files Docker will know about when building." +
-				" We default to the directory of the project file. This means that if you need files outside of the directory of" +
-				" the project file, you need to specify this flag.",
-			Sources: cli.EnvVars("3LV_BUILD_CONTEXT"),
+func Command(config *shared.Config) *cli.Command {
+	return &cli.Command{
+		Name:      commandName,
+		Aliases:   []string{"b"},
+		Usage:     "Build a Docker image from a project file.",
+		UsageText: "3lv build [options] <application-name>",
+		Flags: []cli.Flag{
+			shared.ProjectFileFlag(),
+			shared.SystemNameFlag(
+				"The system name to prefix the image name with." +
+					" If not provided, we will try to use the current git repository name.",
+			),
+			shared.SeverityFlag("scan-severity"),
+			shared.FormatsFlag("scan-formats"),
+			shared.DisableErrorFlag("scan-disable-error"),
+			shared.RegistryFlag("The container registry to use. Image name will be prefixed with this value."),
+			&cli.StringFlag{
+				Name:    "build-context",
+				Aliases: []string{"c"},
+				Usage: "The directory to use as the Docker build context, i.e. what files Docker will know about when building." +
+					" We default to the directory of the project file. This means that if you need files outside of the directory of" +
+					" the project file, you need to specify this flag.",
+				Sources: cli.EnvVars("3LV_BUILD_CONTEXT"),
+			},
+			&cli.StringFlag{
+				Name:    "go-main-package-directory",
+				Usage:   "The main package directory to use when building a Go application.",
+				Sources: cli.EnvVars("3LV_GO_MAIN_PACKAGE_DIRECTORY"),
+			},
+			&cli.StringFlag{
+				Name:    "cache-tag",
+				Usage:   "The tag to use for the cache image.",
+				Value:   "latest-cache",
+				Sources: cli.EnvVars("3LV_CACHE_TAG"),
+			},
+			&cli.StringFlag{
+				Name:    "azure-tenant-id",
+				Usage:   "The tenant ID to use when authenticating with the Azure Container Registry.",
+				Hidden:  true,
+				Sources: cli.EnvVars("3LV_AZURE_TENANT_ID"),
+			},
+			&cli.StringFlag{
+				Name:    "azure-subscription-id",
+				Usage:   "The subscription ID to use when authenticating with the Azure Container Registry.",
+				Hidden:  true,
+				Sources: cli.EnvVars("3LV_AZURE_SUBSCRIPTION_ID"),
+			},
+			&cli.StringFlag{
+				Name: "azure-client-id",
+				Usage: "The client ID to use when authenticating with the Azure Container registry." +
+					" Must be combined with --azure-federated-token.",
+				Hidden:  true,
+				Sources: cli.EnvVars("3LV_AZURE_CLIENT_ID"),
+			},
+			&cli.StringFlag{
+				Name: "azure-federated-token",
+				Usage: "The federated token to use when authenticating with the Azure Container Registry." +
+					" Must be combined with --client-id.",
+				Hidden:  true,
+				Sources: cli.EnvVars("3LV_AZURE_FEDERATED_TOKEN"),
+			},
+			&cli.StringSliceFlag{
+				Name:    "additional-tags",
+				Aliases: []string{"t"},
+				Usage:   "Additional tags to use when pushing the image to the registry.",
+				Sources: cli.EnvVars("3LV_ADDITIONAL_TAGS"),
+			},
+			&cli.BoolFlag{
+				Name:    "push",
+				Aliases: []string{"p"},
+				Usage:   "Push the image to the registry.",
+				Value:   false,
+				Sources: cli.EnvVars("3LV_PUSH"),
+			},
+			&cli.BoolFlag{
+				Name:    "generate-only",
+				Aliases: []string{"G"},
+				Usage:   "Generates a Dockerfile, but does not build the image.",
+				Value:   false,
+				Sources: cli.EnvVars("3LV_GENERATE_ONLY"),
+			},
+			&cli.BoolFlag{
+				Name:    "skip-authentication",
+				Usage:   "Skip authentication before pushing the image to the registry.",
+				Value:   false,
+				Sources: cli.EnvVars("3LV_SKIP_AUTHENTICATION"),
+			},
 		},
-		&cli.StringFlag{
-			Name:    "go-main-package-directory",
-			Usage:   "The main package directory to use when building a Go application.",
-			Sources: cli.EnvVars("3LV_GO_MAIN_PACKAGE_DIRECTORY"),
+		Action: func(ctx context.Context, c *cli.Command) error {
+			return Build(ctx, c, config)
 		},
-		&cli.StringFlag{
-			Name:    "cache-tag",
-			Usage:   "The tag to use for the cache image.",
-			Value:   "latest-cache",
-			Sources: cli.EnvVars("3LV_CACHE_TAG"),
-		},
-		&cli.StringFlag{
-			Name:    "azure-tenant-id",
-			Usage:   "The tenant ID to use when authenticating with the Azure Container Registry.",
-			Hidden:  true,
-			Sources: cli.EnvVars("3LV_AZURE_TENANT_ID"),
-		},
-		&cli.StringFlag{
-			Name:    "azure-subscription-id",
-			Usage:   "The subscription ID to use when authenticating with the Azure Container Registry.",
-			Hidden:  true,
-			Sources: cli.EnvVars("3LV_AZURE_SUBSCRIPTION_ID"),
-		},
-		&cli.StringFlag{
-			Name: "azure-client-id",
-			Usage: "The client ID to use when authenticating with the Azure Container registry." +
-				" Must be combined with --azure-federated-token.",
-			Hidden:  true,
-			Sources: cli.EnvVars("3LV_AZURE_CLIENT_ID"),
-		},
-		&cli.StringFlag{
-			Name: "azure-federated-token",
-			Usage: "The federated token to use when authenticating with the Azure Container Registry." +
-				" Must be combined with --client-id.",
-			Hidden:  true,
-			Sources: cli.EnvVars("3LV_AZURE_FEDERATED_TOKEN"),
-		},
-		&cli.StringSliceFlag{
-			Name:    "additional-tags",
-			Aliases: []string{"t"},
-			Usage:   "Additional tags to use when pushing the image to the registry.",
-			Sources: cli.EnvVars("3LV_ADDITIONAL_TAGS"),
-		},
-		&cli.BoolFlag{
-			Name:    "push",
-			Aliases: []string{"p"},
-			Usage:   "Push the image to the registry.",
-			Value:   false,
-			Sources: cli.EnvVars("3LV_PUSH"),
-		},
-		&cli.BoolFlag{
-			Name:    "generate-only",
-			Aliases: []string{"G"},
-			Usage:   "Generates a Dockerfile, but does not build the image.",
-			Value:   false,
-			Sources: cli.EnvVars("3LV_GENERATE_ONLY"),
-		},
-		&cli.BoolFlag{
-			Name:    "skip-authentication",
-			Usage:   "Skip authentication before pushing the image to the registry.",
-			Value:   false,
-			Sources: cli.EnvVars("3LV_SKIP_AUTHENTICATION"),
-		},
-	},
-	Action: Build,
+	}
 }
 
-func Build(_ context.Context, c *cli.Command) error {
+func Build(_ context.Context, c *cli.Command, config *shared.Config) error {
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
@@ -117,39 +121,24 @@ func Build(_ context.Context, c *cli.Command) error {
 	// Required args
 	applicationName := c.Args().First()
 	if applicationName == "" {
-		return cli.Exit("Application name not provided", 1)
+		return cli.Exit("Application name not provided.", 1)
 	}
 
-	projectFile := c.String("project-file")
-	if projectFile == "" {
-		return cli.Exit("Project file not provided", 1)
-	}
-
-	systemName, err := func() (string, error) {
-		possibleSystemName := c.String("system-name")
-
-		if possibleSystemName == "" {
-			style.PrintInfo(
-				"System name not provided, will try to use the current git repository name.",
-			)
-
-			repositoryName, err := utils.ResolveRepositoryName("")
-			if err != nil {
-				return "", err
-			}
-
-			return repositoryName, nil
-		}
-
-		return possibleSystemName, nil
-	}()
+	configForApplication, err := config.GetConfigForApplication(applicationName)
 	if err != nil {
-		return cli.Exit(err, 1)
+		style.PrintWarning(err.Error())
 	}
+
+	projectFile := utils.FirstNonEmpty(c.String("project-file"), configForApplication.ProjectFile)
+	if projectFile == "" {
+		return cli.Exit("Project file not provided.", 1)
+	}
+
+	systemName := utils.FirstNonEmpty(c.String("system-name"), config.System)
 
 	generateOptions := GenerateDockerfileOptions{
 		GoMainPackageDirectory: c.String("go-main-package-directory"),
-		BuildContext:           c.String("build-context"),
+		BuildContext:           utils.FirstNonEmpty(c.String("build-context"), configForApplication.BuildContext),
 	}
 
 	dockerfilePath, buildContext, err := generateDockerfile(
