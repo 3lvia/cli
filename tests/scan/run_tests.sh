@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 test_normal_scan() {
     if 3lv scan debian:10; then

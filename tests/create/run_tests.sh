@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 system_name='core'
 
@@ -81,9 +81,47 @@ test_create_python() {
     done
 }
 
+test_create_go() {
+    app_name='demo-api-go'
+    project_dir="$app_name"
+
+    for go_template_type in go-webapi; do
+        output_dir="$(mktemp -d)"
+
+        if ! 3lv create \
+            -s "$system_name" \
+            -a "$app_name" \
+            -t "$go_template_type" \
+            --non-interactive \
+            "$output_dir"; then
+            echo "Failed to create project with template $go_template_type."
+            exit 1
+        fi
+
+        if [[ ! -d "$output_dir/$project_dir" ]]; then
+            echo "Project directory does not exist for template $go_template_type."
+            exit 1
+        fi
+
+        if [[ ! -f "$output_dir/$project_dir/.github/workflows/build-deploy-$app_name.yml" ]]; then
+            echo "Workflow file does not exist for template $go_template_type."
+            exit 1
+        fi
+
+        if ! 3lv build \
+            -s "$system_name" \
+            -f "$output_dir/$project_dir/go.mod" \
+            "$app_name"; then
+            echo "Failed to build project for template $go_template_type."
+            exit 1
+        fi
+    done
+}
+
 main() {
     test_create_dotnet8
     test_create_python
+    test_create_go
 
     echo 'All tests passed!'
 }
