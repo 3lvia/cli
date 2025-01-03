@@ -12,6 +12,7 @@ import (
 	"github.com/3lvia/cli/pkg/create"
 	"github.com/3lvia/cli/pkg/deploy"
 	"github.com/3lvia/cli/pkg/githubactions"
+	"github.com/3lvia/cli/pkg/initialize"
 	"github.com/3lvia/cli/pkg/run"
 	"github.com/3lvia/cli/pkg/scan"
 	"github.com/3lvia/cli/pkg/shared"
@@ -33,28 +34,24 @@ func main() {
 
 	version := strings.TrimSpace(string(versionFile))
 
-	config, err := shared.ReadConfig()
-	if err != nil {
-		style.PrintInfo("No configuration file (3lv.yml) found.")
-	}
-
 	// Check for a new version of the CLI after all these commands.
 	// Any new commands should be added here.
 	commands := shared.WithCheckVersionAfterCommands(
 		[]*cli.Command{
-			build.Command(config),
-			deploy.Command(config),
-			run.Command(config),
-			scan.Command,
-			githubactions.Command,
-			create.Command,
+			build.Command(),
+			deploy.Command(),
+			run.Command(),
+			scan.Command(),
+			githubactions.Command(),
+			create.Command(),
+			initialize.Command(),
 		},
 		version,
 	)
 
 	app := &cli.Command{
 		Name:                  "3lv",
-		Usage:                 "Command Line Interface tool for developing, building and securing Elvia applications ⚡",
+		Usage:                 "Command Line Interface tool for creating, building and securing Elvia applications ⚡",
 		Version:               version,
 		EnableShellCompletion: true,
 		Flags: []cli.Flag{

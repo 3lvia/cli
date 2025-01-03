@@ -1,16 +1,16 @@
 # cli
 
-Command Line Interface tool for developing, building and securing Elvia applications ⚡
+Command Line Interface tool for creating, building and securing Elvia applications ⚡
 
 ## 🚀 Features
 
-- **Build** Docker images for .NET and Go projects without needing a Dockerfile.
-- **Scan** Docker images for vulnerabilities using Trivy.
+- **Build** a container for .NET, Go or Python projects without needing a Dockerfile.
+- **Scan** a container for vulnerabilities using Trivy.
 - **Deploy** to Azure Kubernetes Service, Google Kubernetes Engine and ISS.
-- **Create** new projects with all batteries included.
-- **Generate** GitHub Actions workflows for building and deploying to Elvia's clusters on Azure, Google Cloud and ISS.
+- **Create** new projects from Elvia templates, with all batteries included.
+- **Generate** a GitHub Actions workflow for building and deploying to Elvia's clusters on Azure, Google Cloud and ISS.
 
-The GitHub composite actions at [core-github-actions-templates](https://github.com/3lvia/core-github-actions-templates) are wrappers around many of the CLI commands.
+The GitHub Actions composite actions at [core-github-actions-templates](https://github.com/3lvia/core-github-actions-templates) are wrappers around many of the CLI commands.
 Therefore it's useful to use the CLI when debugging or testing Elvias actions, since you can very easily reproduce the same commands locally.
 
 ## 📚 Documentation

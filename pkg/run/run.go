@@ -21,7 +21,7 @@ const commandName = "run"
 //go:embed *.tmpl*
 var composeTemplates embed.FS
 
-func Command(config *shared.Config) *cli.Command {
+func Command() *cli.Command {
 	return &cli.Command{
 		Name:      commandName,
 		Aliases:   []string{"r"},
@@ -36,13 +36,13 @@ func Command(config *shared.Config) *cli.Command {
 				"The registry to use for the image. Used for finding the image name.",
 			),
 		},
-		Action: func(ctx context.Context, c *cli.Command) error {
-			return Run(ctx, c, config)
-		},
+		Action: Run,
 	}
 }
 
-func Run(_ context.Context, c *cli.Command, config *shared.Config) error {
+func Run(_ context.Context, c *cli.Command) error {
+	config := shared.GetConfig()
+
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}

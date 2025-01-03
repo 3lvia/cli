@@ -15,17 +15,19 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-var Command *cli.Command = &cli.Command{
-	Name:      "scan",
-	Aliases:   []string{"s"},
-	Usage:     "Scan a container image using Trivy.",
-	UsageText: "3lv scan [options] <image-name>",
-	Flags: []cli.Flag{
-		shared.SeverityFlag("severity"),
-		shared.FormatsFlag("formats"),
-		shared.DisableErrorFlag("disable-error"),
-	},
-	Action: Scan,
+func Command() *cli.Command {
+	return &cli.Command{
+		Name:      "scan",
+		Aliases:   []string{"s"},
+		Usage:     "Scan a container image using Trivy.",
+		UsageText: "3lv scan [options] <image-name>",
+		Flags: []cli.Flag{
+			shared.SeverityFlag("severity"),
+			shared.FormatsFlag("formats"),
+			shared.DisableErrorFlag("disable-error"),
+		},
+		Action: Scan,
+	}
 }
 
 func Scan(_ context.Context, c *cli.Command) error {
