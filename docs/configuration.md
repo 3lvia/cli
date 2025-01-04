@@ -1,6 +1,6 @@
 ## ⚙️ Configuration
 
-The Elvia CLI support a configuration file (`3lv.yml`) to store some default values for the commands.
+`3lv` supports a configuration file (`3lv.yml`) to store some default values for the commands.
 Using a configuration file means you can avoid typing the same options every time you run a command.
 The configuration file is optional and should be placed in the root of your repository.
 
