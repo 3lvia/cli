@@ -55,6 +55,7 @@ For example, to run the tests for the `build` command:
 ```bash
 ./tests/build/run_tests.sh
 ```
+
 Note that the end-to-end tests run the `3lv` command directly.
 This means that if you have changed some code and want to test it locally, you will need to install from source again (e.g. `make install`).
 
