@@ -1,6 +1,6 @@
 ## 📖 Examples
 
-The CLI assumes that you are in the git repository of the project you are working on.
+`3lv` assumes that you are in the git repository of the project you are working on.
 
 ### Init
 
@@ -8,7 +8,7 @@ The CLI assumes that you are in the git repository of the project you are workin
 
 <summary>Expand</summary>
 
-#### Create a new 3lv configuration file
+#### Create a new `3lv` configuration file
 
 ```bash
 # you will be prompted for input
@@ -17,6 +17,7 @@ The CLI assumes that you are in the git repository of the project you are workin
 
 This will create a `3lv.yml` file in the root of your repository.
 The advantage of having a configuration file is that you can avoid typing the same options every time you run a command.
+See [here](configuration.md) for more information.
 
 ### Build
 

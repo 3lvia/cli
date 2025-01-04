@@ -1,6 +1,6 @@
 # cli
 
-Command Line Interface tool for creating, building and securing Elvia applications ⚡
+**3lv** – the Command Line Interface tool for creating, building and securing Elvia applications ⚡
 
 ## 🚀 Features
 
@@ -10,8 +10,8 @@ Command Line Interface tool for creating, building and securing Elvia applicatio
 - **Create** new projects from Elvia templates, with all batteries included.
 - **Generate** a GitHub Actions workflow for building and deploying to Elvia's clusters on Azure, Google Cloud and ISS.
 
-The GitHub Actions composite actions at [core-github-actions-templates](https://github.com/3lvia/core-github-actions-templates) are wrappers around many of the CLI commands.
-Therefore it's useful to use the CLI when debugging or testing Elvias actions, since you can very easily reproduce the same commands locally.
+The GitHub Actions composite actions at [core-github-actions-templates](https://github.com/3lvia/core-github-actions-templates) are wrappers around many of the `3lv` commands.
+Therefore it's useful to use `3lv` when debugging or testing Elvia's actions, since you can very easily reproduce the same commands locally.
 
 ## 📚 Documentation
 

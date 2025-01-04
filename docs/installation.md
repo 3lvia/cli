@@ -6,14 +6,14 @@ Supported platforms:
 - **macOS** (both Intel and M-series)
 - **Windows**
 
-We stronlgy recommend using [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install) if you are on Windows.
+We strongly recommend using [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install) if you are on Windows.
 This is because we depend on software tools (see [requirements](requirements.md)) that are much easier to install on a Linux distribution than on Windows.
 
-Note however that the CLI works perfectly fine on Windows, as long as you manage to install the aforementioned required software yourself.
+Note however that `3lv` works perfectly fine on Windows, as long as you manage to install the aforementioned required software yourself.
 
 ### Linux/WSL and macOS
 
-Download the tarball file for your platform (and optionally the MD5 cheksum) from the [releases page](https://github.com/3lvia/cli/releases),
+Download the tarball file for your platform (and optionally the MD5 checksum) from the [releases page](https://github.com/3lvia/cli/releases),
 extract it and move the binary to a directory in your PATH.
 
 If you are using WSL, you can install the Linux binary.
@@ -43,7 +43,7 @@ certutil -hashfile 3lv-windows-amd64.msi MD5
 
 ### Upgrades
 
-To upgrade the CLI, simply run this command:
+To upgrade `3lv`, simply run this command:
 
 ```bash
 3lv upgrade
