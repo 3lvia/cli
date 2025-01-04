@@ -141,15 +141,13 @@ func Create(ctx context.Context, c *cli.Command) error {
 		}
 
 		if yes {
-			checkPipxInstalledOutput := checkPipxInstalledCommand(nil)
-			if command.IsError(checkPipxInstalledOutput) {
+			if checkPipxInstalledOutput := checkPipxInstalledCommand(nil); command.IsError(checkPipxInstalledOutput) {
 				log.Fatal("pipx, which is required for installing cookiecutter, is not installed. Please install it first.")
 			}
 
 			style.PrintInfo("Installing cookiecutter...")
 
-			installCookiecutterOutput := installCookiecutterCommand(nil)
-			if command.IsError(installCookiecutterOutput) {
+			if installCookiecutterOutput := installCookiecutterCommand(nil); command.IsError(installCookiecutterOutput) {
 				return cli.Exit("Failed to install cookiecutter.", 1)
 			}
 
@@ -159,15 +157,14 @@ func Create(ctx context.Context, c *cli.Command) error {
 		}
 	}
 
-	cookiecutterOutput := cookiecutterCommand(
+	if cookiecutterOutput := cookiecutterCommand(
 		template,
 		outputDirectory,
 		applicationName,
 		systemName,
 		pythonVersion,
 		nil,
-	)
-	if command.IsError(cookiecutterOutput) {
+	); command.IsError(cookiecutterOutput) {
 		return cli.Exit("Failed to create project.", 1)
 	}
 
@@ -181,15 +178,13 @@ func Create(ctx context.Context, c *cli.Command) error {
 	}
 
 	if template == PythonWebAPI {
-		checkUvInstalledOutput := checkUvInstalledCommand(nil)
-		if command.IsError(checkUvInstalledOutput) {
+		if checkUvInstalledOutput := checkUvInstalledCommand(nil); command.IsError(checkUvInstalledOutput) {
 			yes, err := utils.PromptYesNo("uv is not installed. Do you want to install it using pipx?", nonInteractive)
 			if err != nil {
 				return cli.Exit(err, 1)
 			}
 
-			checkPipxInstalledOutput := checkPipxInstalledCommand(nil)
-			if command.IsError(checkPipxInstalledOutput) {
+			if checkPipxInstalledOutput := checkPipxInstalledCommand(nil); command.IsError(checkPipxInstalledOutput) {
 				log.Fatal(
 					"pipx is not installed, cannot automatically install uv." +
 						" Please install uv yourself (https://docs.astral.sh/uv/getting-started/installation)," +
@@ -200,8 +195,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 			if yes {
 				style.PrintInfo("Installing uv...")
 
-				installUvOutput := installUvCommand(nil)
-				if command.IsError(installUvOutput) {
+				if installUvOutput := installUvCommand(nil); command.IsError(installUvOutput) {
 					return cli.Exit("Failed to install uv.", 1)
 				}
 
@@ -211,8 +205,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 			}
 		}
 
-		uvSyncOutput := uvSyncCommand(projectDirectory, nil)
-		if command.IsError(uvSyncOutput) {
+		if uvSyncOutput := uvSyncCommand(projectDirectory, nil); command.IsError(uvSyncOutput) {
 			return cli.Exit("Failed to generate uv.lock file.", 1)
 		}
 	}

@@ -40,11 +40,12 @@ func ErrorString(err string) Output {
 
 type RunOptions struct {
 	DryRun bool
+	Silent bool
 }
 
 func Run(cmd exec.Cmd, options *RunOptions) Output {
 	if options == nil {
-		options = &RunOptions{} //nolint:exhaustruct
+		options = &RunOptions{}
 	}
 
 	if options.DryRun {
@@ -61,8 +62,14 @@ func Run(cmd exec.Cmd, options *RunOptions) Output {
 	)
 
 	var errBuf, outBuf bytes.Buffer
-	cmd.Stderr = io.MultiWriter(os.Stderr, &errBuf)
-	cmd.Stdout = io.MultiWriter(os.Stdout, &outBuf)
+
+	if options.Silent {
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+	} else {
+		cmd.Stderr = io.MultiWriter(os.Stderr, &errBuf)
+		cmd.Stdout = io.MultiWriter(os.Stdout, &outBuf)
+	}
 
 	err := cmd.Run()
 	if err != nil {

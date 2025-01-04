@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -25,33 +26,30 @@ type Application struct {
 
 const configFileName = "3lv.yml"
 
-func GetConfig() *Config {
+func GetConfig() (*Config, error) {
 	exists, filePath := ConfigExists()
 	if !exists {
-		style.PrintInfo("No 3lv configuration file found, will proceed without it. You can run `3lv init` to create one.")
-
-		return &Config{} //nolint:exhaustruct
+		return &Config{},
+			errors.New("No 3lv configuration file found, will proceed without it. You can run `3lv init` to create one.")
 	}
 
 	file, err := os.ReadFile(filePath)
 	if err != nil {
-		style.PrintInfo(fmt.Sprintf("Could not read 3lv configuration file at %s, will proceed without it.", filePath))
-
-		return &Config{} //nolint:exhaustruct
+		return &Config{},
+			fmt.Errorf("Could not read 3lv configuration file at %s, will proceed without it.", filePath)
 	}
 
 	var config Config
 
 	err = yaml.Unmarshal(file, &config)
 	if err != nil {
-		style.PrintInfo(fmt.Sprintf("Could not parse 3lv configuration file at %s, will proceed without it.", filePath))
-
-		return &Config{} //nolint:exhaustruct
+		return &Config{},
+			fmt.Errorf("Could not parse 3lv configuration file at %s, will proceed without it.", filePath)
 	}
 
-	style.PrintInfo(fmt.Sprintf("Found 3lv confirguration file at %s.", filePath))
+	style.PrintInfo(fmt.Sprintf("Found 3lv confirguration file at %s.\n", filePath))
 
-	return &config
+	return &config, nil
 }
 
 func SetConfig(config *Config) error {
@@ -95,12 +93,20 @@ func WithConfig(commands [](func(_ *Config) *cli.Command), config *Config) []*cl
 	})
 }
 
-func (config Config) GetConfigForApplication(applicationName string) (*Application, error) {
+func (config *Config) GetConfigForApplication(applicationName string) (*Application, error) {
+	if config == nil {
+		return &Application{}, errors.New("Config is nil.")
+	}
+
 	for _, application := range config.Applications {
 		if application.Name == applicationName {
 			return &application, nil
 		}
 	}
 
-	return &Application{}, fmt.Errorf("application %s not found in config", applicationName)
+	return &Application{}, fmt.Errorf("Application %s not found in config.", applicationName)
+}
+
+func (config *Config) IsEmpty() bool {
+	return config.System == "" && len(config.Applications) == 0
 }

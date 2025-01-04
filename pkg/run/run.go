@@ -41,8 +41,6 @@ func Command() *cli.Command {
 }
 
 func Run(_ context.Context, c *cli.Command) error {
-	config := shared.GetConfig()
-
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
@@ -52,9 +50,14 @@ func Run(_ context.Context, c *cli.Command) error {
 		return cli.Exit("Application name not provided", 1)
 	}
 
-	configForApplication, err := config.GetConfigForApplication(applicationName)
+	config, err := shared.GetConfig()
 	if err != nil {
-		style.PrintWarning(err.Error())
+		style.PrintWarning(err.Error() + "\n")
+	}
+
+	configForApplication, err := config.GetConfigForApplication(applicationName)
+	if !config.IsEmpty() && err != nil { // Ignore error if config is empty, will default to flags.
+		style.PrintWarning(err.Error() + "\n")
 	}
 
 	helmValues, err := parseHelmValuesFile(
@@ -74,11 +77,10 @@ func Run(_ context.Context, c *cli.Command) error {
 		return cli.Exit(err.Error(), 1)
 	}
 
-	dockerComposeUpOutput := dockerComposeUpCommand(
+	if dockerComposeUpOutput := dockerComposeUpCommand(
 		composeFile,
 		nil,
-	)
-	if command.IsError(dockerComposeUpOutput) {
+	); dockerComposeUpOutput.Error != nil {
 		return cli.Exit(dockerComposeUpOutput.Error, 1)
 	}
 

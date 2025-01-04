@@ -269,15 +269,13 @@ func TestGenerateGoDockerfile(t *testing.T) {
 
 	expectedBuildContext := "."
 
-	const (
-		projectFile     = "go.mod"
-		applicationName = "demo-api-go"
-	)
+	const projectFile = "go.mod"
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 		projectFile,
-		applicationName,
-		GenerateDockerfileOptions{},
+		GenerateDockerfileOptions{
+			GoMainPackageDirectory: "./cmd/demo-api-go",
+		},
 	)
 	if err != nil {
 		t.Errorf("Error generating Dockerfile: %v", err)
@@ -314,7 +312,6 @@ func TestGeneratePythonDockerfile1(t *testing.T) {
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 		projectFile,
-		applicationName,
 		GenerateDockerfileOptions{},
 	)
 	if err != nil {
@@ -348,8 +345,6 @@ func TestGeneratePythonDockerfile2(t *testing.T) {
 		projectFile := filepath.Join(tempDir, "pyproject.toml")
 		expectedBuildContext := tempDir
 
-		const applicationName = "demo-api-python"
-
 		file, err := os.Create(filepath.Join(tempDir, ".python-version"))
 		if err != nil {
 			t.Errorf("Error creating file: %v", err)
@@ -361,7 +356,6 @@ func TestGeneratePythonDockerfile2(t *testing.T) {
 
 		actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 			projectFile,
-			applicationName,
 			GenerateDockerfileOptions{},
 		)
 		if err != nil {
@@ -393,7 +387,6 @@ func TestGenerateDockerfileWithDockerfile1(t *testing.T) {
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 		projectFile,
-		"",
 		GenerateDockerfileOptions{},
 	)
 	if err != nil {
@@ -419,7 +412,6 @@ func TestGenerateDockerfileWithDockerfile2(t *testing.T) {
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 		projectFile,
-		"",
 		GenerateDockerfileOptions{},
 	)
 	if err != nil {
@@ -445,7 +437,6 @@ func TestGenerateDockerfileWithDockerfile3(t *testing.T) {
 
 	actualDockerfilePath, actualBuildContext, err := generateDockerfile(
 		projectFile,
-		expectedBuildContext,
 		GenerateDockerfileOptions{},
 	)
 	if err != nil {

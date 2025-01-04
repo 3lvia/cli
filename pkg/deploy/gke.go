@@ -24,7 +24,7 @@ func setupGKE(
 		return err
 	}
 
-	gcloudGetCredentialsOutput := gcloudGetCredentialsCommand(
+	if gcloudGetCredentialsOutput := gcloudGetCredentialsCommand(
 		environment,
 		&GcloudGetCredentialsCommandOptions{
 			ProjectID:       options.ProjectID,
@@ -32,9 +32,7 @@ func setupGKE(
 			ClusterLocation: options.ClusterLocation,
 			RunOptions:      nil,
 		},
-	)
-
-	if command.IsError(gcloudGetCredentialsOutput) {
+	); command.IsError(gcloudGetCredentialsOutput) {
 		return fmt.Errorf("Failed to get GKE credentials: %w", gcloudGetCredentialsOutput.Error)
 	}
 

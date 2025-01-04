@@ -69,6 +69,7 @@ func setupAKS(
 	}()
 
 	runKubeloginConvert := options.AzLoginOptions.FederatedToken != "" && options.AzLoginOptions.ClientID != ""
+
 	if err := getAKSCredentials(
 		resourceGroupName,
 		clusterName,
@@ -89,20 +90,18 @@ func getAKSCredentials(
 	contextName string,
 	runKubeloginConvert bool,
 ) error {
-	azGetCredentialsOutput := azGetCredentialsCommand(
+	if azGetCredentialsOutput := azGetCredentialsCommand(
 		resourceGroupName,
 		clusterName,
 		subscriptionID,
 		contextName,
 		nil,
-	)
-	if command.IsError(azGetCredentialsOutput) {
+	); command.IsError(azGetCredentialsOutput) {
 		return fmt.Errorf("Failed to get AKS credentials: %w", azGetCredentialsOutput.Error)
 	}
 
 	if runKubeloginConvert {
-		kubeloginConvertOutput := kubeloginConvertCommand(nil)
-		if command.IsError(kubeloginConvertOutput) {
+		if kubeloginConvertOutput := kubeloginConvertCommand(nil); command.IsError(kubeloginConvertOutput) {
 			return fmt.Errorf("Failed to convert AKS credentials: %w", kubeloginConvertOutput.Error)
 		}
 	}

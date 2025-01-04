@@ -63,24 +63,22 @@ func Command() *cli.Command {
 				},
 			},
 			&cli.StringFlag{
-				Name:    "commit-hash",
-				Aliases: []string{"c"},
-				Usage: "The commit hash of the commit being deployed. Used for deployment annotations." +
-					" If you are running this command from a git repository," +
-					" the commit hash of the latest commit in the currently checked out branch will be used by default.",
+				Name:        "commit-hash",
+				Aliases:     []string{"c"},
+				Usage:       "The commit hash of the commit being deployed. Used for deployment annotations.",
+				DefaultText: "latest commit hash of the repository the command is run in",
 			},
 			&cli.StringFlag{
-				Name:    "commit-message",
-				Aliases: []string{"m"},
-				Usage: "The commit message of the commit being deployed. Used for deployment annotations." +
-					" If you are running this command from a git repository," +
-					" the commit message of the latest commit in the currently checked out branch will be used by default.",
+				Name:        "commit-message",
+				Aliases:     []string{"m"},
+				Usage:       "The commit message of the commit being deployed. Used for deployment annotations.",
+				DefaultText: "latest commit message of the repository the command is run in",
 			},
 			&cli.StringFlag{
-				Name:    "repository-name",
-				Aliases: []string{"n"},
-				Usage: "Name of the repository the code of the application is stored in. Used for deployment annotations." +
-					" If you are running this command from a git repository, that repository name will be used by default.",
+				Name:        "repository-name",
+				Aliases:     []string{"n"},
+				Usage:       "Name of the repository the code of the application is stored in. Used for deployment annotations.",
+				DefaultText: "name of the repository the command is run in",
 			},
 			&cli.BoolFlag{
 				Name:    "dry-run",
@@ -169,8 +167,6 @@ func Command() *cli.Command {
 }
 
 func Deploy(ctx context.Context, c *cli.Command) error {
-	config := shared.GetConfig()
-
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
@@ -184,9 +180,14 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		return cli.Exit("Application name not provided.", 1)
 	}
 
-	configForApplication, err := config.GetConfigForApplication(applicationName)
+	config, err := shared.GetConfig()
 	if err != nil {
-		style.PrintWarning(err.Error())
+		style.PrintWarning(err.Error() + "\n")
+	}
+
+	configForApplication, err := config.GetConfigForApplication(applicationName)
+	if !config.IsEmpty() && err != nil { // Ignore error if config is empty, will default to flags.
+		style.PrintWarning(err.Error() + "\n")
 	}
 
 	systemName := utils.FirstNonEmpty(c.String("system-name"), config.System)
@@ -224,61 +225,30 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 	runID := c.String("run-id")
 	helmChartRepositoryURL := c.String("helm-chart-repository-url")
 
-	checkKubectlInstalledOutput := checkKubectlInstalledCommand(nil)
-	if command.IsError(checkKubectlInstalledOutput) {
+	if checkKubectlInstalledOutput := checkKubectlInstalledCommand(nil); command.IsError(checkKubectlInstalledOutput) {
 		return cli.Exit(fmt.Errorf("kubectl is not installed: %w", checkKubectlInstalledOutput.Error), 1)
 	}
 
-	checkHelmInstalledOutput := checkHelmInstalledCommand(nil)
-	if command.IsError(checkHelmInstalledOutput) {
+	if checkHelmInstalledOutput := checkHelmInstalledCommand(nil); command.IsError(checkHelmInstalledOutput) {
 		return cli.Exit(fmt.Errorf("helm is not installed: %w", checkHelmInstalledOutput.Error), 1)
 	}
 
-	if runtimeCloudProvider == "aks" {
-		if err := setupAKS(
-			utils.StringWithDefault(
-				c.String("azure-tenant-id"),
-				auth.ElviaTenantID,
-			),
-			environment,
-			&SetupAKSOptions{
-				SubscriptionID:    c.String("aks-subscription-id"),
-				ClusterName:       c.String("aks-cluster-name"),
-				ResourceGroupName: c.String("aks-resource-group-name"),
-				AzLoginOptions: &auth.AzLoginCommandOptions{
-					ClientID:       c.String("azure-client-id"),
-					FederatedToken: c.String("azure-federated-token"),
-				},
-			},
-		); err != nil {
-			return cli.Exit(err, 1)
-		}
-	} else if runtimeCloudProvider == "gke" {
-		if err := setupGKE(
-			environment,
-			&SetupGKEOptions{
-				ProjectID:       c.String("gke-project-id"),
-				ClusterName:     c.String("gke-cluster-name"),
-				ClusterLocation: c.String("gke-cluster-location"),
-			},
-		); err != nil {
-			return cli.Exit(err, 1)
-		}
+	err = setupKubernetes(c, runtimeCloudProvider, environment)
+	if err != nil {
+		return cli.Exit(err, 1)
 	}
 
-	helmRepoAddOutput := helmRepoAddCommand(helmChartRepositoryURL, nil)
-	if command.IsError(helmRepoAddOutput) {
+	if helmRepoAddOutput := helmRepoAddCommand(helmChartRepositoryURL, nil); command.IsError(helmRepoAddOutput) {
 		return cli.Exit(fmt.Errorf("Failed to add Helm repository: %w", helmRepoAddOutput.Error), 1)
 	}
 
-	helmRepoUpdateOutput := helmRepoUpdateCommand(nil)
-	if command.IsError(helmRepoUpdateOutput) {
+	if helmRepoUpdateOutput := helmRepoUpdateCommand(nil); command.IsError(helmRepoUpdateOutput) {
 		return cli.Exit(fmt.Errorf("Failed to update Helm repository: %w", helmRepoUpdateOutput.Error), 1)
 	}
 
 	useISSChart := runtimeCloudProvider == "iss"
 
-	helmDeployOutput := helmDeployCommand(
+	if helmDeployOutput := helmDeployCommand(
 		applicationName,
 		systemName,
 		helmValuesFile,
@@ -290,8 +260,7 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		dryRun,
 		useISSChart,
 		nil,
-	)
-	if command.IsError(helmDeployOutput) {
+	); command.IsError(helmDeployOutput) {
 		if !dryRun {
 			// If the deployment failed, we still want to post the Grafana annotation,
 			// but we add a failure message to the annotation.
@@ -320,13 +289,12 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		return cli.Exit(fmt.Errorf("Failed to deploy Helm chart: %w", helmDeployOutput.Error), 1)
 	}
 
-	kubectlRolloutStatusOutput := kubectlRolloutStatusCommand(
+	if kubectlRolloutStatusOutput := kubectlRolloutStatusCommand(
 		applicationName,
 		systemName,
 		workloadType,
 		nil,
-	)
-	if command.IsError(kubectlRolloutStatusOutput) {
+	); command.IsError(kubectlRolloutStatusOutput) {
 		return cli.Exit(kubectlRolloutStatusOutput.Error, 1)
 	}
 
@@ -417,4 +385,40 @@ func kubectlGetEventsCommand(
 		),
 		runOptions,
 	)
+}
+
+func setupKubernetes(
+	c *cli.Command,
+	runtimeCloudProvider string,
+	environment string,
+) error {
+	if runtimeCloudProvider == "aks" {
+		return setupAKS(
+			utils.StringWithDefault(
+				c.String("azure-tenant-id"),
+				auth.ElviaTenantID,
+			),
+			environment,
+			&SetupAKSOptions{
+				SubscriptionID:    c.String("aks-subscription-id"),
+				ClusterName:       c.String("aks-cluster-name"),
+				ResourceGroupName: c.String("aks-resource-group-name"),
+				AzLoginOptions: &auth.AzLoginCommandOptions{
+					ClientID:       c.String("azure-client-id"),
+					FederatedToken: c.String("azure-federated-token"),
+				},
+			},
+		)
+	} else if runtimeCloudProvider == "gke" {
+		return setupGKE(
+			environment,
+			&SetupGKEOptions{
+				ProjectID:       c.String("gke-project-id"),
+				ClusterName:     c.String("gke-cluster-name"),
+				ClusterLocation: c.String("gke-cluster-location"),
+			},
+		)
+	}
+
+	return nil
 }

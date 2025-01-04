@@ -31,7 +31,7 @@ func Command(version string) *cli.Command {
 	return &cli.Command{
 		Name:      commandName,
 		Aliases:   []string{"u"},
-		Usage:     "Upgrade the Elvia CLI to the latest version.",
+		Usage:     "Upgrade 3lv to the latest version.",
 		UsageText: "3lv upgrade [options]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -147,12 +147,11 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 		return cli.Exit(err, 1)
 	}
 
-	installCommandOutput := installCommand(
+	if installCommandOutput := installCommand(
 		nil,
 		path.Join(tempDir, "3lv"),
 		installLocation,
-	)
-	if command.IsError(installCommandOutput) {
+	); installCommandOutput.Error != nil {
 		return cli.Exit(installCommandOutput.Error, 1)
 	}
 
