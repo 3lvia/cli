@@ -38,37 +38,33 @@ func AuthenticateAzure(
 	subscriptionID string,
 	options *AzLoginCommandOptions,
 ) error {
-	azAccountShowCommandOutput := azAccountShowCommand(nil)
+	azAccountShowCommandOutput := azAccountShowCommand(&command.RunOptions{Silent: true})
 	if command.IsError(azAccountShowCommandOutput) {
-		azLoginCommandOutput := azLoginCommand(
+		if azLoginCommandOutput := azLoginCommand(
 			tenantID,
 			options,
-		)
-		if command.IsError(azLoginCommandOutput) {
+		); command.IsError(azLoginCommandOutput) {
 			return fmt.Errorf("Failed to authenticate to Azure: %w", azLoginCommandOutput.Error)
 		}
 
 		return nil
 	}
 
-	if tenantID := strings.TrimSpace(azAccountShowCommandOutput.Output); tenantID != "" {
-		azAccountShowCmdOutputString := strings.TrimSpace(tenantID)
-		if azAccountShowCmdOutputString != tenantID {
-			azLoginTenantCommandOutput := azLoginCommand(
+	if currentTenantID := strings.TrimSpace(azAccountShowCommandOutput.Output); currentTenantID != "" {
+		if currentTenantID != tenantID {
+			if azLoginTenantCommandOutput := azLoginCommand(
 				tenantID,
 				options,
-			)
-			if command.IsError(azLoginTenantCommandOutput) {
+			); command.IsError(azLoginTenantCommandOutput) {
 				return fmt.Errorf("Failed to authenticate to Azure: %w", azLoginTenantCommandOutput.Error)
 			}
 		}
 	}
 
-	azSetSubscriptionCommandOutput := azSetSubscriptionCommand(
+	if azSetSubscriptionCommandOutput := azSetSubscriptionCommand(
 		subscriptionID,
 		nil,
-	)
-	if command.IsError(azSetSubscriptionCommandOutput) {
+	); command.IsError(azSetSubscriptionCommandOutput) {
 		return fmt.Errorf("Failed to set subscription: %w", azSetSubscriptionCommandOutput.Error)
 	}
 
@@ -121,7 +117,7 @@ func azLoginCommand(
 	}
 
 	if tenantID == "" {
-		return command.Error(errors.New("Tenant ID is required"))
+		return command.Error(errors.New("Tenant ID is required."))
 	}
 
 	cmd := exec.Command(
@@ -133,7 +129,7 @@ func azLoginCommand(
 
 	if options.FederatedToken != "" {
 		if options.ClientID == "" {
-			return command.Error(errors.New("Client ID is required when federated token is provided"))
+			return command.Error(errors.New("Client ID is required when federated token is provided."))
 		}
 
 		cmd.Args = append(cmd.Args, "--service-principal")

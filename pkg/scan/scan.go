@@ -158,11 +158,10 @@ func ScanImage(
 	if slices.Contains(formats, "table") {
 		style.PrintInfo("Converted results to table format.")
 
-		convertOutput := convertCommand(
+		if convertOutput := convertCommand(
 			"table",
 			nil,
-		)
-		if command.IsError(convertOutput) {
+		); command.IsError(convertOutput) {
 			return convertOutput.Error
 		}
 	}
@@ -170,11 +169,10 @@ func ScanImage(
 	if slices.Contains(formats, "sarif") {
 		style.PrintInfo("Converted results to SARIF format.")
 
-		convertOutput := convertCommand(
+		if convertOutput := convertCommand(
 			"sarif",
 			nil,
-		)
-		if command.IsError(convertOutput) {
+		); command.IsError(convertOutput) {
 			return convertOutput.Error
 		}
 	}
@@ -196,15 +194,13 @@ func ScanImage(
 			style.PrintWarning("Markdown output is empty, will write to empty file")
 		}
 
-		err = os.WriteFile("trivy.md", markdown, 0o644)
-		if err != nil {
+		if err := os.WriteFile("trivy.md", markdown, 0o644); err != nil {
 			return err
 		}
 	}
 
 	if !slices.Contains(formats, "json") {
-		err := os.Remove("trivy.json")
-		if err != nil {
+		if err := os.Remove("trivy.json"); err != nil {
 			return err
 		}
 	} else {

@@ -18,7 +18,6 @@ type GenerateDockerfileOptions struct {
 
 func generateDockerfile(
 	projectFile string,
-	applicationName string,
 	options GenerateDockerfileOptions,
 ) (string, string, error) {
 	directory, err := os.MkdirTemp("", "3lv-build-*")
@@ -42,7 +41,6 @@ func generateDockerfile(
 	} else if projectFileBase == "go.mod" {
 		dockerfile, buildContext, err := generateDockerfileForGo(
 			projectFile,
-			applicationName,
 			directory,
 			options,
 		)

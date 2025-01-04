@@ -7,13 +7,12 @@ import (
 )
 
 type DockerfileVariablesGo struct {
-	GoModuleDirectory    string // required
-	MainPackageDirectory string // required
+	GoModuleDirectory    string
+	MainPackageDirectory string
 }
 
 func generateDockerfileForGo(
 	projectFile string,
-	applicationName string,
 	directory string,
 	options GenerateDockerfileOptions,
 ) (string, string, error) {
@@ -22,17 +21,9 @@ func generateDockerfileForGo(
 		options.BuildContext,
 	)
 
-	mainPackageDirectory := func() string {
-		if options.GoMainPackageDirectory == "" {
-			return "./cmd/" + applicationName
-		}
-
-		return options.GoMainPackageDirectory
-	}()
-
 	dockerfileVariables := DockerfileVariablesGo{
 		GoModuleDirectory:    goModuleDirectory,
-		MainPackageDirectory: mainPackageDirectory,
+		MainPackageDirectory: options.GoMainPackageDirectory,
 	}
 
 	const templateFile = "Dockerfile.go.tmpl"

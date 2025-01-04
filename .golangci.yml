@@ -6,7 +6,7 @@ linters:
     - mnd
     - exportloopref
     - tagliatelle
-    # TODO: fix issues and enable these
+    # TODO: fix issues and enable linters below
     - funlen
     - err113
     - wrapcheck
@@ -39,31 +39,50 @@ linters-settings:
       - ST1023
   exhaustruct:
     exclude:
-      - 'github.com\/urfave\/cli\/v[0-9]+\..+'
-      - 'github.com\/3lvia\/cli\/pkg\/auth\.AzLoginCommandOptions'
-      - 'github.com\/3lvia\/cli\/pkg\/build\.GenerateDockerfileOptions'
+      - 'github.com\/urfave\/cli\/v[0-9]+\..+' # many fields are optional
+      - 'github.com\/3lvia\/cli\/pkg\/auth\.AzLoginCommandOptions' # every field is optional
+      - 'github.com\/3lvia\/cli\/pkg\/build\.GenerateDockerfileOptions' # every field is optional
+      - 'github.com\/3lvia\/cli\/pkg\/command\.RunOptions' # every field is optional
 issues:
   exclude-rules:
+    # urfave/cli uses this naming scheme, so we stick to it.
     - linters:
       - varnamelen
       text: "parameter name 'c' is too short for the scope of its usage"
+
+    # There is not other way to do this; we have to use var for structs.
     - linters:
       - gochecknoglobals
       text: "Dotnet.* is a global variable"
+
+    # There is not other way to do this; we have to use var for structs.
     - linters:
       - gochecknoglobals
       text: "Python.* is a global variable"
+
+    # There is not other way to do this; we have to use var for structs.
     - linters:
       - gochecknoglobals
       text: "Go.* is a global variable"
+
+    # There is not other way to do this; we have to use var for structs.
     - linters:
       - gochecknoglobals
       text: "Templates is a global variable"
+
+    # Does not make sense when looking at the bigger picture.
     - linters:
       - revive
       text: "exported: func name will be used as scan.ScanImage by other packages, and that stutters; consider calling this Image"
+
+    # We have to print to the user.
     - linters:
       - forbidigo
       text: "use of `fmt.Println` forbidden by pattern"
+
+    # We want to output user-readable error messages, not long stack traces.
+    - linters:
+      - revive
+      text: "error-strings: error strings should not be capitalized or end with punctuation or a newline"
 output:
   show-stats: true

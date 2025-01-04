@@ -39,14 +39,16 @@ func Command() *cli.Command {
 				Name:    "build-context",
 				Aliases: []string{"c"},
 				Usage: "The directory to use as the Docker build context, i.e. what files Docker will know about when building." +
-					" We default to the directory of the project file. This means that if you need files outside of the directory of" +
+					" This means that if you need files outside of the directory of" +
 					" the project file, you need to specify this flag.",
-				Sources: cli.EnvVars("3LV_BUILD_CONTEXT"),
+				Sources:     cli.EnvVars("3LV_BUILD_CONTEXT"),
+				DefaultText: "directory of the project file",
 			},
 			&cli.StringFlag{
-				Name:    "go-main-package-directory",
-				Usage:   "The main package directory to use when building a Go application.",
-				Sources: cli.EnvVars("3LV_GO_MAIN_PACKAGE_DIRECTORY"),
+				Name:        "go-main-package-directory",
+				Usage:       "The main package directory to use when building a Go application.",
+				DefaultText: "\"./cmd/<application-name>\"",
+				Sources:     cli.EnvVars("3LV_GO_MAIN_PACKAGE_DIRECTORY"),
 			},
 			&cli.StringFlag{
 				Name:    "cache-tag",
@@ -112,21 +114,23 @@ func Command() *cli.Command {
 }
 
 func Build(_ context.Context, c *cli.Command) error {
-	config := shared.GetConfig()
-
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
 	}
 
-	// Required args
 	applicationName := c.Args().First()
 	if applicationName == "" {
 		return cli.Exit("Application name not provided.", 1)
 	}
 
-	configForApplication, err := config.GetConfigForApplication(applicationName)
+	config, err := shared.GetConfig()
 	if err != nil {
-		style.PrintWarning(err.Error())
+		style.PrintWarning(err.Error() + "\n")
+	}
+
+	configForApplication, err := config.GetConfigForApplication(applicationName)
+	if !config.IsEmpty() && err != nil { // Ignore error if config is empty, will default to flags.
+		style.PrintWarning(err.Error() + "\n")
 	}
 
 	projectFile := utils.FirstNonEmpty(c.String("project-file"), configForApplication.ProjectFile)
@@ -137,13 +141,12 @@ func Build(_ context.Context, c *cli.Command) error {
 	systemName := utils.FirstNonEmpty(c.String("system-name"), config.System)
 
 	generateOptions := GenerateDockerfileOptions{
-		GoMainPackageDirectory: c.String("go-main-package-directory"),
+		GoMainPackageDirectory: utils.FirstNonEmpty(c.String("go-main-package-directory"), "./cmd/"+applicationName),
 		BuildContext:           utils.FirstNonEmpty(c.String("build-context"), configForApplication.BuildContext),
 	}
 
 	dockerfilePath, buildContext, err := generateDockerfile(
 		projectFile,
-		applicationName,
 		generateOptions,
 	)
 	if err != nil {
@@ -202,11 +205,10 @@ func Build(_ context.Context, c *cli.Command) error {
 			return cli.Exit(err, 1)
 		}
 
-		azAcrLoginCommandOutput := azAcrLoginCommand(
+		if azAcrLoginCommandOutput := azAcrLoginCommand(
 			registryName,
 			nil,
-		)
-		if command.IsError(azAcrLoginCommandOutput) {
+		); command.IsError(azAcrLoginCommandOutput) {
 			return cli.Exit(
 				fmt.Errorf(
 					"Failed to authenticate to Azure Container Registry: %w",
@@ -225,15 +227,14 @@ func Build(_ context.Context, c *cli.Command) error {
 
 	additionalTags := utils.RemoveZeroValues(c.StringSlice("additional-tags"))
 
-	buildImageCommandOutput := buildImageCommand(
+	if buildImageCommandOutput := buildImageCommand(
 		dockerfilePath,
 		buildContext,
 		imageName,
 		cacheTag,
 		additionalTags,
 		nil,
-	)
-	if command.IsError(buildImageCommandOutput) {
+	); command.IsError(buildImageCommandOutput) {
 		return cli.Exit(buildImageCommandOutput.Error, 1)
 	}
 
@@ -245,14 +246,12 @@ func Build(_ context.Context, c *cli.Command) error {
 	)
 
 	if push && scanErr != nil {
-		pushImageOutput := pushImageCommand(
+		if pushImageOutput := pushImageCommand(
 			imageName,
 			cacheTag,
 			false,
 			nil,
-		)
-
-		if command.IsError(pushImageOutput) {
+		); command.IsError(pushImageOutput) {
 			return fmt.Errorf(
 				"Failed to push Docker image cache to tag %s after scan reported vulnerabilities: %w",
 				cacheTag,
@@ -266,14 +265,12 @@ func Build(_ context.Context, c *cli.Command) error {
 	}
 
 	if push {
-		pushImageOutput := pushImageCommand(
+		if pushImageOutput := pushImageCommand(
 			imageName,
 			cacheTag,
 			true,
 			nil,
-		)
-
-		if command.IsError(pushImageOutput) {
+		); command.IsError(pushImageOutput) {
 			return fmt.Errorf(
 				"Failed to push Docker image. If using GHCR, please login using the command `gh auth login` first. %w",
 				err,
