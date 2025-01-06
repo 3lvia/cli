@@ -74,6 +74,26 @@ func Init(_ context.Context, c *cli.Command) error {
 			return err
 		}
 
+		var goMainPackageDirectory string
+
+		if strings.Contains(projectFile, "go.mod") {
+			goMainPackageDirectory = "./cmd/" + applicationName
+
+			err = huh.NewInput().
+				Title(
+					fmt.Sprintf(
+						"Is your main package (with main.go) located somewhere else than %s? If so, please provide the full path.",
+						"./cmd/"+applicationName,
+					),
+				).
+				Description("Use '.' for if your main package is in the root of the project").
+				Value(&goMainPackageDirectory).
+				Run()
+			if err != nil {
+				return err
+			}
+		}
+
 		helmValuesFile := ".github/deploy/values-" + applicationName + ".yml"
 
 		err = huh.NewInput().
@@ -94,10 +114,12 @@ func Init(_ context.Context, c *cli.Command) error {
 			return err
 		}
 
-		applications = append(applications, shared.Application{ //nolint:exhaustruct
-			Name:           applicationName,
-			ProjectFile:    projectFile,
-			HelmValuesFile: helmValuesFile,
+		applications = append(applications, shared.Application{
+			Name:                   applicationName,
+			ProjectFile:            projectFile,
+			BuildContext:           "",
+			HelmValuesFile:         helmValuesFile,
+			GoMainPackageDirectory: goMainPackageDirectory,
 		})
 
 		if !anotherOne {

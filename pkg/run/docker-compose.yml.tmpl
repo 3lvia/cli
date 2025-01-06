@@ -2,7 +2,7 @@ services:
   {{ .ApplicationName }}:
     image: {{ .ImageName }}
     ports:
-    - "{{ .Port }}:{{ .Port }}"
+    - "{{ .TargetPort }}:{{ .TargetPort }}"
     {{- if .EnvironmentVariables }}
     environment:
       {{- range $key, $value := .EnvironmentVariables }}

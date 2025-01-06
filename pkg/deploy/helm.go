@@ -70,7 +70,7 @@ func helmDeployCommand(
 ) command.Output {
 	if workloadType != "deployment" && workloadType != "statefulset" {
 		return command.Error(
-			fmt.Errorf("workloadType must be either deployment or statefulset, got %s", workloadType),
+			fmt.Errorf("Workload type must be either deployment or statefulset, got '%s'.", workloadType),
 		)
 	}
 
@@ -80,7 +80,7 @@ func helmDeployCommand(
 				return "iss-" + workloadType, nil
 			}
 
-			return "", fmt.Errorf("%s is not supported with ISS chart", workloadType)
+			return "", fmt.Errorf("Workload type '%s' is not supported with ISS chart.", workloadType)
 		}
 
 		return "elvia-" + workloadType, nil

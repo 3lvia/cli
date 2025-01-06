@@ -18,10 +18,11 @@ type Config struct {
 }
 
 type Application struct {
-	Name           string `yaml:"name"`
-	BuildContext   string `yaml:"buildContext,omitempty"`
-	ProjectFile    string `yaml:"projectFile"`
-	HelmValuesFile string `yaml:"helmValuesFile"`
+	Name                   string `yaml:"name"`
+	ProjectFile            string `yaml:"projectFile"`
+	BuildContext           string `yaml:"buildContext"`
+	HelmValuesFile         string `yaml:"helmValuesFile"`
+	GoMainPackageDirectory string `yaml:"goMainPackageDirectory,omitempty"`
 }
 
 const configFileName = "3lv.yml"

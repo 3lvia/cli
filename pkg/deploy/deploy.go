@@ -191,7 +191,13 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 	}
 
 	systemName := utils.FirstNonEmpty(c.String("system-name"), config.System)
-	helmValuesFile := utils.FirstNonEmpty(c.String("helm-values-file"), configForApplication.HelmValuesFile)
+	helmValuesFile := func() string {
+		if c.IsSet("helm-values-file") {
+			return c.String("helm-values-file")
+		}
+
+		return configForApplication.HelmValuesFile
+	}()
 	imageTag := c.String("image-tag")
 
 	commitHash, err := utils.ResolveCommitHash(c.String("commit-hash"))
