@@ -60,9 +60,15 @@ func Run(_ context.Context, c *cli.Command) error {
 		style.PrintWarning(err.Error() + "\n")
 	}
 
-	helmValues, err := parseHelmValuesFile(
-		utils.FirstNonEmpty(c.String("helm-values-file"), configForApplication.HelmValuesFile),
-	)
+	helmValuesFile := func() string {
+		if c.IsSet("helm-values-file") {
+			return c.String("helm-values-file")
+		}
+
+		return configForApplication.HelmValuesFile
+	}()
+
+	helmValues, err := parseHelmValuesFile(helmValuesFile)
 	if err != nil {
 		return cli.Exit(err.Error(), 1)
 	}
@@ -155,6 +161,7 @@ func parseHelmValuesFile(
 	helmValuesFilePath string,
 ) (*HelmValues, error) {
 	var helmValues HelmValues
+
 	if helmValuesFilePath == "" {
 		return &helmValues, nil
 	}

@@ -141,8 +141,12 @@ func Build(_ context.Context, c *cli.Command) error {
 	systemName := utils.FirstNonEmpty(c.String("system-name"), config.System)
 
 	generateOptions := GenerateDockerfileOptions{
-		GoMainPackageDirectory: utils.FirstNonEmpty(c.String("go-main-package-directory"), "./cmd/"+applicationName),
-		BuildContext:           utils.FirstNonEmpty(c.String("build-context"), configForApplication.BuildContext),
+		GoMainPackageDirectory: utils.FirstNonEmpty(
+			c.String("go-main-package-directory"),
+			configForApplication.GoMainPackageDirectory,
+			"./cmd/"+applicationName,
+		),
+		BuildContext: utils.FirstNonEmpty(c.String("build-context"), configForApplication.BuildContext),
 	}
 
 	dockerfilePath, buildContext, err := generateDockerfile(
