@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"path"
 	"strings"
 
 	"github.com/3lvia/cli/pkg/build"
@@ -14,30 +13,12 @@ import (
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/style"
 	"github.com/3lvia/cli/pkg/utils"
-	"github.com/orsinium-labs/enum"
 	"github.com/urfave/cli/v3"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
 const commandName = "create"
-
-type Template enum.Member[string]
-
-var (
-	Dotnet8WebAPI = Template{"dotnet8-webapi"}
-	// Dotnet8WebApp = Template{"dotnet8-webapp"}.
-	Dotnet8Worker = Template{"dotnet8-worker"}
-	GoWebAPI      = Template{"go-webapi"}
-	PythonWebAPI  = Template{"python-webapi"}
-	Templates     = enum.New(
-		Dotnet8WebAPI,
-		//	Dotnet8WebApp,
-		Dotnet8Worker,
-		GoWebAPI,
-		PythonWebAPI,
-	)
-)
 
 func Command() *cli.Command {
 	return &cli.Command{
@@ -129,7 +110,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 	nonInteractive := c.Bool("non-interactive")
 	pythonVersion := c.String("python-version")
 
-	if template != PythonWebAPI && c.IsSet("python-version") {
+	if template.getLanguage() != Python && c.IsSet("python-version") {
 		style.PrintWarning("Argument 'python-version' is only applicable for Python templates.")
 	}
 
@@ -168,16 +149,12 @@ func Create(ctx context.Context, c *cli.Command) error {
 		return cli.Exit("Failed to create project.", 1)
 	}
 
-	projectDirectory, err := getProjectDirectoryForTemplate(
-		template,
+	projectDirectory := template.getProjectDirectory(
 		outputDirectory,
 		applicationName,
 	)
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
 
-	if template == PythonWebAPI {
+	if template.getLanguage() == Python {
 		if checkUvInstalledOutput := checkUvInstalledCommand(nil); command.IsError(checkUvInstalledOutput) {
 			yes, err := utils.PromptYesNo("uv is not installed. Do you want to install it using pipx?", nonInteractive)
 			if err != nil {
@@ -218,7 +195,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 		return projectDirectory
 	}()
 
-	projectFile, err := getProjectFileForTemplate(template, applicationName)
+	projectFile, err := template.getProjectFile(applicationName)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -247,40 +224,6 @@ func toPascalCaseWithoutHyphens(s string) string {
 	return strings.ReplaceAll(cases.Title(language.English).String(s), "-", "")
 }
 
-func getProjectDirectoryForTemplate(
-	template Template,
-	outputDirectory string,
-	applicationName string,
-) (string, error) {
-	switch template {
-	case Dotnet8WebAPI /*Dotnet8WebApp,*/, Dotnet8Worker:
-		return path.Join(
-			outputDirectory,
-			toPascalCaseWithoutHyphens(applicationName),
-		), nil
-	case PythonWebAPI, GoWebAPI:
-		return path.Join(outputDirectory, applicationName), nil
-	default:
-		return "", fmt.Errorf("Could not find project directory for template '%s'", template)
-	}
-}
-
-func getProjectFileForTemplate(
-	template Template,
-	applicationName string,
-) (string, error) {
-	switch template {
-	case Dotnet8WebAPI /*Dotnet8WebApp,*/, Dotnet8Worker:
-		return toPascalCaseWithoutHyphens(applicationName) + ".csproj", nil
-	case GoWebAPI:
-		return "go.mod", nil
-	case PythonWebAPI:
-		return "pyproject.toml", nil
-	default:
-		return "", fmt.Errorf("Could not find project file for template '%s'", template)
-	}
-}
-
 func cookiecutterCommand(
 	template Template,
 	outputDirectory string,
@@ -302,7 +245,7 @@ func cookiecutterCommand(
 		"system_name="+systemName,
 	)
 
-	if template == PythonWebAPI {
+	if template.getLanguage() == Python {
 		if pythonVersion == "" {
 			cmd.Args = append(cmd.Args, "python_version="+build.DefaultPythonVersion)
 		} else {

@@ -21,6 +21,7 @@ test_create_dotnet8() {
             exit 1
         fi
 
+
         if [[ ! -d "$output_dir/$project_dir" ]]; then
             echo "Project directory does not exist for template $dotnet8_template_type."
             exit 1
@@ -45,7 +46,7 @@ test_create_python() {
     app_name='demo-api-python'
     project_dir="$app_name"
 
-    for python_template_type in python-webapi; do
+    for python_template_type in python-webapi python-worker; do
         for python_version in 3.12 3.13; do
             output_dir="$(mktemp -d)"
 
@@ -62,6 +63,11 @@ test_create_python() {
 
             if [[ ! -d "$output_dir/$project_dir" ]]; then
                 echo "Project directory does not exist for template $python_template_type and version $python_version."
+                exit 1
+            fi
+
+            if [[ $(cat "$output_dir/$project_dir/.python-version") != "$python_version" ]]; then
+                echo "Python version file does not exist for template $python_template_type and version $python_version."
                 exit 1
             fi
 
