@@ -70,6 +70,11 @@ issues:
       - gochecknoglobals
       text: "Templates is a global variable"
 
+    # There is not other way to do this; we have to use var for structs.
+    - linters:
+      - gochecknoglobals
+      text: "Languages is a global variable"
+
     # Does not make sense when looking at the bigger picture.
     - linters:
       - revive
