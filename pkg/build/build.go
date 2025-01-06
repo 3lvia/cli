@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -158,9 +159,15 @@ func Build(_ context.Context, c *cli.Command) error {
 	}
 
 	if c.Bool("generate-only") {
-		style.PrintSuccess(
-			fmt.Sprintf("Dockerfile generated at %s\n", dockerfilePath),
+		newDockerfilePath, err := copyDockerfileToCurrentDirectory(
+			dockerfilePath,
+			c.Bool("non-interactive"),
 		)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		style.PrintSuccess(fmt.Sprintf("Dockerfile generated at %s\n", newDockerfilePath))
 
 		return nil
 	}
@@ -419,4 +426,47 @@ func azAcrLoginCommand(
 		),
 		options,
 	)
+}
+
+func copyDockerfileToCurrentDirectory(dockerfilePath string, nonInteractive bool) (string, error) {
+	dockerfile, err := os.Open(dockerfilePath)
+	if err != nil {
+		return "", err
+	}
+
+	defer dockerfile.Close()
+
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	newDockerfilePath := workingDirectory + "/Dockerfile"
+	if _, err := os.Stat(newDockerfilePath); err == nil {
+		overwriteFile, err := utils.PromptYesNo(
+			"There is already a Dockerfile in the current directory. Do you want to overwrite it?",
+			nonInteractive,
+		)
+		if err != nil {
+			return "", err
+		}
+
+		if !overwriteFile {
+			return "", errors.New("User chose not to overwrite existing Dockerfile")
+		}
+	}
+
+	newDockerfile, err := os.Create(newDockerfilePath)
+	if err != nil {
+		return "", err
+	}
+
+	defer newDockerfile.Close()
+
+	_, err = io.Copy(newDockerfile, dockerfile)
+	if err != nil {
+		return "", err
+	}
+
+	return newDockerfilePath, nil
 }
