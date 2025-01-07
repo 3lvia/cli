@@ -2,9 +2,11 @@ package build
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -12,59 +14,54 @@ import (
 )
 
 type DockerfileVariablesDotnet struct {
-	CsprojFile       string // required
-	AssemblyName     string // required
-	BaseImageTag     string // required
-	RuntimeBaseImage string // required
+	CsprojFile       string
+	AssemblyName     string
+	BaseImageTag     string
+	RuntimeBaseImage string
 }
 
 func generateDockerfileForDotNet(
 	projectFile string,
+	buildContext string,
 	directory string,
-	options GenerateDockerfileOptions,
-) (string, string, error) {
-	csprojFileName, buildContext := getProjectFileAndBuildContext(
-		projectFile,
-		options.BuildContext,
-	)
-
-	assemblyName, err := findAssemblyName(
-		projectFile,
-		csprojFileName,
-	)
+) (string, error) {
+	csprojXML, err := getXMLFromFile(path.Join(buildContext, projectFile))
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	baseImageTag, err := findBaseImageTag(projectFile)
+	assemblyName, err := findAssemblyName(projectFile, csprojXML)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	runtimeBaseImage, err := findRuntimeBaseImage(projectFile)
+	baseImageTag, err := findBaseImageTag(csprojXML)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	const templateFile = "Dockerfile.dotnet.tmpl"
+	runtimeBaseImage, err := findRuntimeBaseImage(csprojXML)
+	if err != nil {
+		return "", err
+	}
 
 	dockerfilePath, err := utils.WriteFileWithTemplate(
 		directory,
 		"Dockerfile",
-		templateFile,
+		"Dockerfile.dotnet.tmpl",
 		dockerfileTemplates,
 		DockerfileVariablesDotnet{
-			CsprojFile:       csprojFileName,
+			CsprojFile:       projectFile,
 			AssemblyName:     assemblyName,
 			BaseImageTag:     baseImageTag,
 			RuntimeBaseImage: runtimeBaseImage,
 		},
 	)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	return dockerfilePath, buildContext, nil
+	return dockerfilePath, nil
 }
 
 type CSharpProjectFile struct {
@@ -79,42 +76,33 @@ type PropertyGroup struct {
 }
 
 func getXMLFromFile(fileName string) (*CSharpProjectFile, error) {
+	var project CSharpProjectFile
+
 	file, err := os.Open(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("getXMLFromFile: Failed to open file: %w", err)
+		return &project, fmt.Errorf("Failed to open file: %w", err)
 	}
+
+	defer file.Close()
 
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		return nil, fmt.Errorf("getXMLFromFile: Failed to read file: %w", err)
+		return &project, fmt.Errorf("Failed to read file: %w", err)
 	}
-
-	var project CSharpProjectFile
 
 	err = xml.Unmarshal(bytes, &project)
 	if err != nil {
-		return nil, fmt.Errorf("getXMLFromFile: Failed to unmarshal file: %w", err)
+		return &project, fmt.Errorf("Failed to unmarshal file: %w", err)
 	}
 
 	return &project, nil
 }
 
-func findAssemblyName(
-	csprojFileRelativePath string,
-	csprojFileName string,
-) (string, error) {
-	var assemblyName string
-
-	csprojXML, err := getXMLFromFile(csprojFileRelativePath)
-	if err != nil {
-		return "", err
-	}
-
-	assemblyName = csprojXML.PropertyGroup.AssemblyName
+func findAssemblyName(csprojFileName string, csprojXML *CSharpProjectFile) (string, error) {
+	assemblyName := csprojXML.PropertyGroup.AssemblyName
 
 	if len(assemblyName) == 0 {
-		basename := filepath.Base(csprojFileName)
-		withoutExtension := strings.TrimSuffix(basename, filepath.Ext(basename))
+		withoutExtension := strings.TrimSuffix(path.Base(csprojFileName), filepath.Ext(csprojFileName))
 
 		return withoutExtension + ".dll", nil
 	}
@@ -122,35 +110,19 @@ func findAssemblyName(
 	return assemblyName + ".dll", nil
 }
 
-func findBaseImageTag(csprojFileRelativePath string) (string, error) {
-	csprojXML, err := getXMLFromFile(csprojFileRelativePath)
-	if err != nil {
-		return "", err
-	}
-
+func findBaseImageTag(csprojXML *CSharpProjectFile) (string, error) {
 	targetFramework := csprojXML.PropertyGroup.TargetFramework
 	if len(targetFramework) == 0 {
-		return "", fmt.Errorf(
-			"findBaseImageTag: TargetFramework not found in csproj file: %s",
-			csprojFileRelativePath,
-		)
+		return "", errors.New("TargetFramework not found in .csproj-file.")
 	}
 
 	return targetFramework[3:] + "-alpine", nil
 }
 
-func findRuntimeBaseImage(csprojFileRelativePath string) (string, error) {
-	csprojXML, err := getXMLFromFile(csprojFileRelativePath)
-	if err != nil {
-		return "", err
-	}
-
+func findRuntimeBaseImage(csprojXML *CSharpProjectFile) (string, error) {
 	sdk := csprojXML.SDK
 	if len(sdk) == 0 {
-		return "", fmt.Errorf(
-			"SDK not found in csproj file: %s",
-			csprojFileRelativePath,
-		)
+		return "", errors.New("SDK not found in .csproj-file.")
 	}
 
 	switch sdk {

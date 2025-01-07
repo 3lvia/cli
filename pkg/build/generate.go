@@ -12,12 +12,12 @@ import (
 var dockerfileTemplates embed.FS
 
 type GenerateDockerfileOptions struct {
-	GoMainPackageDirectory string
 	BuildContext           string
+	GoMainPackageDirectory string
 }
 
 func generateDockerfile(
-	projectFile string,
+	projectFileRelativePath string,
 	options GenerateDockerfileOptions,
 ) (string, string, error) {
 	directory, err := os.MkdirTemp("", "3lv-build-*")
@@ -25,13 +25,16 @@ func generateDockerfile(
 		return "", "", fmt.Errorf("Failed to create temporary directory: %w", err)
 	}
 
-	projectFileBase := path.Base(projectFile)
+	projectFile := getProjectFilePathRelativeToBuildContext(projectFileRelativePath, options.BuildContext)
+	buildContext := getBuildContextFromProjectFile(projectFileRelativePath, options.BuildContext)
+
+	projectFileBase := path.Base(projectFileRelativePath) // could have used `projectFile` here also, doesn't matter
 
 	if strings.HasSuffix(projectFileBase, ".csproj") {
-		dockerfile, buildContext, err := generateDockerfileForDotNet(
+		dockerfile, err := generateDockerfileForDotNet(
 			projectFile,
+			buildContext,
 			directory,
-			options,
 		)
 		if err != nil {
 			return "", "", fmt.Errorf("Failed to generate Dockerfile for .NET project: %w", err)
@@ -39,10 +42,10 @@ func generateDockerfile(
 
 		return dockerfile, buildContext, nil
 	} else if projectFileBase == "go.mod" {
-		dockerfile, buildContext, err := generateDockerfileForGo(
-			projectFile,
+		dockerfile, err := generateDockerfileForGo(
+			buildContext,
 			directory,
-			options,
+			options.GoMainPackageDirectory,
 		)
 		if err != nil {
 			return "", "", fmt.Errorf("Failed to generate Dockerfile for Go project: %w", err)
@@ -50,10 +53,10 @@ func generateDockerfile(
 
 		return dockerfile, buildContext, nil
 	} else if projectFileBase == "pyproject.toml" {
-		dockerfile, buildContext, err := generateDockerfileForPython(
+		dockerfile, err := generateDockerfileForPython(
 			projectFile,
+			buildContext,
 			directory,
-			options,
 		)
 		if err != nil {
 			return "", "", fmt.Errorf("Failed to generate Dockerfile for Python project: %w", err)
@@ -63,37 +66,45 @@ func generateDockerfile(
 	} else if strings.HasPrefix(projectFileBase, "Dockerfile") ||
 		strings.HasSuffix(projectFileBase, "Dockerfile") ||
 		strings.Contains(projectFileBase, "Dockerfile") {
-		if options.BuildContext == "" {
-			return projectFile, path.Dir(projectFile), nil
-		}
-
-		return projectFile, options.BuildContext, nil
+		return projectFileRelativePath, buildContext, nil
 	}
 
 	return "", "", fmt.Errorf(
 		"Unsupported project file: %s. If you want to use a Dockerfile directly,"+
 			" ensure the name of the Dockerfile contains the string 'Dockerfile'",
-		projectFileBase,
+		projectFileRelativePath,
 	)
 }
 
-func getProjectFileAndBuildContext(
+func getProjectFilePathRelativeToBuildContext(
 	projectFileRelativePath string,
 	buildContextRelativePath string,
-) (string, string) {
-	if len(buildContextRelativePath) == 0 {
-		return path.Base(projectFileRelativePath), path.Dir(projectFileRelativePath)
+) string {
+	if buildContextRelativePath == "" {
+		return path.Base(projectFileRelativePath)
 	}
 
-	if strings.HasSuffix(buildContextRelativePath, "/") {
-		return strings.TrimPrefix(
-			projectFileRelativePath,
-			buildContextRelativePath,
-		), buildContextRelativePath
-	}
+	buildContextRelativePath = strings.TrimSuffix(buildContextRelativePath, "/")
 
 	return strings.TrimPrefix(
 		projectFileRelativePath,
 		buildContextRelativePath+"/",
-	), buildContextRelativePath
+	)
+}
+
+func getBuildContextFromProjectFile(
+	projectFileRelativePath string,
+	buildContextRelativePath string,
+) string {
+	if buildContextRelativePath == "" {
+		projectFileDirectory := path.Dir(projectFileRelativePath)
+
+		if projectFileDirectory == "" {
+			return "."
+		}
+
+		return projectFileDirectory
+	}
+
+	return strings.TrimSuffix(buildContextRelativePath, "/")
 }

@@ -20,14 +20,9 @@ type DockerfileVariablesPython struct {
 
 func generateDockerfileForPython(
 	projectFile string,
+	buildContext string,
 	directory string,
-	options GenerateDockerfileOptions,
-) (string, string, error) {
-	_, buildContext := getProjectFileAndBuildContext(
-		projectFile,
-		options.BuildContext,
-	)
-
+) (string, error) {
 	pythonVersion := getPythonVersion(
 		path.Dir(projectFile),
 		buildContext,
@@ -47,10 +42,10 @@ func generateDockerfileForPython(
 		dockerfileVariables,
 	)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	return dockerfilePath, buildContext, nil
+	return dockerfilePath, nil
 }
 
 func getPythonVersion(directories ...string) string {
