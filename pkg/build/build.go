@@ -204,14 +204,7 @@ func Build(_ context.Context, c *cli.Command) error {
 			return cli.Exit(err, 1)
 		}
 
-		registryName, err := func() (string, error) {
-			split := strings.Split(registry, ".")
-			if len(split) <= 0 {
-				return "", fmt.Errorf("Invalid registry name: %s", registry)
-			}
-
-			return split[0], nil
-		}()
+		registryName, err := getRegistryName(registry)
 		if err != nil {
 			return cli.Exit(err, 1)
 		}
@@ -410,6 +403,15 @@ func pushImageCommand(
 		),
 		options,
 	)
+}
+
+func getRegistryName(registry string) (string, error) {
+	split := strings.Split(registry, ".")
+	if len(split) <= 0 {
+		return "", fmt.Errorf("Invalid registry name: %s", registry)
+	}
+
+	return split[0], nil
 }
 
 func azAcrLoginCommand(
