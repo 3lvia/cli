@@ -228,6 +228,9 @@ func Build(_ context.Context, c *cli.Command) error {
 		systemName,
 		applicationName,
 	)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
 
 	additionalTags := utils.RemoveZeroValues(c.StringSlice("additional-tags"))
 
@@ -259,7 +262,7 @@ func Build(_ context.Context, c *cli.Command) error {
 			return fmt.Errorf(
 				"Failed to push Docker image cache to tag %s after scan reported vulnerabilities: %w",
 				cacheTag,
-				err,
+				pushImageOutput.Error,
 			)
 		}
 	}
@@ -277,7 +280,7 @@ func Build(_ context.Context, c *cli.Command) error {
 		); command.IsError(pushImageOutput) {
 			return fmt.Errorf(
 				"Failed to push Docker image. If using GHCR, please login using the command `gh auth login` first. %w",
-				err,
+				pushImageOutput.Error,
 			)
 		}
 	}
