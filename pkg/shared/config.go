@@ -79,18 +79,49 @@ func SetConfig(config *Config, overrideDirectory string) error {
 }
 
 func ConfigExists() (bool, string) {
-	filePath := func() string {
-		gitTopLevel, err := utils.ResolveGitRepositoryTopLevelPath()
-		if err != nil {
-			return configFileName
+	returnNameCheckExists := func(filePath string) (string, error) {
+		_, err := os.Stat(filePath)
+
+		if os.IsNotExist(err) {
+			return "", errors.New("No 3lv configuration file found at " + filePath)
 		}
 
-		return path.Join(gitTopLevel, configFileName)
+		return filePath, nil
+	}
+
+	gitFilePath, gitErr := func() (string, error) {
+		gitTopLevel, err := utils.ResolveGitRepositoryTopLevelPath()
+		if err != nil {
+			return "", err
+		}
+
+		return returnNameCheckExists(path.Join(gitTopLevel, configFileName))
 	}()
 
-	_, err := os.Stat(filePath)
+	currentDirectoryFilePath, currentDirectoryErr := func() (string, error) {
+		currentDirectory, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
 
-	return !os.IsNotExist(err), filePath
+		return returnNameCheckExists(path.Join(currentDirectory, configFileName))
+	}()
+
+	defaultFilePath, defaultErr := returnNameCheckExists(configFileName)
+
+	if gitErr == nil {
+		return true, gitFilePath
+	}
+
+	if currentDirectoryErr == nil {
+		return true, currentDirectoryFilePath
+	}
+
+	if defaultErr == nil {
+		return true, defaultFilePath
+	}
+
+	return false, ""
 }
 
 func WithConfig(commands [](func(_ *Config) *cli.Command), config *Config) []*cli.Command {
