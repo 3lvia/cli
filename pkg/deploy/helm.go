@@ -62,6 +62,7 @@ func helmDeployCommand(
 	environment string,
 	workloadType string,
 	imageTag string,
+	imageDigest string,
 	repositoryName string,
 	commitHash string,
 	dryRun bool,
@@ -103,12 +104,18 @@ func helmDeployCommand(
 		"--set-string",
 		"environment="+environment,
 		"--set-string",
-		"image.tag="+imageTag,
-		"--set-string",
 		"labels.repositoryName="+repositoryName,
 		"--set-string",
 		"labels.commitHash=\""+commitHash+"\"",
 	)
+
+	if imageTag != "" {
+		cmd.Args = append(cmd.Args, "--set-string", "image.tag="+imageTag)
+	}
+
+	if imageDigest != "" {
+		cmd.Args = append(cmd.Args, "--set-string", "image.digest="+imageDigest)
+	}
 
 	if dryRun {
 		cmd.Args = append(cmd.Args, "--dry-run")

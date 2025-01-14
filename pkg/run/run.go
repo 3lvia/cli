@@ -124,7 +124,7 @@ func generateComposeFile(
 		composeTemplates,
 		ComposeFileVariables{
 			ApplicationName:      applicationName,
-			ImageName:            imageName + ":latest-cache",
+			ImageName:            imageName + build.DefaultCacheTag,
 			Port:                 helmValues.Service.Port,
 			TargetPort:           helmValues.Service.TargetPort,
 			EnvironmentVariables: helmValues.GetEnvironmentVariablesMap(),

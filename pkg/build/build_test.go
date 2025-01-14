@@ -124,10 +124,9 @@ func TestBuildCommand2(t *testing.T) {
 		dockerfilePath = "Dockerfile"
 		buildContext   = "."
 		imageName      = "ghcr.io/test-image"
-		cacheTag       = "latest-cache"
 	)
 
-	imageNameWithCacheTag := imageName + ":" + cacheTag
+	imageNameWithCacheTag := imageName + ":" + DefaultCacheTag
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -152,7 +151,7 @@ func TestBuildCommand2(t *testing.T) {
 		dockerfilePath,
 		buildContext,
 		imageName,
-		cacheTag,
+		DefaultCacheTag,
 		[]string{},
 		&command.RunOptions{DryRun: true},
 	)
@@ -171,10 +170,9 @@ func TestBuildCommand3(t *testing.T) {
 		dockerfilePath = "Dockerfile"
 		buildContext   = "."
 		imageName      = "ghcr.io/test-image"
-		cacheTag       = "latest-cache"
 	)
 
-	imageNameWithCacheTag := imageName + ":" + cacheTag
+	imageNameWithCacheTag := imageName + ":" + DefaultCacheTag
 	additionalTags := []string{"latest", "v42.0.1", "v420alpha"}
 
 	expectedCommandString := strings.Join(
@@ -206,7 +204,7 @@ func TestBuildCommand3(t *testing.T) {
 		dockerfilePath,
 		buildContext,
 		imageName,
-		cacheTag,
+		DefaultCacheTag,
 		additionalTags,
 		&command.RunOptions{DryRun: true},
 	)

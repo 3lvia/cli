@@ -18,7 +18,11 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-const commandName = "build"
+const (
+	commandName                   = "build"
+	DefaultElviaContainerRegistry = "containerregistryelvia.azurecr.io"
+	DefaultCacheTag               = "latest-cache"
+)
 
 func Command() *cli.Command {
 	return &cli.Command{
@@ -54,7 +58,7 @@ func Command() *cli.Command {
 			&cli.StringFlag{
 				Name:    "cache-tag",
 				Usage:   "The tag to use for the cache image.",
-				Value:   "latest-cache",
+				Value:   DefaultCacheTag,
 				Sources: cli.EnvVars("3LV_CACHE_TAG"),
 			},
 			&cli.StringFlag{
@@ -173,7 +177,7 @@ func Build(_ context.Context, c *cli.Command) error {
 	}
 
 	cacheTag := c.String("cache-tag")
-	registry := utils.StringWithDefault(c.String("registry"), "containerregistryelvia.azurecr.io")
+	registry := utils.StringWithDefault(c.String("registry"), DefaultElviaContainerRegistry)
 
 	push := c.Bool("push")
 	skipAuthentication := c.Bool("skip-authentication") || !push
