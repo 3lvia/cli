@@ -1,6 +1,9 @@
 package create
 
-import "testing"
+import (
+	"path"
+	"testing"
+)
 
 func TestGetProjectDirectoryForTemplateDotnet(t *testing.T) {
 	t.Parallel()
@@ -14,7 +17,7 @@ func TestGetProjectDirectoryForTemplateDotnet(t *testing.T) {
 					return toPascalCaseWithoutHyphens(applicationName)
 				}
 
-				return outputDirectory + "/" + toPascalCaseWithoutHyphens(applicationName)
+				return path.Join(outputDirectory, toPascalCaseWithoutHyphens(applicationName))
 			}()
 
 			actual := template.getProjectDirectory(
@@ -45,7 +48,7 @@ func TestGetProjectDirectoryForTemplateGoPython(t *testing.T) {
 					return applicationName
 				}
 
-				return outputDirectory + "/" + applicationName
+				return path.Join(outputDirectory, applicationName)
 			}()
 
 			actual := template.getProjectDirectory(

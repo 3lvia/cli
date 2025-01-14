@@ -32,13 +32,16 @@ test_create_dotnet8() {
             exit 1
         fi
 
-        if ! 3lv build \
-            -s "$system_name" \
-            -f "$output_dir/$project_dir/$project_dir.csproj" \
-            "$app_name"; then
+        current_dir="$(pwd)"
+        cd "$output_dir/$project_dir"
+
+        if ! 3lv build "$app_name"; then
             echo "Failed to build project for template $dotnet8_template_type."
+            cd "$current_dir"
             exit 1
         fi
+
+        cd "$current_dir"
     done
 }
 
@@ -76,13 +79,16 @@ test_create_python() {
                 exit 1
             fi
 
-            if ! 3lv build \
-                -s "$system_name" \
-                -f "$output_dir/$project_dir/pyproject.toml" \
-                "$app_name"; then
+            current_dir="$(pwd)"
+            cd "$output_dir/$project_dir"
+
+            if ! 3lv build "$app_name"; then
                 echo "Failed to build project for template $python_template_type and version $python_version."
+                cd "$current_dir"
                 exit 1
             fi
+
+            cd "$current_dir"
         done
     done
 }
@@ -114,13 +120,16 @@ test_create_go() {
             exit 1
         fi
 
-        if ! 3lv build \
-            -s "$system_name" \
-            -f "$output_dir/$project_dir/go.mod" \
-            "$app_name"; then
+        current_dir="$(pwd)"
+        cd "$output_dir/$project_dir"
+
+        if ! 3lv build "$app_name"; then
             echo "Failed to build project for template $go_template_type."
+            cd "$current_dir"
             exit 1
         fi
+
+        cd "$current_dir"
     done
 }
 

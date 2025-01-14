@@ -149,7 +149,5 @@ func Init(_ context.Context, c *cli.Command) error {
 		}
 	}
 
-	err = shared.SetConfig(config)
-
-	return err
+	return shared.SetConfig(config, "")
 }

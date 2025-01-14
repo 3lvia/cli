@@ -67,7 +67,7 @@ func GitHubActions(ctx context.Context, c *cli.Command) error {
 		return first
 	}()
 
-	err := CreateDeployWorkflow(
+	_, err := CreateDeployWorkflow(
 		ctx,
 		projectDirectory,
 		c.String("project-file"),
@@ -97,7 +97,7 @@ func CreateDeployWorkflow(
 	helmValuesFile string,
 	defaultBranch string,
 	nonInteractive bool,
-) error {
+) (string, error) {
 	const githubActionsDir = ".github/workflows"
 	fullGithubActionsDir := path.Join(outputDirectory, githubActionsDir)
 
@@ -105,13 +105,13 @@ func CreateDeployWorkflow(
 		style.PrintInfo(fmt.Sprintf("Creating directory '%s'.\n", githubActionsDir))
 
 		if err := os.MkdirAll(fullGithubActionsDir, 0o755); err != nil {
-			return fmt.Errorf("Failed to create directory '%s'", fullGithubActionsDir)
+			return "", fmt.Errorf("Failed to create directory '%s'", fullGithubActionsDir)
 		}
 	}
 
 	language, err := getLanguageFromProjectFile(path.Base(projectFile))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resolvedHelmValuesFile, err := resolveHelmValuesFile(
@@ -124,19 +124,19 @@ func CreateDeployWorkflow(
 		},
 	)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	exampleWorkflowFileURL, err := getExampleWorkflowFileURL(language, runtimeCloudProvider)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	workflowFileName := fmt.Sprintf("build-deploy-%s.yml", applicationName)
 	workflowFilePath := filepath.Join(fullGithubActionsDir, workflowFileName)
 
 	if err := downloadFile(ctx, exampleWorkflowFileURL, workflowFilePath); err != nil {
-		return err
+		return "", err
 	}
 
 	style.PrintWarning(
@@ -157,7 +157,7 @@ func CreateDeployWorkflow(
 		projectFile,
 		replaceWorkflowPlaceholdersOptions,
 	); err != nil {
-		return err
+		return "", err
 	}
 
 	terraformReminder := func() string {
@@ -171,7 +171,7 @@ func CreateDeployWorkflow(
 	}()
 	style.PrintWarning(terraformReminder + "\n")
 
-	return nil
+	return helmValuesFile, nil
 }
 
 type ReplaceWorkflowPlaceholdersOptions struct {
