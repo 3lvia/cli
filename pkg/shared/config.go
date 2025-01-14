@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/3lvia/cli/pkg/style"
 	"github.com/3lvia/cli/pkg/utils"
@@ -53,14 +54,18 @@ func GetConfig() (*Config, error) {
 	return &config, nil
 }
 
-func SetConfig(config *Config) error {
+func SetConfig(config *Config, overrideDirectory string) error {
 	filePath := func() string {
+		if overrideDirectory != "" {
+			return path.Join(overrideDirectory, configFileName)
+		}
+
 		gitTopLevel, err := utils.ResolveGitRepositoryTopLevelPath()
 		if err != nil {
 			return configFileName
 		}
 
-		return gitTopLevel + "/" + configFileName
+		return path.Join(gitTopLevel, configFileName)
 	}()
 
 	file, err := yaml.Marshal(config)
@@ -80,7 +85,7 @@ func ConfigExists() (bool, string) {
 			return configFileName
 		}
 
-		return gitTopLevel + "/" + configFileName
+		return path.Join(gitTopLevel, configFileName)
 	}()
 
 	_, err := os.Stat(filePath)

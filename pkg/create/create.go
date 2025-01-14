@@ -200,7 +200,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 		return cli.Exit(err, 1)
 	}
 
-	err = githubactions.CreateDeployWorkflow(
+	helmValuesFile, err := githubactions.CreateDeployWorkflow(
 		ctx,
 		githubActionsDirectory,
 		projectFile,
@@ -212,6 +212,20 @@ func Create(ctx context.Context, c *cli.Command) error {
 		nonInteractive,
 	)
 	if err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	config := shared.Config{
+		System: systemName,
+		Applications: []shared.Application{
+			{ //nolint:exhaustruct
+				Name:           applicationName,
+				ProjectFile:    projectFile,
+				HelmValuesFile: helmValuesFile,
+			},
+		},
+	}
+	if err := shared.SetConfig(&config, projectDirectory); err != nil {
 		return cli.Exit(err, 1)
 	}
 
