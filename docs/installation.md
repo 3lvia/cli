@@ -18,7 +18,7 @@ extract it and move the binary to a directory in your PATH.
 
 If you are using WSL, you can install the Linux binary.
 
-#### Example installation
+#### Example Linux installation
 
 ```bash
 # OPTIONAL: verify checksum first
@@ -28,7 +28,13 @@ tar -xzf 3lv-linux-amd64.tar.gz
 sudo install -Dm755 -t /usr/local/bin 3lv
 ```
 
-For macOS, you can use the same commands as above, but replace `linux` with `macos`.
+#### Example Mac installation
+The installation is done by first installing the app, secondly trying (and failing) to open it, and thirdly [allowing the opening of it](https://support.apple.com/en-gb/guide/mac-help/mh40616/mac).
+```bash
+tar -xzf 3lv-macos-arm64.tar.gz
+sudo install -Dm755 3lv /usr/local/bin/
+```
+
 **If you have an M1 or newer mac, you can use the `macos-arm64` binary.**
 
 ### Windows
