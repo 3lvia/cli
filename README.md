@@ -23,4 +23,4 @@ Therefore it's useful to use `3lv` when debugging or testing Elvia's actions, si
 
 ## 💥 Breaking changes
 
-Before version `v1.0.0` is released, breaking changes will happen in minor versions (and possibly also patch versions). 
+Before version `v1.0.0` is released, breaking changes will happen in minor versions (and possibly also patch versions).
