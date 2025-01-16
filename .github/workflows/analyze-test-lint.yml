@@ -31,7 +31,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: elvia-runner
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository
