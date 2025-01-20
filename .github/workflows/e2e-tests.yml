@@ -15,9 +15,11 @@ jobs:
       matrix:
         command:
           - build
-          - scan
           - create
           - github-actions
+          - init
+          - scan
+          - upgrade
       fail-fast: false
     steps:
       - name: Checkout repository
