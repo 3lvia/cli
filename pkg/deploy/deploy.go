@@ -433,7 +433,7 @@ func setupKubernetes(
 }
 
 func dockerInspectCommand(
-	imageName string,
+	imageNameWithTag string,
 	runOptions *command.RunOptions,
 ) command.Output {
 	return command.Run(
@@ -442,7 +442,7 @@ func dockerInspectCommand(
 			"inspect",
 			"--format",
 			"{{index .RepoDigests 0}}",
-			imageName+":"+build.DefaultCacheTag,
+			imageNameWithTag,
 		),
 		runOptions,
 	)
