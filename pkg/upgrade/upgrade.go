@@ -17,7 +17,7 @@ import (
 
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/style"
-	"github.com/google/go-github/v67/github"
+	"github.com/3lvia/cli/pkg/utils"
 	"github.com/urfave/cli/v3"
 	"golang.org/x/mod/semver"
 )
@@ -163,6 +163,8 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 }
 
 func getLatestBinaryURL(ctx context.Context) (string, error) {
+	githubClient := utils.GetAuthenticatedGithubClient()
+
 	if runtime.GOOS == "windows" {
 		return "",
 			errors.New(
@@ -178,9 +180,7 @@ func getLatestBinaryURL(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("Auto-upgrade is not supported on %s", runtime.GOARCH)
 	}
 
-	client := github.NewClient(nil)
-
-	release, _, err := client.Repositories.GetLatestRelease(ctx, "3lvia", "cli")
+	release, _, err := githubClient.Repositories.GetLatestRelease(ctx, "3lvia", "cli")
 	if err != nil {
 		return "", err
 	}
@@ -204,9 +204,9 @@ func getLatestBinaryURL(ctx context.Context) (string, error) {
 }
 
 func GetLatestCLIVersion(ctx context.Context) (string, error) {
-	client := github.NewClient(nil)
+	githubClient := utils.GetAuthenticatedGithubClient()
 
-	release, _, err := client.Repositories.GetLatestRelease(ctx, "3lvia", "cli")
+	release, _, err := githubClient.Repositories.GetLatestRelease(ctx, "3lvia", "cli")
 	if err != nil {
 		return "", err
 	}

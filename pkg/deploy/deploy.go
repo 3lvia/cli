@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/3lvia/cli/pkg/auth"
+	"github.com/3lvia/cli/pkg/build"
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/style"
@@ -199,6 +200,7 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		return configForApplication.HelmValuesFile
 	}()
 	imageTag := c.String("image-tag")
+	imageDigest := getImageDigest(systemName, applicationName, imageTag)
 
 	commitHash, err := utils.ResolveCommitHash(c.String("commit-hash"))
 	if err != nil {
@@ -261,6 +263,7 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		environment,
 		workloadType,
 		imageTag,
+		imageDigest,
 		repositoryName,
 		commitHash,
 		dryRun,
@@ -427,4 +430,42 @@ func setupKubernetes(
 	}
 
 	return nil
+}
+
+func dockerInspectCommand(
+	imageName string,
+	runOptions *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"docker",
+			"inspect",
+			"--format",
+			"{{index .RepoDigests 0}}",
+			imageName+":"+build.DefaultCacheTag,
+		),
+		runOptions,
+	)
+}
+
+func getImageDigest(
+	systemName string,
+	applicationName string,
+	imageTag string,
+) string {
+	imageName, err := build.GetImageName(
+		build.DefaultElviaContainerRegistry,
+		systemName,
+		applicationName,
+	)
+	if err != nil {
+		return ""
+	}
+
+	dockerInspectCommandOutput := dockerInspectCommand(imageName+":"+imageTag, nil)
+	if command.IsError(dockerInspectCommandOutput) {
+		return ""
+	}
+
+	return dockerInspectCommandOutput.Output
 }

@@ -101,6 +101,7 @@ func TestHelmDeployCommand1(t *testing.T) {
 		environment     = "dev"
 		workloadType    = "deployment"
 		imageTag        = "v12"
+		imageDigest     = "sha256:1234567890"
 		repositoryName  = "core"
 		commitHash      = "123456"
 	)
@@ -120,11 +121,13 @@ func TestHelmDeployCommand1(t *testing.T) {
 			"--set-string",
 			"environment=" + environment,
 			"--set-string",
-			"image.tag=" + imageTag,
-			"--set-string",
 			"labels.repositoryName=" + repositoryName,
 			"--set-string",
 			"labels.commitHash=\"" + commitHash + "\"",
+			"--set-string",
+			"image.tag=" + imageTag,
+			"--set-string",
+			"image.digest=" + imageDigest,
 		},
 		" ",
 	)
@@ -136,6 +139,7 @@ func TestHelmDeployCommand1(t *testing.T) {
 		environment,
 		workloadType,
 		imageTag,
+		imageDigest,
 		repositoryName,
 		commitHash,
 		false,
@@ -160,6 +164,7 @@ func TestHelmDeployCommand2(t *testing.T) {
 		environment     = "prod"
 		workloadType    = "statefulset"
 		imageTag        = "v420"
+		imageDigest     = "sha256:abcdef"
 		repositoryName  = "core-not-monorepo"
 		commitHash      = "abcdef"
 	)
@@ -179,11 +184,13 @@ func TestHelmDeployCommand2(t *testing.T) {
 			"--set-string",
 			"environment=" + environment,
 			"--set-string",
-			"image.tag=" + imageTag,
-			"--set-string",
 			"labels.repositoryName=" + repositoryName,
 			"--set-string",
 			"labels.commitHash=\"" + commitHash + "\"",
+			"--set-string",
+			"image.tag=" + imageTag,
+			"--set-string",
+			"image.digest=" + imageDigest,
 		},
 		" ",
 	)
@@ -195,6 +202,7 @@ func TestHelmDeployCommand2(t *testing.T) {
 		environment,
 		workloadType,
 		imageTag,
+		imageDigest,
 		repositoryName,
 		commitHash,
 		false,
@@ -219,6 +227,7 @@ func TestHelmDeployCommand3(t *testing.T) {
 		environment     = "prod"
 		workloadType    = "job"
 		imageTag        = "v420"
+		imageDigest     = "sha256:abcdef"
 		repositoryName  = "core-not-monorepo"
 		commitHash      = "abcdef"
 	)
@@ -230,6 +239,7 @@ func TestHelmDeployCommand3(t *testing.T) {
 		environment,
 		workloadType,
 		imageTag,
+		imageDigest,
 		repositoryName,
 		commitHash,
 		false,
@@ -251,7 +261,8 @@ func TestHelmDeployCommand4(t *testing.T) {
 		applicationName = "demo-api"
 		environment     = "prod"
 		workloadType    = "deployment"
-		imageTag        = "v420"
+		imageTag        = ""
+		imageDigest     = "sha256:abcdef"
 		repositoryName  = "iss-demo-api"
 		commitHash      = "abcdef"
 	)
@@ -271,11 +282,11 @@ func TestHelmDeployCommand4(t *testing.T) {
 			"--set-string",
 			"environment=" + environment,
 			"--set-string",
-			"image.tag=" + imageTag,
-			"--set-string",
 			"labels.repositoryName=" + repositoryName,
 			"--set-string",
 			"labels.commitHash=\"" + commitHash + "\"",
+			"--set-string",
+			"image.digest=" + imageDigest,
 		},
 		" ",
 	)
@@ -287,6 +298,7 @@ func TestHelmDeployCommand4(t *testing.T) {
 		environment,
 		workloadType,
 		imageTag,
+		imageDigest,
 		repositoryName,
 		commitHash,
 		false,
@@ -311,6 +323,7 @@ func TestHelmDeployCommand5(t *testing.T) {
 		environment     = "prod"
 		workloadType    = "statefulset"
 		imageTag        = "v420"
+		imageDigest     = "sha256:abcdef"
 		repositoryName  = "iss-demo-api"
 		commitHash      = "abcdef"
 	)
@@ -322,6 +335,7 @@ func TestHelmDeployCommand5(t *testing.T) {
 		environment,
 		workloadType,
 		imageTag,
+		imageDigest,
 		repositoryName,
 		commitHash,
 		false,
