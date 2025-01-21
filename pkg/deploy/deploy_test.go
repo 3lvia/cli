@@ -16,15 +16,15 @@ func TestDockerInspectCommand(t *testing.T) {
 	expectedCommandString := strings.Join(
 		[]string{
 			"docker",
+			"manifest",
 			"inspect",
-			"--format",
-			"{{index .RepoDigests 0}}",
 			imageName,
+			"-v",
 		},
 		" ",
 	)
 
-	actualCommand := dockerInspectCommand(
+	actualCommand := dockerManifestInspectCommand(
 		imageName,
 		&command.RunOptions{DryRun: true},
 	)

@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os/exec"
@@ -432,20 +433,28 @@ func setupKubernetes(
 	return nil
 }
 
-func dockerInspectCommand(
+func dockerManifestInspectCommand(
 	imageNameWithTag string,
 	runOptions *command.RunOptions,
 ) command.Output {
 	return command.Run(
 		*exec.Command(
 			"docker",
+			"manifest",
 			"inspect",
-			"--format",
-			"{{index .RepoDigests 0}}",
 			imageNameWithTag,
+			"-v",
 		),
 		runOptions,
 	)
+}
+
+// Incomplete, since we only need digest.
+type DockerManifest struct {
+	Ref        string `json:"Ref"`
+	Descriptor struct {
+		Digest string `json:"digest"`
+	} `json:"Descriptor"`
 }
 
 func getImageDigest(
@@ -462,10 +471,17 @@ func getImageDigest(
 		return ""
 	}
 
-	dockerInspectCommandOutput := dockerInspectCommand(imageName+":"+imageTag, nil)
-	if command.IsError(dockerInspectCommandOutput) {
+	dockerManifestInspectCommand := dockerManifestInspectCommand(imageName+":"+imageTag, nil)
+	if command.IsError(dockerManifestInspectCommand) {
 		return ""
 	}
 
-	return dockerInspectCommandOutput.Output
+	var manifest DockerManifest
+
+	err = json.Unmarshal([]byte(dockerManifestInspectCommand.Output), &manifest)
+	if err != nil {
+		return ""
+	}
+
+	return manifest.Descriptor.Digest
 }
