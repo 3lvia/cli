@@ -2,7 +2,6 @@ package deploy
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os/exec"
@@ -10,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/3lvia/cli/pkg/auth"
-	"github.com/3lvia/cli/pkg/build"
 	"github.com/3lvia/cli/pkg/command"
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/style"
@@ -35,6 +33,13 @@ func Command() *cli.Command {
 				Name:    "image-tag",
 				Aliases: []string{"i"},
 				Usage:   "The image tag to deploy.",
+				Sources: cli.EnvVars("3LV_IMAGE_TAG"),
+			},
+			&cli.StringFlag{
+				Name:    "image-digest",
+				Aliases: []string{"I"},
+				Usage:   "The image digest to deploy.",
+				Sources: cli.EnvVars("3LV_IMAGE_DIGEST"),
 			},
 			&cli.StringFlag{
 				Name:    "environment",
@@ -200,8 +205,9 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 
 		return configForApplication.HelmValuesFile
 	}()
+
 	imageTag := c.String("image-tag")
-	imageDigest := getImageDigest(systemName, applicationName, imageTag)
+	imageDigest := c.String("image-digest")
 
 	commitHash, err := utils.ResolveCommitHash(c.String("commit-hash"))
 	if err != nil {
@@ -431,57 +437,4 @@ func setupKubernetes(
 	}
 
 	return nil
-}
-
-func dockerManifestInspectCommand(
-	imageNameWithTag string,
-	runOptions *command.RunOptions,
-) command.Output {
-	return command.Run(
-		*exec.Command(
-			"docker",
-			"manifest",
-			"inspect",
-			imageNameWithTag,
-			"-v",
-		),
-		runOptions,
-	)
-}
-
-// Incomplete, since we only need digest.
-type DockerManifest struct {
-	Ref        string `json:"Ref"`
-	Descriptor struct {
-		Digest string `json:"digest"`
-	} `json:"Descriptor"`
-}
-
-func getImageDigest(
-	systemName string,
-	applicationName string,
-	imageTag string,
-) string {
-	imageName, err := build.GetImageName(
-		build.DefaultElviaContainerRegistry,
-		systemName,
-		applicationName,
-	)
-	if err != nil {
-		return ""
-	}
-
-	dockerManifestInspectCommand := dockerManifestInspectCommand(imageName+":"+imageTag, nil)
-	if command.IsError(dockerManifestInspectCommand) {
-		return ""
-	}
-
-	var manifest DockerManifest
-
-	err = json.Unmarshal([]byte(dockerManifestInspectCommand.Output), &manifest)
-	if err != nil {
-		return ""
-	}
-
-	return manifest.Descriptor.Digest
 }

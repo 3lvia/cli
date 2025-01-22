@@ -154,7 +154,7 @@ func TestHelmDeployCommand1(t *testing.T) {
 	)
 }
 
-func TestHelmDeployCommand2(t *testing.T) {
+func TestHelmDeployCommandWithDigestAndStatefulSet(t *testing.T) {
 	t.Parallel()
 
 	const (
@@ -217,7 +217,7 @@ func TestHelmDeployCommand2(t *testing.T) {
 	)
 }
 
-func TestHelmDeployCommand3(t *testing.T) {
+func TestHelmDeployCommandWithInvalidWorkloadType(t *testing.T) {
 	t.Parallel()
 
 	const (
@@ -252,7 +252,7 @@ func TestHelmDeployCommand3(t *testing.T) {
 	}
 }
 
-func TestHelmDeployCommand4(t *testing.T) {
+func TestHelmDeployCommandWithIssRepository(t *testing.T) {
 	t.Parallel()
 
 	const (
@@ -313,7 +313,7 @@ func TestHelmDeployCommand4(t *testing.T) {
 	)
 }
 
-func TestHelmDeployCommand5(t *testing.T) {
+func TestHelmDeployCommandWithDigestAndStatefulSetAndIssRepository(t *testing.T) {
 	t.Parallel()
 
 	const (
@@ -322,7 +322,7 @@ func TestHelmDeployCommand5(t *testing.T) {
 		applicationName = "demo-api"
 		environment     = "prod"
 		workloadType    = "statefulset"
-		imageTag        = "v420"
+		imageTag        = ""
 		imageDigest     = "sha256:abcdef"
 		repositoryName  = "iss-demo-api"
 		commitHash      = "abcdef"
