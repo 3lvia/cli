@@ -6,7 +6,7 @@ test_disabled_deploy() {
     if 3lv deploy \
         -s core \
         -f tests/deploy/values.yml \
-        -i latest-cache \
+        -i containerregistryelvia.azurecr.io/core-demo-api:latest-cache \
         demo-api; then
         echo "Should fail since CI is not set"
         exit 1

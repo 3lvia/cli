@@ -2,6 +2,7 @@ package build
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -289,11 +290,24 @@ func Build(_ context.Context, c *cli.Command) error {
 		}
 	}
 
+	err = writeOutputs(imageName, additionalTags, cacheTag)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	return nil
+}
+
+func writeOutputs(
+	imageName string,
+	additionalTags []string,
+	cacheTag string,
+) error {
 	outputDirectory := os.TempDir() + "/3lv-cli-output"
 	if _, err := os.Stat(outputDirectory); os.IsNotExist(err) {
 		err := os.Mkdir(outputDirectory, 0o700)
 		if err != nil {
-			return cli.Exit(err, 1)
+			return err
 		}
 	}
 
@@ -307,13 +321,29 @@ func Build(_ context.Context, c *cli.Command) error {
 		return cacheTag
 	}()
 
-	err = os.WriteFile(
-		outputDirectory+"/image-name",
-		[]byte(imageName+":"+firstAdditionalTagThatsNotCacheTag),
+	imageNameWithTag := imageName + ":" + firstAdditionalTagThatsNotCacheTag
+
+	err := os.WriteFile(
+		outputDirectory+"/image-name-tag",
+		[]byte(imageNameWithTag),
 		0o700,
 	)
 	if err != nil {
-		return cli.Exit(err, 1)
+		return err
+	}
+
+	imageDigest, err := getImageDigest(imageNameWithTag)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(
+		outputDirectory+"/image-digest",
+		[]byte(imageDigest),
+		0o700,
+	)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -478,4 +508,43 @@ func copyDockerfileToCurrentDirectory(dockerfilePath string, nonInteractive bool
 	}
 
 	return newDockerfilePath, nil
+}
+
+// Incomplete, since we only need digest.
+type DockerManifest struct {
+	Descriptor struct {
+		Digest string `json:"digest"`
+	} `json:"Descriptor"`
+}
+
+func getImageDigest(imageNameWithTag string) (string, error) {
+	dockerManifestInspectCommand := dockerManifestInspectCommand(imageNameWithTag, nil)
+	if command.IsError(dockerManifestInspectCommand) {
+		return "", dockerManifestInspectCommand.Error
+	}
+
+	var manifest DockerManifest
+
+	err := json.Unmarshal([]byte(dockerManifestInspectCommand.Output), &manifest)
+	if err != nil {
+		return "", err
+	}
+
+	return manifest.Descriptor.Digest, nil
+}
+
+func dockerManifestInspectCommand(
+	imageNameWithTag string,
+	options *command.RunOptions,
+) command.Output {
+	return command.Run(
+		*exec.Command(
+			"docker",
+			"manifest",
+			"inspect",
+			"-v",
+			imageNameWithTag,
+		),
+		options,
+	)
 }

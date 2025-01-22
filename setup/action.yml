@@ -2,7 +2,7 @@ name: 'Setup 3lv'
 description: 'Sets up the Elvia CLI on your GitHub Actions runner.'
 inputs:
   version:
-    description: 'The version of 3lv to install. Specify `git` to build and install the latest version from the default branch.'
+    description: 'The version of 3lv to install. Specify a branch name to build and install from git.'
     required: false
     default: 'latest'
 
