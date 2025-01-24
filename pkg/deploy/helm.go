@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/3lvia/cli/pkg/command"
@@ -115,6 +116,10 @@ func helmDeployCommand(
 
 	if imageDigest != "" {
 		cmd.Args = append(cmd.Args, "--set-string", "image.digest="+imageDigest)
+	}
+
+	if os.Getenv("GITHUB_ACTIONS") == "true" {
+		cmd.Args = append(cmd.Args, "--set-string", "labels.deployedBy=github-actions")
 	}
 
 	if dryRun {
