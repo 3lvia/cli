@@ -7,6 +7,7 @@ test_github_actions() {
     output_dir=$(mktemp -d)
 
     if ! 3lv gha \
+        --non-interactive \
         -s core \
         -a "$app_name" \
         -f "$app_name.csproj" \
