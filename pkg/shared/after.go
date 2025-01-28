@@ -3,6 +3,7 @@ package shared
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/3lvia/cli/pkg/style"
 	"github.com/3lvia/cli/pkg/upgrade"
@@ -12,6 +13,10 @@ import (
 )
 
 func checkVersionAfter(ctx context.Context, version string) error {
+	if os.Getenv("CI") == "true" {
+		return nil
+	}
+
 	latestVersion, _ := upgrade.GetLatestCLIVersion(ctx)
 	if semver.Compare("v"+version, "v"+latestVersion) == -1 {
 		style.PrintWarning(
