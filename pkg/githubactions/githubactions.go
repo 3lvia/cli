@@ -67,14 +67,34 @@ func GitHubActions(ctx context.Context, c *cli.Command) error {
 		return first
 	}()
 
-	_, err := CreateDeployWorkflow(
+	config, err := shared.GetConfig()
+	if err != nil {
+		style.PrintWarning(err.Error() + "\n")
+	}
+
+	applicationName := c.String("application-name")
+
+	configForApplication, err := config.GetConfigForApplication(applicationName)
+	if !config.IsEmpty() && err != nil { // Ignore error if config is empty, will default to flags.
+		style.PrintWarning(err.Error() + "\n")
+	}
+
+	projectFile := utils.FirstNonEmpty(c.String("project-file"), configForApplication.ProjectFile)
+	if projectFile == "" {
+		return cli.Exit("Project file not provided.", 1)
+	}
+
+	systemName := utils.FirstNonEmpty(c.String("system-name"), config.System)
+	helmValuesFile := utils.FirstNonEmpty(c.String("helm-values-file"), configForApplication.HelmValuesFile)
+
+	_, err = CreateDeployWorkflow(
 		ctx,
 		projectDirectory,
-		c.String("project-file"),
+		projectFile,
 		c.String("runtime-cloud-provider"),
-		c.String("system-name"),
-		c.String("application-name"),
-		c.String("helm-values-file"),
+		systemName,
+		applicationName,
+		helmValuesFile,
 		c.String("default-branch"),
 		c.Bool("non-interactive"),
 	)
