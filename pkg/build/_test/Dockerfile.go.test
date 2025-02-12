@@ -12,11 +12,14 @@ COPY . .
 RUN go build -o ./out/executable ./cmd/demo-api-go
 
 
-FROM alpine:3.21
+FROM alpine:latest
 LABEL maintainer="elvia@elvia.no"
 
 RUN apk update && \
     apk upgrade --no-cache
+
+# CVE-2024-12797
+RUN apk add --no-cache libssl3 libcrypto3
 
 RUN addgroup application-group --gid 1001 && \
     adduser application-user --uid 1001 \
