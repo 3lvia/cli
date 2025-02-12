@@ -1,18 +1,18 @@
-FROM mcr.microsoft.com/dotnet/sdk:{{ .BaseImageTag }} AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 LABEL maintainer="elvia@elvia.no"
 
 WORKDIR /app
 COPY . .
 
 RUN dotnet tool restore && \
-    dotnet restore {{ .CsprojFile }} && \
+    dotnet restore dotnet-8.0.csproj && \
     dotnet publish \
-      {{ .CsprojFile }} \
+      dotnet-8.0.csproj \
       --configuration Release \
       --output ./out
 
 
-FROM {{ .RuntimeBaseImage }}:{{ .BaseImageTag }} AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 LABEL maintainer="elvia@elvia.no"
 
 RUN addgroup application-group --gid 1001 && \
@@ -37,4 +37,4 @@ USER application-user
 
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "{{ .AssemblyName }}"]
+ENTRYPOINT ["dotnet", "SelfDefinedAssemblyName.dll"]
