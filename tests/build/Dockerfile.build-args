@@ -1,0 +1,8 @@
+FROM alpine:latest
+
+ARG ENVIRONMENT
+ARG VERSION
+
+RUN echo "$ENVIRONMENT $VERSION" > /tmp/build-args.txt
+
+CMD ["cat", "/tmp/build-args.txt"]

@@ -15,6 +15,7 @@ import (
 	"github.com/3lvia/cli/pkg/shared"
 	"github.com/3lvia/cli/pkg/style"
 	"github.com/3lvia/cli/pkg/utils"
+	"github.com/samber/lo"
 	"github.com/urfave/cli/v3"
 )
 
@@ -92,6 +93,12 @@ func Command() *cli.Command {
 				Aliases: []string{"t"},
 				Usage:   "Additional tags to use when pushing the image to the registry.",
 				Sources: cli.EnvVars("3LV_ADDITIONAL_TAGS"),
+			},
+			&cli.StringSliceFlag{
+				Name: "build-args",
+				Usage: "Build arguments to pass to the Docker build command." +
+					" Should be in the format key=value, separated by commas.",
+				Sources: cli.EnvVars("3LV_BUILD_ARGS"),
 			},
 			&cli.BoolFlag{
 				Name:    "push",
@@ -237,6 +244,11 @@ func Build(_ context.Context, c *cli.Command) error {
 	}
 
 	additionalTags := utils.RemoveZeroValues(c.StringSlice("additional-tags"))
+	buildArgs := lo.SliceToMap(utils.RemoveZeroValues(c.StringSlice("build-args")), func(f string) (string, string) {
+		split := strings.Split(f, "=")
+
+		return split[0], split[1]
+	})
 
 	if buildImageCommandOutput := buildImageCommand(
 		dockerfilePath,
@@ -244,6 +256,7 @@ func Build(_ context.Context, c *cli.Command) error {
 		imageName,
 		cacheTag,
 		additionalTags,
+		buildArgs,
 		nil,
 	); command.IsError(buildImageCommandOutput) {
 		return cli.Exit(buildImageCommandOutput.Error, 1)
@@ -349,6 +362,7 @@ func buildImageCommand(
 	imageName string,
 	cacheTag string,
 	additionalTags []string,
+	buildArgs map[string]string,
 	options *command.RunOptions,
 ) command.Output {
 	tags := func() []string {
@@ -377,6 +391,10 @@ func buildImageCommand(
 		"--cache-from",
 		imageName+":"+cacheTag,
 	)
+
+	for key, value := range buildArgs {
+		buildCmd.Args = append(buildCmd.Args, "--build-arg", key+"="+value)
+	}
 
 	buildCmd.Args = append(buildCmd.Args, tagArguments...)
 	buildCmd.Args = append(buildCmd.Args, buildContext)

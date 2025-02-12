@@ -81,6 +81,8 @@ func TestBuildCommand1(t *testing.T) {
 	)
 
 	imageNameWithCacheTag := imageName + ":" + cacheTag
+	additionalTags := []string{}
+	buildArgs := map[string]string{}
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -106,7 +108,8 @@ func TestBuildCommand1(t *testing.T) {
 		buildContext,
 		imageName,
 		cacheTag,
-		[]string{},
+		additionalTags,
+		buildArgs,
 		&command.RunOptions{DryRun: true},
 	)
 
@@ -127,6 +130,8 @@ func TestBuildCommand2(t *testing.T) {
 	)
 
 	imageNameWithCacheTag := imageName + ":" + DefaultCacheTag
+	additionalTags := []string{}
+	buildArgs := map[string]string{}
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -152,7 +157,8 @@ func TestBuildCommand2(t *testing.T) {
 		buildContext,
 		imageName,
 		DefaultCacheTag,
-		[]string{},
+		additionalTags,
+		buildArgs,
 		&command.RunOptions{DryRun: true},
 	)
 
@@ -174,6 +180,7 @@ func TestBuildCommand3(t *testing.T) {
 
 	imageNameWithCacheTag := imageName + ":" + DefaultCacheTag
 	additionalTags := []string{"latest", "v42.0.1", "v420alpha"}
+	buildArgs := map[string]string{}
 
 	expectedCommandString := strings.Join(
 		[]string{
@@ -206,6 +213,69 @@ func TestBuildCommand3(t *testing.T) {
 		imageName,
 		DefaultCacheTag,
 		additionalTags,
+		buildArgs,
+		&command.RunOptions{DryRun: true},
+	)
+
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
+}
+
+func TestBuildCommandWithBuildArgs(t *testing.T) {
+	t.Parallel()
+
+	const (
+		dockerfilePath = "Dockerfile"
+		buildContext   = "."
+		imageName      = "ghcr.io/test-image"
+	)
+
+	imageNameWithCacheTag := imageName + ":" + DefaultCacheTag
+	additionalTags := []string{"latest", "v42.0.1", "v420alpha"}
+	buildArgs := map[string]string{
+		"BUILD_ARG_1": "value1",
+		"BUILD_ARG_2": "value2",
+	}
+
+	expectedCommandString := strings.Join(
+		[]string{
+			"docker",
+			"buildx",
+			"build",
+			"-f",
+			dockerfilePath,
+			"--load",
+			"--cache-to",
+			"type=inline",
+			"--cache-from",
+			imageNameWithCacheTag,
+			"--build-arg",
+			"BUILD_ARG_1=value1",
+			"--build-arg",
+			"BUILD_ARG_2=value2",
+			"-t",
+			imageName + ":" + additionalTags[0],
+			"-t",
+			imageName + ":" + additionalTags[1],
+			"-t",
+			imageName + ":" + additionalTags[2],
+			"-t",
+			imageNameWithCacheTag,
+			buildContext,
+		},
+		" ",
+	)
+
+	actualCommand := buildImageCommand(
+		dockerfilePath,
+		buildContext,
+		imageName,
+		DefaultCacheTag,
+		additionalTags,
+		buildArgs,
 		&command.RunOptions{DryRun: true},
 	)
 
