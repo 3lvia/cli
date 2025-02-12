@@ -201,7 +201,9 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		return configForApplication.HelmValuesFile
 	}()
 	imageTag := c.String("image-tag")
-	imageDigest := getImageDigest(systemName, applicationName, imageTag)
+	// NOTE: Not fully implemented yet.
+	// imageDigest := getImageDigest(systemName, applicationName, imageTag)
+	const imageDigest = ""
 
 	commitHash, err := utils.ResolveCommitHash(c.String("commit-hash"))
 	if err != nil {
@@ -457,7 +459,7 @@ type DockerManifest struct {
 	} `json:"Descriptor"`
 }
 
-func getImageDigest(
+func getImageDigest( //nolint:unused
 	systemName string,
 	applicationName string,
 	imageTag string,
