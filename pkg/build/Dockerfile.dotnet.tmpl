@@ -25,6 +25,9 @@ RUN apk update && \
     apk add --no-cache \
         icu-libs
 
+# CVE-2024-12797
+RUN apk add --no-cache libssl3 libcrypto3
+
 WORKDIR /app
 
 COPY --from=build /app/out .
