@@ -8,7 +8,7 @@ require (
 	github.com/google/go-github/v67 v67.0.0
 	github.com/orsinium-labs/enum v1.4.0
 	github.com/samber/lo v1.49.1
-	github.com/urfave/cli/v3 v3.0.0-beta1.0.20241130210637-606c89a79657
+	github.com/urfave/cli/v3 v3.0.0-beta1.0.20250209232119-706f78edb6b4
 	golang.org/x/mod v0.24.0
 	golang.org/x/text v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
