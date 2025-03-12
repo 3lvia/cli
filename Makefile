@@ -18,7 +18,7 @@ help:
 ## test: Run unit tests.
 .PHONY: test
 test:
-	go test -v ./...
+	go test -v -cover ./...
 
 
 ## lint: Run linter (golangci-lint).
