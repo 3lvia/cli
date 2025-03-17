@@ -13,6 +13,7 @@ import (
 	"github.com/3lvia/cli/pkg/deploy"
 	"github.com/3lvia/cli/pkg/githubactions"
 	"github.com/3lvia/cli/pkg/initialize"
+	"github.com/3lvia/cli/pkg/kubeseal"
 	"github.com/3lvia/cli/pkg/run"
 	"github.com/3lvia/cli/pkg/scan"
 	"github.com/3lvia/cli/pkg/shared"
@@ -45,6 +46,7 @@ func main() {
 			githubactions.Command(),
 			create.Command(),
 			initialize.Command(),
+			kubeseal.Command(),
 		},
 		version,
 	)

@@ -39,8 +39,9 @@ func ErrorString(err string) Output {
 }
 
 type RunOptions struct {
-	DryRun bool
-	Silent bool
+	PrintCommand bool
+	DryRun       bool
+	Silent       bool
 }
 
 func Run(cmd exec.Cmd, options *RunOptions) Output {
@@ -56,19 +57,21 @@ func Run(cmd exec.Cmd, options *RunOptions) Output {
 		}
 	}
 
-	style.Print(
-		cmd.String()+"\n",
-		&style.PrintOptions{Color: "cyan"},
-	)
+	if options.PrintCommand {
+		style.Print(
+			cmd.String()+"\n",
+			&style.PrintOptions{Color: "cyan"},
+		)
+	}
 
 	var errBuf, outBuf bytes.Buffer
 
 	if options.Silent {
-		cmd.Stdout = nil
-		cmd.Stderr = nil
+		cmd.Stdout = &outBuf
+		cmd.Stderr = &errBuf
 	} else {
-		cmd.Stderr = io.MultiWriter(os.Stderr, &errBuf)
 		cmd.Stdout = io.MultiWriter(os.Stdout, &outBuf)
+		cmd.Stderr = io.MultiWriter(os.Stderr, &errBuf)
 	}
 
 	err := cmd.Run()

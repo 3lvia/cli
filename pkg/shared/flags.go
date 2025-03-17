@@ -118,3 +118,20 @@ func RegistryFlag(usage string) *cli.StringFlag {
 		Sources: cli.EnvVars("3LV_REGISTRY"),
 	}
 }
+
+func EnvironmentFlag() *cli.StringFlag {
+	return &cli.StringFlag{
+		Name:    "environment",
+		Aliases: []string{"e"},
+		Usage:   "The environment to use: sandbox, dev, test or prod",
+		Value:   "dev",
+		Action: func(_ context.Context, _ *cli.Command, environment string) error {
+			allowedEnvironments := []string{"sandbox", "dev", "test", "prod"}
+			if !slices.Contains(allowedEnvironments, environment) {
+				return cli.Exit(fmt.Sprintf("Invalid environment provided: must be one of %v", allowedEnvironments), 1)
+			}
+
+			return nil
+		},
+	}
+}

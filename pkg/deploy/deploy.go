@@ -36,20 +36,7 @@ func Command() *cli.Command {
 				Aliases: []string{"i"},
 				Usage:   "The image tag to deploy.",
 			},
-			&cli.StringFlag{
-				Name:    "environment",
-				Aliases: []string{"e"},
-				Usage:   "The environment to deploy to: sandbox, dev, test or prod",
-				Value:   "dev",
-				Action: func(_ context.Context, _ *cli.Command, environment string) error {
-					allowedEnvironments := []string{"sandbox", "dev", "test", "prod"}
-					if !slices.Contains(allowedEnvironments, environment) {
-						return cli.Exit(fmt.Sprintf("Invalid environment provided: must be one of %v", allowedEnvironments), 1)
-					}
-
-					return nil
-				},
-			},
+			shared.EnvironmentFlag(),
 			&cli.StringFlag{
 				Name:    "workload-type",
 				Aliases: []string{"w"},
@@ -244,7 +231,25 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		return cli.Exit(fmt.Errorf("helm is not installed: %w", checkHelmInstalledOutput.Error), 1)
 	}
 
-	err = setupKubernetes(c, runtimeCloudProvider, environment)
+	err = SetupKubernetes(
+		&SetupAKSOptions{
+			SubscriptionID:    c.String("aks-subscription-id"),
+			ClusterName:       c.String("aks-cluster-name"),
+			ResourceGroupName: c.String("aks-resource-group-name"),
+			AzLoginOptions: &auth.AzLoginCommandOptions{
+				ClientID:       c.String("azure-client-id"),
+				FederatedToken: c.String("azure-federated-token"),
+			},
+		},
+		&SetupGKEOptions{
+			ProjectID:       c.String("gke-project-id"),
+			ClusterName:     c.String("gke-cluster-name"),
+			ClusterLocation: c.String("gke-cluster-location"),
+		},
+		c.String("azure-tenant-id"),
+		runtimeCloudProvider,
+		environment,
+	)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -399,36 +404,26 @@ func kubectlGetEventsCommand(
 	)
 }
 
-func setupKubernetes(
-	c *cli.Command,
+func SetupKubernetes(
+	setupAKSOptions *SetupAKSOptions,
+	setupGKEOptions *SetupGKEOptions,
+	azureTenantID string,
 	runtimeCloudProvider string,
 	environment string,
 ) error {
 	if runtimeCloudProvider == "aks" {
 		return setupAKS(
 			utils.StringWithDefault(
-				c.String("azure-tenant-id"),
+				azureTenantID,
 				auth.ElviaTenantID,
 			),
 			environment,
-			&SetupAKSOptions{
-				SubscriptionID:    c.String("aks-subscription-id"),
-				ClusterName:       c.String("aks-cluster-name"),
-				ResourceGroupName: c.String("aks-resource-group-name"),
-				AzLoginOptions: &auth.AzLoginCommandOptions{
-					ClientID:       c.String("azure-client-id"),
-					FederatedToken: c.String("azure-federated-token"),
-				},
-			},
+			setupAKSOptions,
 		)
 	} else if runtimeCloudProvider == "gke" {
 		return setupGKE(
 			environment,
-			&SetupGKEOptions{
-				ProjectID:       c.String("gke-project-id"),
-				ClusterName:     c.String("gke-cluster-name"),
-				ClusterLocation: c.String("gke-cluster-location"),
-			},
+			setupGKEOptions,
 		)
 	}
 
