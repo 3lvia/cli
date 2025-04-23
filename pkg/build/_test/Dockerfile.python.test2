@@ -30,6 +30,11 @@ COPY --from=build /app .
 
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Fixes CVE-2024-56406
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        perl-base
+
 RUN chown --recursive application-user .
 USER application-user
 
