@@ -349,10 +349,6 @@ func GetImageName(
 		return "", errors.New("Application name not provided")
 	}
 
-	if strings.Contains(registry, "azurecr.io") || strings.Contains(registry, "gcr.io") {
-		return strings.ToLower(fmt.Sprintf("%s/%s-%s", registry, systemName, applicationName)), nil
-	}
-
 	return strings.ToLower(fmt.Sprintf("%s/%s/%s", registry, systemName, applicationName)), nil
 }
 
