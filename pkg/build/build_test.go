@@ -16,7 +16,7 @@ func TestGetImageName(t *testing.T) {
 		imageName  = "demo-api"
 	)
 
-	expectedImageName := registry + "/" + systemName + "-" + imageName
+	expectedImageName := registry + "/" + systemName + "/" + imageName
 
 	actualImageName, err := GetImageName(registry, systemName, imageName)
 	if err != nil {
