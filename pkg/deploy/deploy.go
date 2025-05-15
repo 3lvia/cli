@@ -86,6 +86,7 @@ func Command() *cli.Command {
 				Name:    "dry-run",
 				Aliases: []string{"D"},
 				Usage:   "Simulate the deployment without actually deploying.",
+				Sources: cli.EnvVars("3LV_DRY_RUN"),
 			},
 			&cli.StringFlag{
 				Name:    "azure-tenant-id",
