@@ -30,10 +30,22 @@ COPY --from=build /app .
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Fixes CVE-2024-56406
+# Fixes CVEs:
+# CVE-2023-4039: gcc-12-base, libgcc-s1, libstdc++6
+# CVE-2025-1390: libcap2
+# CVE-2024-13176: libssl3, openssl
+# CVE-2023-4641: login, passwd
+# CVE-2023-29383: login, passwd
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        perl-base
+        gcc-12-base \
+        libgcc-s1 \
+        libstdc++6 \
+        libcap2 \
+        libssl3 \
+        openssl \
+        login \
+        passwd
 
 RUN chown --recursive application-user .
 USER application-user
