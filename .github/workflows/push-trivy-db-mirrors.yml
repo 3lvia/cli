@@ -14,7 +14,7 @@ on:
 jobs:
   push-trivy-db-mirror:
     name: Push Trivy Database Mirror
-    runs-on: elvia-runner
+    runs-on: elvia-runner-v2
     permissions:
       contents: read
       packages: write
@@ -38,7 +38,7 @@ jobs:
 
   push-trivy-java-db-mirror:
     name: Push Trivy Java Database Mirror
-    runs-on: elvia-runner
+    runs-on: elvia-runner-v2
     permissions:
       contents: read
       packages: write
