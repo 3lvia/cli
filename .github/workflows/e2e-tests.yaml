@@ -41,6 +41,10 @@ jobs:
       - name: Install CLI from source
         run: make install
 
+      - name: Install cookiecutter
+        if: ${{ matrix.command == 'create' }}
+        run: python3 -m pip install --user cookiecutter
+
       - name: 'Run tests for ${{ matrix.command }} command'
         run: './tests/${{ matrix.command }}/run_tests.sh'
         env:
