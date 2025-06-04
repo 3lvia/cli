@@ -49,6 +49,10 @@ jobs:
         if: ${{ matrix.command == 'create' }}
         run: python3 -m pip install --user cookiecutter
 
+      - name: Install uv
+        if: ${{ matrix.command == 'create' }}
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
       - name: 'Run tests for ${{ matrix.command }} command'
         run: |
           export PATH="$HOME/.local/bin:$PATH"
