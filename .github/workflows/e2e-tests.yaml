@@ -50,7 +50,10 @@ jobs:
         run: |
           python3 -m pip install --user pipx
           python3 -m pipx ensurepath
-          sudo pipx ensurepath --global # needed to allow pipx actions with --global argument
+
+      - name: Add pipx to PATH
+        if: ${{ matrix.command == 'create' }}
+        run: sudo pipx ensurepath --global # needed to allow pipx actions with --global argument
 
       - name: Install cookiecutter
         if: ${{ matrix.command == 'create' }}
