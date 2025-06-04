@@ -47,12 +47,13 @@ jobs:
 
       - name: Install cookiecutter
         if: ${{ matrix.command == 'create' }}
-        run: |
-          sudo python3 -m pip install pipx
-          sudo python3 -m pipx install cookiecutter --global
+        run: python3 -m pip install --user cookiecutter
 
       - name: 'Run tests for ${{ matrix.command }} command'
-        run: './tests/${{ matrix.command }}/run_tests.sh'
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          './tests/$COMMAND/run_tests.sh'
         env:
           # Increases rate-limit of when downloading 3lv from GitHub in tests for '3lv upgrade'.
           GITHUB_TOKEN: ${{ github.token }}
+          COMMAND: ${{ matrix.command }}
