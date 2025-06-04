@@ -45,20 +45,13 @@ jobs:
         if: ${{ matrix.command == 'create' }}
         uses: actions/setup-python@v5
 
-      - name: Install pipx
+      - name: Install cookiecutter
         if: ${{ matrix.command == 'create' }}
         run: |
           python3 -m pip install --user pipx
           python3 -m pipx ensurepath
-          source ~/.bashrc
-
-      - name: Add pipx to PATH
-        if: ${{ matrix.command == 'create' }}
-        run: pipx ensurepath --global # needed to allow pipx actions with --global argument
-
-      - name: Install cookiecutter
-        if: ${{ matrix.command == 'create' }}
-        run: pipx install cookiecutter --global
+          python3 -m pipx ensurepath --global
+          python3 -m pipx install cookiecutter --global
 
       - name: 'Run tests for ${{ matrix.command }} command'
         run: './tests/${{ matrix.command }}/run_tests.sh'
