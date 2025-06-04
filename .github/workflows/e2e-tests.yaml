@@ -10,7 +10,7 @@ on:
 jobs:
   e2e-tests:
     name: End-to-End Tests
-    runs-on: elvia-runner
+    runs-on: elvia-runner-v2
     strategy:
       matrix:
         command:
@@ -41,8 +41,23 @@ jobs:
       - name: Install CLI from source
         run: make install
 
+      - name: Setup Python
+        if: ${{ matrix.command == 'create' }}
+        uses: actions/setup-python@v5
+
+      - name: Install cookiecutter
+        if: ${{ matrix.command == 'create' }}
+        run: python3 -m pip install --user cookiecutter
+
+      - name: Install uv
+        if: ${{ matrix.command == 'create' }}
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
       - name: 'Run tests for ${{ matrix.command }} command'
-        run: './tests/${{ matrix.command }}/run_tests.sh'
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          "./tests/$COMMAND/run_tests.sh"
         env:
           # Increases rate-limit of when downloading 3lv from GitHub in tests for '3lv upgrade'.
           GITHUB_TOKEN: ${{ github.token }}
+          COMMAND: ${{ matrix.command }}

@@ -3,10 +3,10 @@ name: Push Trivy Database Mirrors
 on:
   push:
     branches: [trunk]
-    paths: ['.github/workflows/push-trivy-db-mirrors.yml']
+    paths: ['.github/workflows/push-trivy-db-mirrors.yaml']
   pull_request:
     branches: [trunk]
-    paths: ['.github/workflows/push-trivy-db-mirrors.yml']
+    paths: ['.github/workflows/push-trivy-db-mirrors.yaml']
   schedule:
     # Run every 6 hours, which is when Trivy updates their database
     - cron: '45 */6 * * *'
@@ -14,11 +14,14 @@ on:
 jobs:
   push-trivy-db-mirror:
     name: Push Trivy Database Mirror
-    runs-on: elvia-runner
+    runs-on: elvia-runner-v2
     permissions:
       contents: read
       packages: write
     steps:
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+
       - name: Login to GHCR
         run: |
           echo "$GITHUB_TOKEN" | oras login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
@@ -38,11 +41,14 @@ jobs:
 
   push-trivy-java-db-mirror:
     name: Push Trivy Java Database Mirror
-    runs-on: elvia-runner
+    runs-on: elvia-runner-v2
     permissions:
       contents: read
       packages: write
     steps:
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+
       - name: Login to GHCR
         run: |
           echo "$GITHUB_TOKEN" | oras login ghcr.io -u "$GITHUB_USERNAME" --password-stdin
