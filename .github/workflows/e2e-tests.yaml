@@ -53,11 +53,11 @@ jobs:
 
       - name: Add pipx to PATH
         if: ${{ matrix.command == 'create' }}
-        run: sudo pipx ensurepath --global # needed to allow pipx actions with --global argument
+        run: pipx ensurepath --global # needed to allow pipx actions with --global argument
 
       - name: Install cookiecutter
         if: ${{ matrix.command == 'create' }}
-        run: sudo pipx install cookiecutter --global
+        run: pipx install cookiecutter --global
 
       - name: 'Run tests for ${{ matrix.command }} command'
         run: './tests/${{ matrix.command }}/run_tests.sh'
