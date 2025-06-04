@@ -50,6 +50,7 @@ jobs:
         run: |
           python3 -m pip install --user pipx
           python3 -m pipx ensurepath
+          source ~/.bashrc
 
       - name: Add pipx to PATH
         if: ${{ matrix.command == 'create' }}
