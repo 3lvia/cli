@@ -48,9 +48,7 @@ jobs:
       - name: Install cookiecutter
         if: ${{ matrix.command == 'create' }}
         run: |
-          python3 -m pip install --user pipx
-          python3 -m pipx ensurepath
-          sudo python3 -m pipx ensurepath --global
+          sudo python3 -m pip install pipx
           sudo python3 -m pipx install cookiecutter --global
 
       - name: 'Run tests for ${{ matrix.command }} command'
