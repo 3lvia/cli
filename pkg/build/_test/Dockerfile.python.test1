@@ -36,6 +36,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 # CVE-2024-13176: libssl3, openssl
 # CVE-2023-4641: login, passwd
 # CVE-2023-29383: login, passwd
+# CVE-2025-4598: libsystemd0, libudev1
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         gcc-12-base \
@@ -45,7 +46,9 @@ RUN apt-get update && \
         libssl3 \
         openssl \
         login \
-        passwd
+        passwd \
+        libsystemd0 \
+        libudev1
 
 RUN chown --recursive application-user .
 USER application-user
