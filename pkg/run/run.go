@@ -119,8 +119,8 @@ func generateComposeFile(
 
 	composeFile, err := utils.WriteFileWithTemplate(
 		directory,
-		"docker-compose.yml",
-		"docker-compose.yml.tmpl",
+		"compose.yaml",
+		"compose.yaml.tmpl",
 		composeTemplates,
 		ComposeFileVariables{
 			ApplicationName:      applicationName,

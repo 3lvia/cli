@@ -135,9 +135,9 @@ to enable access from GitHub Actions to Kubernetes.
 **<summary>Generate a GitHub Actions workflow for deploying to ISS, using an existing Helm values file</summary>**
 
 ```bash
-3lv github-actions --system-name core --application-name my-cool-application --runtime-cloud-provider iss --helm-values-file CI/values.yml --project-file src/MyProject.csproj
+3lv github-actions --system-name core --application-name my-cool-application --runtime-cloud-provider iss --helm-values-file CI/values.yaml --project-file src/MyProject.csproj
 # or use shorthand
-3lv gha -s core -a my-cool-application -r iss -F CI/values.yml -f src/MyProject.csproj
+3lv gha -s core -a my-cool-application -r iss -F CI/values.yaml -f src/MyProject.csproj
 ```
 
 Remember to also add your repository to the list of repositories in the `github-actions-deploy`-module

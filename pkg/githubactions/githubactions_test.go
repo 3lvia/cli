@@ -13,32 +13,32 @@ func TestGetExampleWorkflowFileURL(t *testing.T) {
 		{
 			language:             "dotnet",
 			runtimeCloudProvider: "aks",
-			want:                 exampleWorkflowBaseURL + "/build-deploy-dotnet.yml",
+			want:                 exampleWorkflowBaseURL + "/build-deploy-dotnet.yaml",
 		},
 		{
 			language:             "dotnet",
 			runtimeCloudProvider: "gke",
-			want:                 exampleWorkflowBaseURL + "/build-deploy-dotnet-google.yml",
+			want:                 exampleWorkflowBaseURL + "/build-deploy-dotnet-google.yaml",
 		},
 		{
 			language:             "go",
 			runtimeCloudProvider: "aks",
-			want:                 exampleWorkflowBaseURL + "/build-deploy-go.yml",
+			want:                 exampleWorkflowBaseURL + "/build-deploy-go.yaml",
 		},
 		{
 			language:             "go",
 			runtimeCloudProvider: "gke",
-			want:                 exampleWorkflowBaseURL + "/build-deploy-go-google.yml",
+			want:                 exampleWorkflowBaseURL + "/build-deploy-go-google.yaml",
 		},
 		{
 			language:             "dockerfile",
 			runtimeCloudProvider: "aks",
-			want:                 exampleWorkflowBaseURL + "/build-deploy-dockerfile.yml",
+			want:                 exampleWorkflowBaseURL + "/build-deploy-dockerfile.yaml",
 		},
 		{
 			language:             "dockerfile",
 			runtimeCloudProvider: "gke",
-			want:                 exampleWorkflowBaseURL + "/build-deploy-dockerfile-google.yml",
+			want:                 exampleWorkflowBaseURL + "/build-deploy-dockerfile-google.yaml",
 		},
 	}
 
