@@ -27,7 +27,7 @@ test_create_dotnet8() {
             exit 1
         fi
 
-        if [[ ! -f "$output_dir/$project_dir/.github/workflows/build-deploy-$app_name.yml" ]]; then
+        if [[ ! -f "$output_dir/$project_dir/.github/workflows/build-deploy-$app_name.yaml" ]]; then
             echo "Workflow file does not exist for template $dotnet8_template_type."
             exit 1
         fi
@@ -74,7 +74,7 @@ test_create_python() {
                 exit 1
             fi
 
-            if [[ ! -f "$output_dir/$project_dir/.github/workflows/build-deploy-$app_name.yml" ]]; then
+            if [[ ! -f "$output_dir/$project_dir/.github/workflows/build-deploy-$app_name.yaml" ]]; then
                 echo "Workflow file does not exist for template $python_template_type and version $python_version."
                 exit 1
             fi
@@ -115,7 +115,7 @@ test_create_go() {
             exit 1
         fi
 
-        if [[ ! -f "$output_dir/$project_dir/.github/workflows/build-deploy-$app_name.yml" ]]; then
+        if [[ ! -f "$output_dir/$project_dir/.github/workflows/build-deploy-$app_name.yaml" ]]; then
             echo "Workflow file does not exist for template $go_template_type."
             exit 1
         fi

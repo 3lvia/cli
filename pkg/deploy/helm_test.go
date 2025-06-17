@@ -96,7 +96,7 @@ func TestHelmDeployCommand1(t *testing.T) {
 
 	const (
 		systemName      = "core"
-		helmValuesFile  = ".github/deploy/values.yml"
+		helmValuesFile  = ".github/deploy/values.yaml"
 		applicationName = "demo-api"
 		environment     = "dev"
 		workloadType    = "deployment"
@@ -159,7 +159,7 @@ func TestHelmDeployCommand2(t *testing.T) {
 
 	const (
 		systemName      = "core"
-		helmValuesFile  = ".github/deploy/values.yml"
+		helmValuesFile  = ".github/deploy/values.yaml"
 		applicationName = "demo-api"
 		environment     = "prod"
 		workloadType    = "statefulset"
@@ -222,7 +222,7 @@ func TestHelmDeployCommand3(t *testing.T) {
 
 	const (
 		systemName      = "core"
-		helmValuesFile  = ".github/deploy/values.yml"
+		helmValuesFile  = ".github/deploy/values.yaml"
 		applicationName = "demo-api"
 		environment     = "prod"
 		workloadType    = "job"
@@ -257,7 +257,7 @@ func TestHelmDeployCommand4(t *testing.T) {
 
 	const (
 		systemName      = "core"
-		helmValuesFile  = ".github/deploy/values.yml"
+		helmValuesFile  = ".github/deploy/values.yaml"
 		applicationName = "demo-api"
 		environment     = "prod"
 		workloadType    = "deployment"
@@ -318,7 +318,7 @@ func TestHelmDeployCommand5(t *testing.T) {
 
 	const (
 		systemName      = "core"
-		helmValuesFile  = ".github/deploy/values.yml"
+		helmValuesFile  = ".github/deploy/values.yaml"
 		applicationName = "demo-api"
 		environment     = "prod"
 		workloadType    = "statefulset"
@@ -351,7 +351,7 @@ func TestHelmDeployCommand5(t *testing.T) {
 func TestHelmDeployCommandWithGitHubActionsEnv(t *testing.T) {
 	const (
 		systemName      = "core"
-		helmValuesFile  = ".github/deploy/values.yml"
+		helmValuesFile  = ".github/deploy/values.yaml"
 		applicationName = "demo-api"
 		environment     = "dev"
 		workloadType    = "deployment"

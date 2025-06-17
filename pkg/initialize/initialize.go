@@ -94,7 +94,7 @@ func Init(_ context.Context, c *cli.Command) error {
 			}
 		}
 
-		helmValuesFile := ".github/deploy/values-" + applicationName + ".yml"
+		helmValuesFile := ".github/deploy/values-" + applicationName + ".yaml"
 
 		err = huh.NewInput().
 			Title("What is the full path to your Helm values file?").

@@ -16,7 +16,7 @@ test_github_actions() {
         exit 1
     fi
 
-    if [[ ! -f "$output_dir/.github/workflows/build-deploy-$app_name.yml" ]]; then
+    if [[ ! -f "$output_dir/.github/workflows/build-deploy-$app_name.yaml" ]]; then
         echo 'Workflow file does not exist.'
         exit 1
     fi

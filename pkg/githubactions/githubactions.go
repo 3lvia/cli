@@ -23,7 +23,7 @@ const (
 	exampleWorkflowBaseURL = "https://raw.githubusercontent.com/3lvia/.github/refs/heads/trunk/workflow-templates"
 )
 
-//go:embed values.yml.tmpl
+//go:embed values.yaml.tmpl
 var helmValuesFileTemplate embed.FS
 
 func Command() *cli.Command {
@@ -152,7 +152,7 @@ func CreateDeployWorkflow(
 		return "", err
 	}
 
-	workflowFileName := fmt.Sprintf("build-deploy-%s.yml", applicationName)
+	workflowFileName := fmt.Sprintf("build-deploy-%s.yaml", applicationName)
 	workflowFilePath := filepath.Join(fullGithubActionsDir, workflowFileName)
 
 	if err := downloadFile(ctx, exampleWorkflowFileURL, workflowFilePath); err != nil {
@@ -260,7 +260,7 @@ func replaceWorkflowPlaceholders(
 	if options.HelmValuesFile != "" {
 		contentsString = strings.ReplaceAll(
 			contentsString,
-			".github/deploy/values.yml",
+			".github/deploy/values.yaml",
 			options.HelmValuesFile,
 		)
 	}
@@ -360,24 +360,24 @@ func getLanguageFromProjectFile(projectFile string) (string, error) {
 func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (string, error) {
 	// .NET
 	if language == "dotnet" && runtimeCloudProvider == "aks" {
-		return exampleWorkflowBaseURL + "/build-deploy-dotnet.yml", nil
+		return exampleWorkflowBaseURL + "/build-deploy-dotnet.yaml", nil
 	}
 
 	if language == "dotnet" && runtimeCloudProvider == "gke" {
-		return exampleWorkflowBaseURL + "/build-deploy-dotnet-google.yml", nil
+		return exampleWorkflowBaseURL + "/build-deploy-dotnet-google.yaml", nil
 	}
 
 	if language == "dotnet" && runtimeCloudProvider == "iss" {
-		return exampleWorkflowBaseURL + "/build-deploy-dotnet-iss.yml", nil
+		return exampleWorkflowBaseURL + "/build-deploy-dotnet-iss.yaml", nil
 	}
 
 	// Go
 	if language == "go" && runtimeCloudProvider == "aks" {
-		return exampleWorkflowBaseURL + "/build-deploy-go.yml", nil
+		return exampleWorkflowBaseURL + "/build-deploy-go.yaml", nil
 	}
 
 	if language == "go" && runtimeCloudProvider == "gke" {
-		return exampleWorkflowBaseURL + "/build-deploy-go-google.yml", nil
+		return exampleWorkflowBaseURL + "/build-deploy-go-google.yaml", nil
 	}
 
 	if language == "go" && runtimeCloudProvider == "iss" {
@@ -390,11 +390,11 @@ func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (st
 
 	// Python
 	if language == "python" && runtimeCloudProvider == "aks" {
-		return exampleWorkflowBaseURL + "/build-deploy-python.yml", nil
+		return exampleWorkflowBaseURL + "/build-deploy-python.yaml", nil
 	}
 
 	if language == "python" && runtimeCloudProvider == "gke" {
-		return exampleWorkflowBaseURL + "/build-deploy-python-google.yml", nil
+		return exampleWorkflowBaseURL + "/build-deploy-python-google.yaml", nil
 	}
 
 	if language == "python" && runtimeCloudProvider == "iss" {
@@ -407,11 +407,11 @@ func getExampleWorkflowFileURL(language string, runtimeCloudProvider string) (st
 
 	// Dockerfile
 	if language == "dockerfile" && runtimeCloudProvider == "aks" {
-		return exampleWorkflowBaseURL + "/build-deploy-dockerfile.yml", nil
+		return exampleWorkflowBaseURL + "/build-deploy-dockerfile.yaml", nil
 	}
 
 	if language == "dockerfile" && runtimeCloudProvider == "gke" {
-		return exampleWorkflowBaseURL + "/build-deploy-dockerfile-google.yml", nil
+		return exampleWorkflowBaseURL + "/build-deploy-dockerfile-google.yaml", nil
 	}
 
 	if language == "dockerfile" && runtimeCloudProvider == "iss" {
@@ -446,7 +446,7 @@ func resolveHelmValuesFile(
 	}
 
 	if options.HelmValuesFile == "" {
-		defaultHelmValuesFile := fmt.Sprintf(".github/deploy/values-%s.yml", applicationName)
+		defaultHelmValuesFile := fmt.Sprintf(".github/deploy/values-%s.yaml", applicationName)
 
 		yes, err := utils.PromptYesNo(
 			"You have not provided a Helm values file, which is required for the deployment."+
@@ -470,7 +470,7 @@ func resolveHelmValuesFile(
 			return "", fmt.Errorf("Failed to create directory for Helm values file: %w", err)
 		}
 
-		const templateFile = "values.yml.tmpl"
+		const templateFile = "values.yaml.tmpl"
 
 		newHelmValuesFile, err := utils.WriteFileWithTemplate(
 			options.OutputDirectory,

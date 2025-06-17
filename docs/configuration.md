@@ -12,7 +12,7 @@ system: core
 applications:
   - name: demo-api
     projectFile: applications/DemoApi/DemoApi.csproj
-    helmValuesFile: .github/deploy/values-demo-api.yml
+    helmValuesFile: .github/deploy/values-demo-api.yaml
     buildContext: . # optional
 ```
 
