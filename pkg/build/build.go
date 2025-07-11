@@ -268,7 +268,6 @@ func Build(_ context.Context, c *cli.Command) error {
 		utils.RemoveZeroValues(c.StringSlice("scan-formats")),
 		c.Bool("scan-disable-error"),
 	)
-
 	if push && scanErr != nil {
 		if pushImageOutput := pushImageCommand(
 			imageName,

@@ -81,7 +81,6 @@ func SetConfig(config *Config, overrideDirectory string) error {
 func ConfigExists() (bool, string) {
 	returnNameCheckExists := func(filePath string) (string, error) {
 		_, err := os.Stat(filePath)
-
 		if os.IsNotExist(err) {
 			return "", errors.New("No 3lv configuration file found at " + filePath)
 		}

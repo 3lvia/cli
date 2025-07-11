@@ -13,9 +13,11 @@ linters:
     - gosec
     - mnd
     - nestif
+    - noinlineerr
     - tagliatelle
     - testpackage
     - wrapcheck
+    - wsl
   settings:
     exhaustruct:
       exclude:
@@ -77,6 +79,9 @@ linters:
       - linters:
           - revive
         text: 'error-strings: error strings should not be capitalized or end with punctuation or a newline'
+      - linters:
+          - revive
+        text: 'var-naming: avoid meaningless package names'
     paths:
       - third_party$
       - builtin$

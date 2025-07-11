@@ -217,8 +217,8 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 	}
 
 	addDeploymentAnnotation := c.Bool("add-deployment-annotation")
-	commitMessage, err := utils.ResolveCommitMessage(c.String("commit-message"))
 
+	commitMessage, err := utils.ResolveCommitMessage(c.String("commit-message"))
 	if err != nil && addDeploymentAnnotation {
 		return cli.Exit(err, 1)
 	}
