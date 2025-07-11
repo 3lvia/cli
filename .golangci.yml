@@ -1,93 +1,100 @@
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
-    - depguard
-    - testpackage
-    - mnd
-    - exportloopref
-    - tagliatelle
-    # TODO: fix issues and enable linters below
-    - funlen
-    - err113
-    - wrapcheck
     - cyclop
-    - nestif
-    - gocritic
-    - goconst
-    - gosec
-    - godox
+    - depguard
+    - err113
+    - funlen
     - gocognit
-linters-settings:
-  stylecheck:
-    checks:
-      - ST1000
-      - ST1001
-      - ST1003
-      - ST1006
-      - ST1008
-      - ST1011
-      - ST1012
-      - ST1013
-      - ST1015
-      - ST1016
-      - ST1017
-      - ST1018
-      - ST1019
-      - ST1020
-      - ST1021
-      - ST1022
-      - ST1023
-  exhaustruct:
-    exclude:
-      - 'github.com\/urfave\/cli\/v[0-9]+\..+' # many fields are optional
-      - 'github.com\/3lvia\/cli\/pkg\/auth\.AzLoginCommandOptions' # every field is optional
-      - 'github.com\/3lvia\/cli\/pkg\/build\.GenerateDockerfileOptions' # every field is optional
-      - 'github.com\/3lvia\/cli\/pkg\/command\.RunOptions' # every field is optional
-issues:
-  exclude-rules:
-    # urfave/cli uses this naming scheme, so we stick to it.
-    - linters:
-      - varnamelen
-      text: "parameter name 'c' is too short for the scope of its usage"
-
-    # There is not other way to do this; we have to use var for structs.
-    - linters:
-      - gochecknoglobals
-      text: "Dotnet.* is a global variable"
-
-    # There is not other way to do this; we have to use var for structs.
-    - linters:
-      - gochecknoglobals
-      text: "Python.* is a global variable"
-
-    # There is not other way to do this; we have to use var for structs.
-    - linters:
-      - gochecknoglobals
-      text: "Go.* is a global variable"
-
-    # There is not other way to do this; we have to use var for structs.
-    - linters:
-      - gochecknoglobals
-      text: "Templates is a global variable"
-
-    # There is not other way to do this; we have to use var for structs.
-    - linters:
-      - gochecknoglobals
-      text: "Languages is a global variable"
-
-    # Does not make sense when looking at the bigger picture.
-    - linters:
-      - revive
-      text: "exported: func name will be used as scan.ScanImage by other packages, and that stutters; consider calling this Image"
-
-    # We have to print to the user.
-    - linters:
-      - forbidigo
-      text: "use of `fmt.Println` forbidden by pattern"
-
-    # We want to output user-readable error messages, not long stack traces.
-    - linters:
-      - revive
-      text: "error-strings: error strings should not be capitalized or end with punctuation or a newline"
-output:
-  show-stats: true
+    - goconst
+    - gocritic
+    - godox
+    - gosec
+    - mnd
+    - nestif
+    - noinlineerr
+    - tagliatelle
+    - testpackage
+    - wrapcheck
+    - wsl
+  settings:
+    exhaustruct:
+      exclude:
+        - github.com\/urfave\/cli\/v[0-9]+\..+
+        - github.com\/3lvia\/cli\/pkg\/auth\.AzLoginCommandOptions
+        - github.com\/3lvia\/cli\/pkg\/build\.GenerateDockerfileOptions
+        - github.com\/3lvia\/cli\/pkg\/command\.RunOptions
+    staticcheck:
+      checks:
+        - ST1000
+        - ST1001
+        - ST1003
+        - ST1006
+        - ST1008
+        - ST1011
+        - ST1012
+        - ST1013
+        - ST1015
+        - ST1016
+        - ST1017
+        - ST1018
+        - ST1019
+        - ST1020
+        - ST1021
+        - ST1022
+        - ST1023
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - varnamelen
+        text: parameter name 'c' is too short for the scope of its usage
+      - linters:
+          - gochecknoglobals
+        text: Dotnet.* is a global variable
+      - linters:
+          - gochecknoglobals
+        text: Python.* is a global variable
+      - linters:
+          - gochecknoglobals
+        text: Go.* is a global variable
+      - linters:
+          - gochecknoglobals
+        text: Templates is a global variable
+      - linters:
+          - gochecknoglobals
+        text: Languages is a global variable
+      - linters:
+          - revive
+        text: 'exported: func name will be used as scan.ScanImage by other packages, and that stutters; consider calling this Image'
+      - linters:
+          - forbidigo
+        text: use of `fmt.Println` forbidden by pattern
+      - linters:
+          - revive
+        text: 'error-strings: error strings should not be capitalized or end with punctuation or a newline'
+      - linters:
+          - revive
+        text: 'var-naming: avoid meaningless package names'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

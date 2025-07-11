@@ -119,6 +119,7 @@ func CreateDeployWorkflow(
 	nonInteractive bool,
 ) (string, error) {
 	const githubActionsDir = ".github/workflows"
+
 	fullGithubActionsDir := path.Join(outputDirectory, githubActionsDir)
 
 	if _, err := os.Stat(fullGithubActionsDir); os.IsNotExist(err) {
