@@ -4,7 +4,6 @@ linters:
     - depguard
     - testpackage
     - mnd
-    - exportloopref
     - tagliatelle
     # TODO: fix issues and enable linters below
     - funlen
