@@ -5,7 +5,7 @@ go 1.24
 require (
 	github.com/charmbracelet/huh v0.7.0
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/google/go-github/v71 v71.0.0
+	github.com/google/go-github/v74 v74.0.0
 	github.com/orsinium-labs/enum v1.4.0
 	github.com/samber/lo v1.51.0
 	github.com/urfave/cli/v3 v3.3.8
