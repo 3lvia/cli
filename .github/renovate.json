@@ -7,5 +7,12 @@
   "ignorePaths": ["pkg/build/_test/Dockerfile*", "tests/build/Dockerfile*"],
   "nuget": {
     "ignorePaths": ["pkg/build/_test/*.csproj"]
-  }
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ]
 }
