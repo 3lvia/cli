@@ -24,7 +24,7 @@ func GetElviaDefaultRuntimeSubscriptionID(
 	}
 
 	switch environment {
-	case "dev", "test", "sandbox":
+	case "dev", "kptest", "test", "sandbox":
 		return ElviaDefaultRuntimeDevTestSubscriptionID, nil
 	case "prod":
 		return ElviaDefaultRuntimeSubscriptionID, nil
