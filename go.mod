@@ -6,7 +6,7 @@ require (
 	github.com/charmbracelet/huh v0.7.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/google/go-github/v74 v74.0.0
-	github.com/orsinium-labs/enum v1.4.0
+	github.com/orsinium-labs/enum v1.5.0
 	github.com/samber/lo v1.51.0
 	github.com/urfave/cli/v3 v3.4.1
 	golang.org/x/mod v0.27.0
@@ -23,7 +23,7 @@ require (
 	github.com/charmbracelet/colorprofile v0.3.2 // indirect
 	github.com/charmbracelet/x/ansi v0.10.1 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
-	github.com/charmbracelet/x/exp/strings v0.0.0-20250814162307-57b675fecd71 // indirect
+	github.com/charmbracelet/x/exp/strings v0.0.0-20250820142022-371acb6ebad9 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
