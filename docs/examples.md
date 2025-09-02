@@ -119,10 +119,12 @@ See [here](configuration.md) for more information.
 
 **<summary>Generate a GitHub Actions workflow for deploying to Kubernetes</summary>**
 
+This assumes you are currently in the root of your repository (hence the `.` at the end of the command).
+
 ```bash
-3lv github-actions --system-name core --application-name my-cool-application --project-file src/MyProject.csproj
+3lv github-actions --system-name core --application-name my-cool-application --project-file src/MyProject.csproj .
 # or use shorthand
-3lv gha -s core -a my-cool-application -f src/MyProject.csproj
+3lv gha -s core -a my-cool-application -f src/MyProject.csproj .
 ```
 
 Remember to also add your repository to [github-repositories-terraform](https://github.com/3lvia/github-repositories-terraform)
