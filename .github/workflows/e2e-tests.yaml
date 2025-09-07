@@ -43,7 +43,7 @@ jobs:
 
       - name: Setup Python
         if: ${{ matrix.command == 'create' }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
 
       - name: Install cookiecutter
         if: ${{ matrix.command == 'create' }}
