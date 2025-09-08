@@ -1,6 +1,8 @@
 module github.com/3lvia/cli
 
-go 1.24
+go 1.24.0
+
+toolchain go1.24.4
 
 require (
 	github.com/charmbracelet/huh v0.7.0
@@ -9,8 +11,8 @@ require (
 	github.com/orsinium-labs/enum v1.5.0
 	github.com/samber/lo v1.51.0
 	github.com/urfave/cli/v3 v3.4.1
-	golang.org/x/mod v0.27.0
-	golang.org/x/text v0.28.0
+	golang.org/x/mod v0.28.0
+	golang.org/x/text v0.29.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -19,11 +21,11 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/charmbracelet/bubbles v0.21.0 // indirect
-	github.com/charmbracelet/bubbletea v1.3.6 // indirect
+	github.com/charmbracelet/bubbletea v1.3.7 // indirect
 	github.com/charmbracelet/colorprofile v0.3.2 // indirect
 	github.com/charmbracelet/x/ansi v0.10.1 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
-	github.com/charmbracelet/x/exp/strings v0.0.0-20250820142022-371acb6ebad9 // indirect
+	github.com/charmbracelet/x/exp/strings v0.0.0-20250908124904-2f6319ea8c3c // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
@@ -38,6 +40,5 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/sys v0.36.0 // indirect
 )
