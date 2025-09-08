@@ -37,6 +37,9 @@ ENV PATH="/app/.venv/bin:$PATH"
 # CVE-2023-4641: login, passwd
 # CVE-2023-29383: login, passwd
 # CVE-2025-4598: libsystemd0, libudev1
+# CVE-2025-6965: libsqlite3-0
+# CVE-2025-4802: libc6, libc-bin
+# CVE-2023-31484: perl-base
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         gcc-12-base \
@@ -48,7 +51,11 @@ RUN apt-get update && \
         login \
         passwd \
         libsystemd0 \
-        libudev1
+        libudev1 \
+        libsqlite3-0 \
+        libc6 \
+        libc-bin \
+        perl-base
 
 RUN chown --recursive application-user .
 USER application-user
