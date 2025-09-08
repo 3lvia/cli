@@ -10,7 +10,7 @@ on:
 jobs:
   e2e-tests:
     name: End-to-End Tests
-    runs-on: elvia-runner-v2
+    runs-on: elvia-runner
     strategy:
       matrix:
         command:

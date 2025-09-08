@@ -15,7 +15,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ${{ matrix.os == 'windows' && 'windows-latest' || 'elvia-runner-v2' }}
+    runs-on: ${{ matrix.os == 'windows' && 'windows-latest' || 'elvia-runner' }}
     strategy:
       matrix:
         os: [linux, macos, windows]
@@ -54,7 +54,7 @@ jobs:
   pre-release:
     name: Pre-release
     needs: [build]
-    runs-on: elvia-runner-v2
+    runs-on: elvia-runner
     if: ${{ github.event_name == 'push' }}
     outputs:
       version-tag: ${{ steps.get-version.outputs.version_tag }}
@@ -102,7 +102,7 @@ jobs:
   upload-binaries:
     name: Upload binaries
     needs: [pre-release]
-    runs-on: elvia-runner-v2
+    runs-on: elvia-runner
     if: ${{ github.event_name == 'push' }}
     strategy:
       matrix:
@@ -158,7 +158,7 @@ jobs:
 
   release:
     name: Release
-    runs-on: elvia-runner-v2
+    runs-on: elvia-runner
     needs: [pre-release, upload-binaries]
     if: ${{ github.event_name == 'push' }}
     permissions:
