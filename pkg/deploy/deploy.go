@@ -137,16 +137,19 @@ func Command() *cli.Command {
 				Sources: cli.EnvVars("3LV_GKE_CLUSTER_LOCATION"),
 			},
 			&cli.BoolFlag{
-				Name:  "add-deployment-annotation",
-				Usage: "Add a deployment annotation to Grafana. Requires --grafana-url and --grafana-api-key to be set.",
+				Name:    "add-deployment-annotation",
+				Usage:   "Add a deployment annotation to Grafana. Requires --grafana-url and --grafana-api-key to be set.",
+				Sources: cli.EnvVars("3LV_ADD_DEPLOYMENT_ANNOTATION"),
 			},
 			&cli.StringFlag{
-				Name:  "grafana-url",
-				Usage: "The Grafana URL to use for deployment annotations.",
+				Name:    "grafana-url",
+				Usage:   "The Grafana URL to use for deployment annotations.",
+				Sources: cli.EnvVars("3LV_GRAFANA_URL"),
 			},
 			&cli.StringFlag{
-				Name:  "grafana-api-key",
-				Usage: "The Grafana API key to use for deployment annotations.",
+				Name:    "grafana-api-key",
+				Usage:   "The Grafana API key to use for deployment annotations.",
+				Sources: cli.EnvVars("3LV_GRAFANA_API_KEY"),
 			},
 			&cli.StringFlag{
 				Name:  "run-id",
