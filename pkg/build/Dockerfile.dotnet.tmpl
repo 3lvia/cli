@@ -23,7 +23,8 @@ RUN addgroup application-group --gid 1001 && \
 RUN apk update && \
     apk upgrade --no-cache && \
     apk add --no-cache \
-        icu-libs
+        icu-libs \
+        tzdata
 
 # CVE-2024-12797
 RUN apk add --no-cache libssl3 libcrypto3
