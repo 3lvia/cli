@@ -276,6 +276,19 @@ func installCommand(
 	binaryFile string,
 	installLocation string,
 ) command.Output {
+	if runtime.GOOS == "darwin" {
+		return command.Run(
+			*exec.Command(
+				"sudo",
+				"install",
+				"-Dm755",
+				binaryFile,
+				installLocation,
+			),
+			options,
+		)
+	}
+
 	return command.Run(
 		*exec.Command(
 			"sudo",
