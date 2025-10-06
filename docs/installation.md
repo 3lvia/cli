@@ -1,5 +1,11 @@
 ## 💾 Installation
 
+### TL;DR
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/3lvia/cli/trunk/install.sh | bash
+```
+
 Supported platforms:
 
 - **Linux/WSL** (recommended)
@@ -29,7 +35,9 @@ sudo install -Dm755 -t /usr/local/bin 3lv
 ```
 
 #### Example Mac installation
+
 The installation is done by first installing the app, secondly trying (and failing) to open it, and thirdly [allowing the opening of it](https://support.apple.com/en-gb/guide/mac-help/mh40616/mac).
+
 ```bash
 tar -xzf 3lv-macos-arm64.tar.gz
 sudo install -Dm755 3lv /usr/local/bin/

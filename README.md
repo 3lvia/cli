@@ -2,6 +2,16 @@
 
 **3lv** – the Command Line Interface tool for creating, building and securing Elvia applications ⚡
 
+## 📦 Installation
+
+### TL;DR
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/3lvia/cli/trunk/install.sh | bash
+```
+
+### See [Installation](docs/installation.md) for more options.
+
 ## 🚀 Features
 
 - **Build** a container for .NET, Go or Python projects without needing a Dockerfile.
