@@ -15,10 +15,10 @@ RUN dotnet tool restore && \
 FROM {{ .RuntimeBaseImage }}:{{ .BaseImageTag }} AS runtime
 LABEL maintainer="elvia@elvia.no"
 
-RUN addgroup application-group --gid 1001 && \
-    adduser application-user --uid 1001 \
-        --ingroup application-group \
-        --disabled-password
+WORKDIR /app
+
+# Copy first so cache is invalidated when binary (i.e. code) changes
+COPY --from=build /app/out .
 
 RUN apk update && \
     apk upgrade --no-cache && \
@@ -26,17 +26,13 @@ RUN apk update && \
         icu-libs \
         tzdata
 
-# CVE-2024-12797
-RUN apk add --no-cache libssl3 libcrypto3
-
-# CVE-2025-5222
-RUN apk add --no-cache icu-data-en icu-libs
-
-WORKDIR /app
-
-COPY --from=build /app/out .
+RUN addgroup application-group --gid 1001 && \
+    adduser application-user --uid 1001 \
+        --ingroup application-group \
+        --disabled-password
 
 RUN chown --recursive application-user .
+
 USER application-user
 
 EXPOSE 8080

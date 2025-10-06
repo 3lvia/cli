@@ -15,22 +15,21 @@ RUN go build -o ./out/executable {{ .MainPackageDirectory }}
 FROM alpine:latest
 LABEL maintainer="elvia@elvia.no"
 
+WORKDIR /app
+
+# Copy first so cache is invalidated when binary (i.e. code) changes
+COPY --from=build /app/out .
+
 RUN apk update && \
     apk upgrade --no-cache
-
-# CVE-2024-12797
-RUN apk add --no-cache libssl3 libcrypto3
 
 RUN addgroup application-group --gid 1001 && \
     adduser application-user --uid 1001 \
         --ingroup application-group \
         --disabled-password
 
-WORKDIR /app
-
-COPY --from=build /app/out .
-
 RUN chown --recursive application-user .
+
 USER application-user
 
 EXPOSE 8080
