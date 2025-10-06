@@ -1,0 +1,19 @@
+name: Test Install Script
+
+on:
+  pull_request:
+    branches: [trunk]
+    paths:
+      - 'install.sh'
+
+jobs:
+  test-install-script:
+    name: Test Install Script
+    runs-on: elvia-runner
+    steps:
+      - name: Test install script
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/3lvia/cli/$COMMIT_SHA/install.sh" | bash
+          3lv
+        env:
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}

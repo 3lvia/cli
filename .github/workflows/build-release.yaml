@@ -6,11 +6,13 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'README.md'
+      - 'install.sh'
   pull_request:
     branches: [trunk]
     paths-ignore:
       - 'docs/**'
       - 'README.md'
+      - 'install.sh'
 
 jobs:
   build:
