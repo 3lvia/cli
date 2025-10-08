@@ -305,13 +305,16 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		return cli.Exit(fmt.Errorf("Failed to deploy Helm chart: %w", helmDeployOutput.Error), 1)
 	}
 
-	if kubectlRolloutStatusOutput := kubectlRolloutStatusCommand(
-		applicationName,
-		systemName,
-		workloadType,
-		nil,
-	); command.IsError(kubectlRolloutStatusOutput) {
-		return cli.Exit(kubectlRolloutStatusOutput.Error, 1)
+	// Jobs do not have a rollout status.
+	if workloadType != "job" {
+		if kubectlRolloutStatusOutput := kubectlRolloutStatusCommand(
+			applicationName,
+			systemName,
+			workloadType,
+			nil,
+		); command.IsError(kubectlRolloutStatusOutput) {
+			return cli.Exit(kubectlRolloutStatusOutput.Error, 1)
+		}
 	}
 
 	kubectlGetEventsOutput := kubectlGetEventsCommand(
