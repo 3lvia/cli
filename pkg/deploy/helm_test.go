@@ -232,6 +232,69 @@ func TestHelmDeployCommand3(t *testing.T) {
 		commitHash      = "abcdef"
 	)
 
+	expectedCommandString := strings.Join(
+		[]string{
+			"helm",
+			"upgrade",
+			"--debug",
+			"--install",
+			"-n",
+			systemName,
+			"-f",
+			helmValuesFile,
+			applicationName,
+			"elvia-charts/elvia-" + workloadType,
+			"--set-string",
+			"environment=" + environment,
+			"--set-string",
+			"labels.repositoryName=" + repositoryName,
+			"--set-string",
+			"labels.commitHash=\"" + commitHash + "\"",
+			"--set-string",
+			"image.tag=" + imageTag,
+			"--set-string",
+			"image.digest=" + imageDigest,
+		},
+		" ",
+	)
+
+	actualCommand := helmDeployCommand(
+		applicationName,
+		systemName,
+		helmValuesFile,
+		environment,
+		workloadType,
+		imageTag,
+		imageDigest,
+		repositoryName,
+		commitHash,
+		false,
+		false,
+		&command.RunOptions{DryRun: true},
+	)
+
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
+}
+
+func TestHelmDeployCommand4(t *testing.T) {
+	t.Setenv("GITHUB_ACTIONS", "false") // Reset GITHUB_ACTIONS env var so tests don't fail in GitHub Actions
+
+	const (
+		systemName      = "core"
+		helmValuesFile  = ".github/deploy/values.yaml"
+		applicationName = "demo-api"
+		environment     = "prod"
+		workloadType    = "daemonset"
+		imageTag        = "v420"
+		imageDigest     = "sha256:abcdef"
+		repositoryName  = "core-not-monorepo"
+		commitHash      = "abcdef"
+	)
+
 	commandOutput := helmDeployCommand(
 		applicationName,
 		systemName,
@@ -252,7 +315,7 @@ func TestHelmDeployCommand3(t *testing.T) {
 	}
 }
 
-func TestHelmDeployCommand4(t *testing.T) {
+func TestHelmDeployCommand5(t *testing.T) {
 	t.Setenv("GITHUB_ACTIONS", "false") // Reset GITHUB_ACTIONS env var so tests don't fail in GitHub Actions
 
 	const (
@@ -313,7 +376,7 @@ func TestHelmDeployCommand4(t *testing.T) {
 	)
 }
 
-func TestHelmDeployCommand5(t *testing.T) {
+func TestHelmDeployCommand6(t *testing.T) {
 	t.Setenv("GITHUB_ACTIONS", "false") // Reset GITHUB_ACTIONS env var so tests don't fail in GitHub Actions
 
 	const (
