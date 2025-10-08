@@ -53,10 +53,10 @@ func Command() *cli.Command {
 			&cli.StringFlag{
 				Name:    "workload-type",
 				Aliases: []string{"w"},
-				Usage:   "The Kubernetes workload type to use: deployment or statefulset",
+				Usage:   "The Kubernetes workload type to use: deployment, statefulset or job",
 				Value:   "deployment",
 				Action: func(_ context.Context, _ *cli.Command, workloadType string) error {
-					allowedWorkloadTypes := []string{"deployment", "statefulset"}
+					allowedWorkloadTypes := []string{"deployment", "statefulset", "job"}
 					if !slices.Contains(allowedWorkloadTypes, workloadType) {
 						return cli.Exit(fmt.Sprintf("Invalid workload type provided: must be one of %v", allowedWorkloadTypes), 1)
 					}
