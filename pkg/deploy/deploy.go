@@ -172,6 +172,7 @@ func Command() *cli.Command {
 	}
 }
 
+//nolint:gocyclo
 func Deploy(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)

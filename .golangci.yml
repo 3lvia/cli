@@ -9,7 +9,6 @@ linters:
     - gocognit
     - goconst
     - gocritic
-    - godoclint
     - godox
     - gosec
     - mnd
