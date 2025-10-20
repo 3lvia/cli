@@ -83,6 +83,9 @@ linters:
       - linters:
           - revive
         text: 'var-naming: avoid meaningless package names'
+      - linters:
+          - godoclint
+        text: godoc should start with symbol name
     paths:
       - third_party$
       - builtin$
