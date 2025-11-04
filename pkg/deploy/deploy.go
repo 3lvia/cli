@@ -326,8 +326,8 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		return cli.Exit(kubectlGetEventsOutput.Error, 1)
 	}
 
-	events := strings.Split(kubectlGetEventsOutput.Output, "\n")
-	for _, event := range events {
+	events := strings.SplitSeq(kubectlGetEventsOutput.Output, "\n")
+	for event := range events {
 		if strings.Contains(event, applicationName) {
 			log.Print(event)
 		}
