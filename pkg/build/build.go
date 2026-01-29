@@ -53,7 +53,7 @@ func Command() *cli.Command {
 			&cli.StringFlag{
 				Name:        "go-main-package-directory",
 				Usage:       "The main package directory to use when building a Go application.",
-				DefaultText: "\"./cmd/<application-name>\"",
+				DefaultText: "\"./\"",
 				Sources:     cli.EnvVars("3LV_GO_MAIN_PACKAGE_DIRECTORY"),
 			},
 			&cli.StringFlag{
@@ -156,7 +156,7 @@ func Build(_ context.Context, c *cli.Command) error {
 		GoMainPackageDirectory: utils.FirstNonEmpty(
 			c.String("go-main-package-directory"),
 			configForApplication.GoMainPackageDirectory,
-			"./cmd/"+applicationName,
+			"./",
 		),
 		BuildContext: utils.FirstNonEmpty(c.String("build-context"), configForApplication.BuildContext),
 	}
