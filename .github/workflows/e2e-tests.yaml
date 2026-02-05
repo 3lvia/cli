@@ -46,9 +46,12 @@ jobs:
         if: ${{ matrix.command == 'create' }}
         uses: actions/setup-python@v6
 
-      - name: Install cookiecutter
+      - name: Install pipx and cookiecutter
         if: ${{ matrix.command == 'create' }}
-        run: python3 -m pip install --user cookiecutter
+        run: |
+          sudo apt update
+          sudo apt install -y pipx
+          pipx install cookiecutter
 
       - name: Install uv
         if: ${{ matrix.command == 'create' }}
