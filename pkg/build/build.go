@@ -62,6 +62,13 @@ func Command() *cli.Command {
 				Value:   DefaultCacheTag,
 				Sources: cli.EnvVars("3LV_CACHE_TAG"),
 			},
+			&cli.BoolFlag{
+				Name: "disable-cache",
+				Usage: "Disable the use of cache when building the image." +
+					" Cache produced by the build will still be pushed to the registry if --push is enabled.",
+				Value:   false,
+				Sources: cli.EnvVars("3LV_DISABLE_CACHE"),
+			},
 			&cli.StringFlag{
 				Name:    "azure-tenant-id",
 				Usage:   "The tenant ID to use when authenticating with the Azure Container Registry.",
@@ -243,6 +250,8 @@ func Build(_ context.Context, c *cli.Command) error {
 		return cli.Exit(err, 1)
 	}
 
+	disableCache := c.Bool("disable-cache")
+
 	additionalTags := utils.RemoveZeroValues(c.StringSlice("additional-tags"))
 	buildArgs := lo.SliceToMap(utils.RemoveZeroValues(c.StringSlice("build-args")), func(f string) (string, string) {
 		split := strings.Split(f, "=")
@@ -255,6 +264,7 @@ func Build(_ context.Context, c *cli.Command) error {
 		buildContext,
 		imageName,
 		cacheTag,
+		disableCache,
 		additionalTags,
 		buildArgs,
 		nil,
@@ -356,6 +366,7 @@ func buildImageCommand(
 	buildContext string,
 	imageName string,
 	cacheTag string,
+	disableCache bool,
 	additionalTags []string,
 	buildArgs map[string]string,
 	options *command.RunOptions,
@@ -383,9 +394,14 @@ func buildImageCommand(
 		"--load",
 		"--cache-to",
 		"type=inline",
-		"--cache-from",
-		imageName+":"+cacheTag,
 	)
+
+	if !disableCache {
+		buildCmd.Args = append(buildCmd.Args,
+			"--cache-from",
+			imageName+":"+cacheTag,
+		)
+	}
 
 	for key, value := range buildArgs {
 		buildCmd.Args = append(buildCmd.Args, "--build-arg", key+"="+value)
