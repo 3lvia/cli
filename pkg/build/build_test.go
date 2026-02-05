@@ -78,6 +78,7 @@ func TestBuildCommand1(t *testing.T) {
 		buildContext   = "src/app"
 		imageName      = "containerregistryelvia.azurecr.io/test-image"
 		cacheTag       = "latest"
+		disableCache   = false
 	)
 
 	imageNameWithCacheTag := imageName + ":" + cacheTag
@@ -108,6 +109,7 @@ func TestBuildCommand1(t *testing.T) {
 		buildContext,
 		imageName,
 		cacheTag,
+		disableCache,
 		additionalTags,
 		buildArgs,
 		&command.RunOptions{DryRun: true},
@@ -127,6 +129,7 @@ func TestBuildCommand2(t *testing.T) {
 		dockerfilePath = "Dockerfile"
 		buildContext   = "."
 		imageName      = "ghcr.io/test-image"
+		disableCache   = false
 	)
 
 	imageNameWithCacheTag := imageName + ":" + DefaultCacheTag
@@ -157,6 +160,7 @@ func TestBuildCommand2(t *testing.T) {
 		buildContext,
 		imageName,
 		DefaultCacheTag,
+		disableCache,
 		additionalTags,
 		buildArgs,
 		&command.RunOptions{DryRun: true},
@@ -176,6 +180,7 @@ func TestBuildCommand3(t *testing.T) {
 		dockerfilePath = "Dockerfile"
 		buildContext   = "."
 		imageName      = "ghcr.io/test-image"
+		disableCache   = false
 	)
 
 	imageNameWithCacheTag := imageName + ":" + DefaultCacheTag
@@ -212,6 +217,7 @@ func TestBuildCommand3(t *testing.T) {
 		buildContext,
 		imageName,
 		DefaultCacheTag,
+		disableCache,
 		additionalTags,
 		buildArgs,
 		&command.RunOptions{DryRun: true},
@@ -231,6 +237,7 @@ func TestBuildCommandWithBuildArgs(t *testing.T) {
 		dockerfilePath = "Dockerfile"
 		buildContext   = "."
 		imageName      = "ghcr.io/test-image"
+		disableCache   = false
 	)
 
 	imageNameWithCacheTag := imageName + ":" + DefaultCacheTag
@@ -274,6 +281,62 @@ func TestBuildCommandWithBuildArgs(t *testing.T) {
 		buildContext,
 		imageName,
 		DefaultCacheTag,
+		disableCache,
+		additionalTags,
+		buildArgs,
+		&command.RunOptions{DryRun: true},
+	)
+
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
+}
+
+func TestBuildCommandWithDisableCache(t *testing.T) {
+	t.Parallel()
+
+	const (
+		dockerfilePath = "Dockerfile"
+		buildContext   = "."
+		imageName      = "ghcr.io/test-image"
+		disableCache   = true
+	)
+
+	imageNameWithCacheTag := imageName + ":" + DefaultCacheTag
+	additionalTags := []string{"latest", "v42.0.1", "v420alpha"}
+	buildArgs := map[string]string{}
+
+	expectedCommandString := strings.Join(
+		[]string{
+			"docker",
+			"buildx",
+			"build",
+			"-f",
+			dockerfilePath,
+			"--load",
+			"--cache-to",
+			"type=inline",
+			"-t",
+			imageName + ":" + additionalTags[0],
+			"-t",
+			imageName + ":" + additionalTags[1],
+			"-t",
+			imageName + ":" + additionalTags[2],
+			"-t",
+			imageNameWithCacheTag,
+			buildContext,
+		},
+		" ",
+	)
+
+	actualCommand := buildImageCommand(
+		dockerfilePath,
+		buildContext,
+		imageName,
+		DefaultCacheTag,
+		disableCache,
 		additionalTags,
 		buildArgs,
 		&command.RunOptions{DryRun: true},
