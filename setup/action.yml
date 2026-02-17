@@ -18,10 +18,10 @@ runs:
           exit 1
         fi
 
-        if [[ '${{ inputs.version }}' == 'latest' ]]; then
+        if [[ "$VERSION" == 'latest' ]]; then
           version=$(gh release list -R 3lvia/cli --json name,isLatest -q '.[] | select(.isLatest == true) | .name' | cut -c 2-)
         else
-          version='${{ inputs.version }}'
+          version="$VERSION"
         fi
 
         if ! gh release download -R "$CLI_REPOSITORY" "v$version" --pattern "3lv-*linux-amd64.tar.gz*"; then
@@ -44,5 +44,6 @@ runs:
         sudo install -Dm755 -t /usr/local/bin 3lv
         3lv --version
       env:
+        VERSION: ${{ inputs.version }}
         GH_TOKEN: ${{ github.token }}
         CLI_REPOSITORY: '3lvia/cli'
