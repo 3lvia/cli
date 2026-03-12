@@ -3,7 +3,6 @@
   "extends": ["config:recommended"],
   "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
   "minimumReleaseAge": "3 days",
-  "prCreation": "not-pending",
   "ignorePaths": ["pkg/build/_test/Dockerfile*", "tests/build/Dockerfile*"],
   "nuget": {
     "ignorePaths": ["pkg/build/_test/*.csproj"]
