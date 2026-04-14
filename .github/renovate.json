@@ -12,6 +12,11 @@
       "matchUpdateTypes": ["patch"],
       "automerge": true,
       "automergeType": "pr"
+    },
+    {
+      "matchDepTypes": ["action"],
+      "matchPackageNames": ["3lvia/core-github-actions-templates"],
+      "pinDigests": false
     }
   ]
 }
