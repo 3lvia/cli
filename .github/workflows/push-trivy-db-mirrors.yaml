@@ -20,7 +20,7 @@ jobs:
       packages: write
     steps:
       - name: Install ORAS
-        uses: oras-project/setup-oras@v2
+        uses: oras-project/setup-oras@38de303aac69abb66f3e6255b7198bff35f323e3 # v2
 
       - name: Login to GHCR
         run: |
@@ -47,7 +47,7 @@ jobs:
       packages: write
     steps:
       - name: Install ORAS
-        uses: oras-project/setup-oras@v2
+        uses: oras-project/setup-oras@38de303aac69abb66f3e6255b7198bff35f323e3 # v2
 
       - name: Login to GHCR
         run: |
