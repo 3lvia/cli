@@ -17,10 +17,10 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ${{ matrix.os == 'windows' && 'windows-latest' || 'elvia-runner' }}
+    runs-on: elvia-runner
     strategy:
       matrix:
-        os: [linux, macos, windows]
+        os: [linux, macos]
         arch: [amd64]
         include:
           - os: macos
@@ -35,17 +35,12 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - name: Add MSBuild to PATH
-        if: ${{ matrix.os == 'windows' }}
-        uses: microsoft/setup-msbuild@v3
-
-      - name: Install WiX
-        if: ${{ matrix.os == 'windows' }}
-        run: dotnet tool install --global wix
-
       - name: Package binaries
         shell: bash
-        run: make 'package-${{ matrix.os }}-${{ matrix.arch }}'
+        run: make "package-$BUILD_OS-$BUILD_ARCH"
+        env:
+          BUILD_OS: ${{ matrix.os }}
+          BUILD_ARCH: ${{ matrix.arch }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
@@ -108,7 +103,7 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     strategy:
       matrix:
-        os: [linux, macos, windows]
+        os: [linux, macos]
         arch: [amd64]
         include:
           - os: macos
@@ -147,14 +142,8 @@ jobs:
             mv "3lv-$version-darwin-${{ matrix.arch }}.tar.gz.md5" "$package_name.tar.gz.md5"
           fi
 
-          # Special case for Windows being packaged as MSI
-          if [[ '${{ matrix.os }}' == 'windows' ]]; then
-            gh release upload "$VERSION_TAG" "$package_name.msi"
-            gh release upload "$VERSION_TAG" "$package_name.msi.md5"
-          else
-            gh release upload "$VERSION_TAG" "$package_name.tar.gz"
-            gh release upload "$VERSION_TAG" "$package_name.tar.gz.md5"
-          fi
+          gh release upload "$VERSION_TAG" "$package_name.tar.gz"
+          gh release upload "$VERSION_TAG" "$package_name.tar.gz.md5"
         env:
           GH_TOKEN: ${{ github.token }}
 

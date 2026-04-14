@@ -3,17 +3,6 @@
 ### Installation from source
 
 Requires [Go](https://golang.org) and [Make](https://www.gnu.org/software/make).
-
-#### Windows
-
-Install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow the Linux instructions.
-
-Optionally, you can build a Windows binary using the following command:
-
-```bash
-make build-windows-amd64
-```
-
 You can then move the binary to a directory in your PATH.
 
 #### Linux and macOS

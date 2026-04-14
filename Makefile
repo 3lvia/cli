@@ -56,13 +56,6 @@ build-macos-arm64: go_os=darwin
 build-macos-arm64: go_arch=arm64
 build-macos-arm64: build
 
-## build-windows-amd64: Build the binary for Windows (amd64).
-.PHONY: build-windows-amd64
-build-windows-amd64: go_os=windows
-build-windows-amd64: go_arch=amd64
-build-windows-amd64: binary_name:=${binary_name}.exe
-build-windows-amd64: build
-
 
 ## run: Build and then run the binary (tries to guess the OS and architecture).
 .PHONY: run
@@ -94,13 +87,6 @@ package-macos-amd64: package
 package-macos-arm64: go_os=darwin
 package-macos-arm64: go_arch=arm64
 package-macos-arm64: package
-
-## package-windows-amd64: Build and then package the binary for Windows (amd64). Only works on Windows, requires WiX Toolset to be installed.
-.PHONY: package-windows-amd64
-package-windows-amd64: build-windows-amd64
-package-windows-amd64:
-	wix build build/package/${binary_name}-${go_arch}.wxs -o ${package_dir}/${package_name}.msi -d "CliVersion=${cli_version}"
-	cd ${package_dir} && md5sum ${package_name}.msi > ${package_name}.msi.md5
 
 
 ## install: Build and then install the binary to /usr/local/bin. Requires root. Only works on Linux and macOS (tries to guess the OS and architecture).

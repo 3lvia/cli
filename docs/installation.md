@@ -8,14 +8,12 @@ curl -fsSL https://raw.githubusercontent.com/3lvia/cli/trunk/install.sh | bash
 
 Supported platforms:
 
-- **Linux/WSL** (recommended)
+- **Linux/WSL**
 - **macOS** (both Intel and M-series)
-- **Windows**
 
-We strongly recommend using [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install) if you are on Windows.
-This is because we depend on software tools (see [requirements](requirements.md)) that are much easier to install on a Linux distribution than on Windows.
+**Windows is not supported natively; use WSL**
 
-Note however that `3lv` works perfectly fine on Windows, as long as you manage to install the aforementioned required software yourself.
+[Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install).
 
 ### Linux/WSL and macOS
 
@@ -45,16 +43,6 @@ sudo install -Dm755 3lv /usr/local/bin/
 
 **If you have an M1 or newer mac, you can use the `macos-arm64` binary.**
 
-### Windows
-
-Download the MSI file (and optionally the MD5 checksum) from the [releases page](https://github.com/3lvia/cli/releases) and run it.
-
-#### Verify checksum (OPTIONAL)
-
-```pwsh
-certutil -hashfile 3lv-windows-amd64.msi MD5
-```
-
 ### Upgrades
 
 To upgrade `3lv`, simply run this command:
@@ -66,7 +54,3 @@ To upgrade `3lv`, simply run this command:
 This will download the latest version and replace the existing binary.
 
 You can also download the new binary manually and replace the old one using the same steps as in the installation section.
-
-#### Upgrade on Windows
-
-If you are on Windows (not WSL), the `3lv upgrade` command will not work. You have to download a new MSI installer manually and run it.
