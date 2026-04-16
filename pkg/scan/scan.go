@@ -56,6 +56,13 @@ func Scan(_ context.Context, c *cli.Command) error {
 	return nil
 }
 
+func checkTrivyInstalledCommand(runOptions *command.RunOptions) command.Output {
+	return command.Run(
+		*exec.Command("trivy", "--version"),
+		runOptions,
+	)
+}
+
 func scanImageCommand(
 	imageName string,
 	severity string,
@@ -138,6 +145,11 @@ func ScanImage(
 	formats []string,
 	disableError bool,
 ) error {
+	checkTrivyInstalledOutput := checkTrivyInstalledCommand(nil)
+	if command.IsError(checkTrivyInstalledOutput) {
+		return checkTrivyInstalledOutput.Error
+	}
+
 	scanImageOutput := scanImageCommand(
 		imageName,
 		severity,
