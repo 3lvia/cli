@@ -48,8 +48,8 @@ jobs:
           name: '3lv-${{ matrix.os }}-${{ matrix.arch }}'
           path: 'dist/package/*'
 
-  pre-release:
-    name: Pre-release
+  draft-release:
+    name: Draft release
     needs: [build]
     runs-on: elvia-runner
     if: ${{ github.event_name == 'push' }}
@@ -68,8 +68,8 @@ jobs:
           echo "VERSION_TAG=v$version" | tee -a "$GITHUB_ENV" "$GITHUB_OUTPUT"
           echo "MAJOR_VERSION_TAG=v$(echo $version | cut -d. -f1)" >> "$GITHUB_ENV"
 
-      - name: Create pre-release if new version
-        id: create-pre-release
+      - name: Create draft of release if new version
+        id: create-draft-release
         run: |
           latest_version=$(gh release list --json name,isLatest -q '.[] | select(.isLatest == true) | .name')
           if [[ "$latest_version" == "$VERSION_TAG" ]]; then
@@ -77,28 +77,19 @@ jobs:
             exit 0
           fi
 
-          latest_prelrease_version=$(gh release list --json name,isPrerelease -q 'first(.[] | select(.isPrerelease == true) | .name)')
-          if [[ "$latest_prelrease_version" == "$VERSION_TAG" ]]; then
-            echo "Pre-release already created."
+          latest_draft_version=$(gh release list --json name,isDraft -q 'first(.[] | select(.isDraft == true) | .name)')
+          if [[ "$latest_draft_version" == "$VERSION_TAG" ]]; then
+            echo "Draft already created."
             exit 0
           fi
 
-          gh release create "$VERSION_TAG" --generate-notes --prerelease
+          gh release create "$VERSION_TAG" --generate-notes --draft
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Override old major tag
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-
-          git fetch --tags
-          git tag "$MAJOR_VERSION_TAG" "$VERSION_TAG" -f
-          git push --tags -f
-
   upload-binaries:
     name: Upload binaries
-    needs: [pre-release]
+    needs: [draft-release]
     runs-on: elvia-runner
     if: ${{ github.event_name == 'push' }}
     strategy:
@@ -110,7 +101,7 @@ jobs:
             arch: arm64
       fail-fast: false
     env:
-      VERSION_TAG: ${{ needs.pre-release.outputs.version-tag }}
+      VERSION_TAG: ${{ needs.draft-release.outputs.version-tag }}
     permissions:
       contents: write
     steps:
@@ -125,7 +116,7 @@ jobs:
       - name: Upload binaries if not already uploaded
         run: |
           version=$(echo "$VERSION_TAG" | cut -c 2-)
-          package_name="3lv-$version-${{ matrix.os }}-${{ matrix.arch }}"
+          package_name="3lv-$version-$MATRIX_OS-$MATRIX_ARCH"
           number_of_binaries=$(gh release view "$VERSION_TAG" \
                                 --json assets \
                                 | jq -r --arg package_name "$package_name" '.[] | map(select(.name | contains($package_name))) | length')
@@ -137,20 +128,22 @@ jobs:
           fi
 
           # Special case for macOS binaries being named differently from their architecture (darwin)
-          if [[ '${{ matrix.os }}' == 'macos' ]]; then
-            mv "3lv-$version-darwin-${{ matrix.arch }}.tar.gz" "$package_name.tar.gz"
-            mv "3lv-$version-darwin-${{ matrix.arch }}.tar.gz.md5" "$package_name.tar.gz.md5"
+          if [[ "$MATRIX_OS" == 'macos' ]]; then
+            mv "3lv-$version-darwin-$MATRIX_ARCH.tar.gz" "$package_name.tar.gz"
+            mv "3lv-$version-darwin-$MATRIX_ARCH.tar.gz.md5" "$package_name.tar.gz.md5"
           fi
 
           gh release upload "$VERSION_TAG" "$package_name.tar.gz"
           gh release upload "$VERSION_TAG" "$package_name.tar.gz.md5"
         env:
           GH_TOKEN: ${{ github.token }}
+          MATRIX_OS: ${{ matrix.os }}
+          MATRIX_ARCH: ${{ matrix.arch }}
 
   release:
     name: Release
     runs-on: elvia-runner
-    needs: [pre-release, upload-binaries]
+    needs: [draft-release, upload-binaries]
     if: ${{ github.event_name == 'push' }}
     permissions:
       contents: write
@@ -160,7 +153,7 @@ jobs:
 
       - name: Release if new version and not alpha or beta
         if: ${{ !contains(needs.build.outputs.version-tag, '-alpha') && !contains(needs.build.outputs.version-tag, '-beta') }}
-        run: gh release edit "$VERSION_TAG" --prerelease=false --latest=true
+        run: gh release edit "$VERSION_TAG" --draft=false --latest=true
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION_TAG: ${{ needs.pre-release.outputs.version-tag }}
+          VERSION_TAG: ${{ needs.draft-release.outputs.version-tag }}
