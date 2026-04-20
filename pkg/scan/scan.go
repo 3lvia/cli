@@ -146,8 +146,15 @@ func ScanImage(
 	disableError bool,
 ) error {
 	checkTrivyInstalledOutput := checkTrivyInstalledCommand(nil)
-	if command.IsError(checkTrivyInstalledOutput) {
-		return checkTrivyInstalledOutput.Error
+
+	if command.IsError(checkTrivyInstalledOutput) && disableError {
+		style.PrintWarning("Trivy is not installed. Will skip scan since disable-error is enabled.")
+
+		return nil
+	}
+
+	if command.IsError(checkTrivyInstalledOutput) && !disableError {
+		return errors.New("Trivy is not installed. Please install Trivy to use this command.")
 	}
 
 	scanImageOutput := scanImageCommand(
