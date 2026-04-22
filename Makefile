@@ -89,10 +89,10 @@ package-macos-arm64: go_arch=arm64
 package-macos-arm64: package
 
 
-## install: Build and then install the binary to /usr/local/bin. Requires root. Only works on Linux and macOS (tries to guess the OS and architecture).
+## install: Build and then install the binary to $HOME/.local/bin. Does not require root. Only works on Linux and macOS (tries to guess the OS and architecture).
 .PHONY: install
 install: build
-	sudo install -Dm755 -t /usr/local/bin ${build_dir}/${go_os}/${go_arch}/${binary_name}
+	install -Dm755 -t "$$HOME/.local/bin" ${build_dir}/${go_os}/${go_arch}/${binary_name}
 
 ## install-linux-amd64: Build and then install the binary for Linux (amd64) to /usr/local/bin. Requires root.
 .PHONY: install-linux-amd64
