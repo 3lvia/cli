@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	chartsNamespace     = "elvia-charts"
-	chartsRepositoryURL = "https://raw.githubusercontent.com/3lvia/kubernetes-charts/master"
+	chartsRepositoryURL = "oci://ghcr.io/3lvia/charts"
 )
 
 func checkHelmInstalledCommand(
@@ -18,40 +17,6 @@ func checkHelmInstalledCommand(
 ) command.Output {
 	return command.Run(
 		*exec.Command("helm", "version"),
-		runOptions,
-	)
-}
-
-func helmRepoAddCommand(
-	helmChartRepositoryURL string,
-	runOptions *command.RunOptions,
-) command.Output {
-	url := chartsRepositoryURL
-	if helmChartRepositoryURL != "" {
-		url = helmChartRepositoryURL
-	}
-
-	return command.Run(
-		*exec.Command(
-			"helm",
-			"repo",
-			"add",
-			chartsNamespace,
-			url,
-		),
-		runOptions,
-	)
-}
-
-func helmRepoUpdateCommand(
-	runOptions *command.RunOptions,
-) command.Output {
-	return command.Run(
-		*exec.Command(
-			"helm",
-			"repo",
-			"update",
-		),
 		runOptions,
 	)
 }
@@ -101,7 +66,7 @@ func helmDeployCommand(
 		"-f",
 		helmValuesFile,
 		applicationName,
-		chartsNamespace+"/"+chartName,
+		chartsRepositoryURL+"/"+chartName,
 		"--set-string",
 		"environment="+environment,
 		"--set-string",
