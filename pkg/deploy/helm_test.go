@@ -23,74 +23,6 @@ func TestCheckHelmInstalledCommand(t *testing.T) {
 	)
 }
 
-func TestHelmRepoAddCommand(t *testing.T) {
-	t.Parallel()
-
-	expectedCommandString := strings.Join(
-		[]string{
-			"helm",
-			"repo",
-			"add",
-			"elvia-charts",
-			"https://raw.githubusercontent.com/3lvia/kubernetes-charts/master",
-		},
-		" ",
-	)
-
-	actualCommand := helmRepoAddCommand(
-		"",
-		&command.RunOptions{DryRun: true},
-	)
-
-	command.ExpectedCommandStringEqualsActualCommand(
-		t,
-		expectedCommandString,
-		actualCommand,
-	)
-}
-
-func TestHelmRepoAddCommandWithUrl(t *testing.T) {
-	t.Parallel()
-
-	expectedCommandString := strings.Join(
-		[]string{
-			"helm",
-			"repo",
-			"add",
-			"elvia-charts",
-			"https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts",
-		},
-		" ",
-	)
-
-	actualCommand := helmRepoAddCommand(
-		"https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts",
-		&command.RunOptions{DryRun: true},
-	)
-
-	command.ExpectedCommandStringEqualsActualCommand(
-		t,
-		expectedCommandString,
-		actualCommand,
-	)
-}
-
-func TestHelmRepoUpdateCommand(t *testing.T) {
-	t.Parallel()
-
-	expectedCommandString := "helm repo update"
-
-	actualCommand := helmRepoUpdateCommand(
-		&command.RunOptions{DryRun: true},
-	)
-
-	command.ExpectedCommandStringEqualsActualCommand(
-		t,
-		expectedCommandString,
-		actualCommand,
-	)
-}
-
 func TestHelmDeployCommand1(t *testing.T) {
 	t.Setenv("GITHUB_ACTIONS", "false") // Reset GITHUB_ACTIONS env var so tests don't fail in GitHub Actions
 
@@ -117,7 +49,7 @@ func TestHelmDeployCommand1(t *testing.T) {
 			"-f",
 			helmValuesFile,
 			applicationName,
-			"elvia-charts/elvia-" + workloadType,
+			"oci://ghcr.io/3lvia/charts/elvia-" + workloadType,
 			"--set-string",
 			"environment=" + environment,
 			"--set-string",
@@ -180,7 +112,7 @@ func TestHelmDeployCommand2(t *testing.T) {
 			"-f",
 			helmValuesFile,
 			applicationName,
-			"elvia-charts/elvia-" + workloadType,
+			"oci://ghcr.io/3lvia/charts/elvia-" + workloadType,
 			"--set-string",
 			"environment=" + environment,
 			"--set-string",
@@ -243,7 +175,7 @@ func TestHelmDeployCommand3(t *testing.T) {
 			"-f",
 			helmValuesFile,
 			applicationName,
-			"elvia-charts/elvia-" + workloadType,
+			"oci://ghcr.io/3lvia/charts/elvia-" + workloadType,
 			"--set-string",
 			"environment=" + environment,
 			"--set-string",
@@ -341,7 +273,7 @@ func TestHelmDeployCommand5(t *testing.T) {
 			"-f",
 			helmValuesFile,
 			applicationName,
-			"elvia-charts/iss-" + workloadType,
+			"oci://ghcr.io/3lvia/charts/iss-" + workloadType,
 			"--set-string",
 			"environment=" + environment,
 			"--set-string",
@@ -435,7 +367,7 @@ func TestHelmDeployCommandWithGitHubActionsEnv(t *testing.T) {
 			"-f",
 			helmValuesFile,
 			applicationName,
-			"elvia-charts/elvia-" + workloadType,
+			"oci://ghcr.io/3lvia/charts/elvia-" + workloadType,
 			"--set-string",
 			"environment=" + environment,
 			"--set-string",

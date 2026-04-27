@@ -42,9 +42,9 @@ fi
 tar -xzf "$TARBALL"
 
 if [[ "$OS" == "mac" ]]; then
-    sudo install -Dm755 3lv /usr/local/bin/
+    install -Dm755 3lv "$HOME/.local/bin"
 else
-    sudo install -Dm755 -t /usr/local/bin 3lv
+    install -Dm755 -t "$HOME/.local/bin" 3lv
 fi
 
 echo "3lv version $LATEST_VERSION installed successfully!"

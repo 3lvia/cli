@@ -1,6 +1,6 @@
 module github.com/3lvia/cli
 
-go 1.26
+go 1.26.2
 
 require (
 	github.com/charmbracelet/huh v1.0.0

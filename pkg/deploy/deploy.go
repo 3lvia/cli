@@ -155,13 +155,6 @@ func Command() *cli.Command {
 				Name:  "run-id",
 				Usage: "The GitHub Actions run ID to use for deployment annotations.",
 			},
-			&cli.StringFlag{
-				Name: "helm-chart-repository-url",
-				Usage: "Override the helm chart repository where the elvia-charts are located." +
-					" Useful for testing feature branches." +
-					" For instance 'https://raw.githubusercontent.com/3lvia/kubernetes-charts/feature/cool-new-charts'.",
-				Sources: cli.EnvVars("3LV_HELM_CHART_REPOSITORY_URL"),
-			},
 			&cli.BoolFlag{
 				Name:    "allow-deploy",
 				Hidden:  true,
@@ -172,7 +165,6 @@ func Command() *cli.Command {
 	}
 }
 
-//nolint:gocyclo
 func Deploy(ctx context.Context, c *cli.Command) error {
 	if c.NArg() <= 0 {
 		cli.ShowSubcommandHelpAndExit(c, 1)
@@ -239,7 +231,6 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 	runtimeCloudProvider := strings.ToLower(c.String("runtime-cloud-provider"))
 	dryRun := c.Bool("dry-run")
 	runID := c.String("run-id")
-	helmChartRepositoryURL := c.String("helm-chart-repository-url")
 
 	if checkKubectlInstalledOutput := checkKubectlInstalledCommand(nil); command.IsError(checkKubectlInstalledOutput) {
 		return cli.Exit(fmt.Errorf("kubectl is not installed: %w", checkKubectlInstalledOutput.Error), 1)
@@ -252,14 +243,6 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 	err = setupKubernetes(c, runtimeCloudProvider, environment)
 	if err != nil {
 		return cli.Exit(err, 1)
-	}
-
-	if helmRepoAddOutput := helmRepoAddCommand(helmChartRepositoryURL, nil); command.IsError(helmRepoAddOutput) {
-		return cli.Exit(fmt.Errorf("Failed to add Helm repository: %w", helmRepoAddOutput.Error), 1)
-	}
-
-	if helmRepoUpdateOutput := helmRepoUpdateCommand(nil); command.IsError(helmRepoUpdateOutput) {
-		return cli.Exit(fmt.Errorf("Failed to update Helm repository: %w", helmRepoUpdateOutput.Error), 1)
 	}
 
 	useISSChart := runtimeCloudProvider == "iss"
