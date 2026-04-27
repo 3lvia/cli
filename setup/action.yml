@@ -34,14 +34,14 @@ runs:
           fi
 
           echo "git-$version-$(git rev-parse --short HEAD)" > VERSION
-          sudo make install
+          make install
           3lv --version
           exit 0
         fi
 
         md5sum -c --quiet 3lv-*linux-amd64.tar.gz.md5
         tar -xzf 3lv-*linux-amd64.tar.gz
-        sudo install -Dm755 -t /usr/local/bin 3lv
+        install -Dm755 -t "$HOME/.local/bin" 3lv
         3lv --version
       env:
         VERSION: ${{ inputs.version }}
