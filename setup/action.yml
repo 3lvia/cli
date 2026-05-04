@@ -9,6 +9,10 @@ inputs:
     description: 'The directory to install the 3lv CLI to. Defaults to $HOME/.local/bin.'
     required: false
     default: '$HOME/.local/bin'
+  run-as-root:
+    description: 'Whether to run the `install` command as root. This is necessary if the `install-directory` is a system directory like `/usr/local/bin`. Defaults to `false`.'
+    required: false
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -45,9 +49,16 @@ runs:
 
         md5sum -c --quiet 3lv-*linux-amd64.tar.gz.md5
         tar -xzf 3lv-*linux-amd64.tar.gz
-        install -Dm755 -t "${{ inputs.install-directory }}" 3lv
+
+        if [[ "$RUN_AS_ROOT" == 'true' ]]; then
+          sudo install -Dm755 -t "${{ inputs.install-directory }}" 3lv
+        else
+          install -Dm755 -t "${{ inputs.install-directory }}" 3lv
+        fi
+
         3lv --version
       env:
         VERSION: ${{ inputs.version }}
+        RUN_AS_ROOT: ${{ inputs.run-as-root }}
         GH_TOKEN: ${{ github.token }}
         CLI_REPOSITORY: '3lvia/cli'
