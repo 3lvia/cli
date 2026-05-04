@@ -6,9 +6,8 @@ inputs:
     required: false
     default: 'latest'
   install-directory:
-    description: 'The directory to install the 3lv CLI to. Defaults to $HOME/.local/bin.'
+    description: 'The directory to install the 3lv CLI to.'
     required: false
-    default: '$HOME/.local/bin'
   install-as-root:
     description: 'Whether to run the `install` command as root. This is necessary if the `install-directory` is a system directory like `/usr/local/bin`. Defaults to `false`.'
     required: false
