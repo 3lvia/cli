@@ -5,6 +5,10 @@ inputs:
     description: 'The version of 3lv to install. Specify `git` to build and install the latest version from the default branch.'
     required: false
     default: 'latest'
+  install-directory:
+    description: 'The directory to install the 3lv CLI to. Defaults to $HOME/.local/bin.'
+    required: false
+    default: '$HOME/.local/bin'
 
 runs:
   using: 'composite'
@@ -41,7 +45,7 @@ runs:
 
         md5sum -c --quiet 3lv-*linux-amd64.tar.gz.md5
         tar -xzf 3lv-*linux-amd64.tar.gz
-        install -Dm755 -t "$HOME/.local/bin" 3lv
+        install -Dm755 -t "${{ inputs.directory }}" 3lv
         3lv --version
       env:
         VERSION: ${{ inputs.version }}
