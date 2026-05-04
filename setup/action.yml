@@ -45,7 +45,7 @@ runs:
 
         md5sum -c --quiet 3lv-*linux-amd64.tar.gz.md5
         tar -xzf 3lv-*linux-amd64.tar.gz
-        install -Dm755 -t "${{ inputs.directory }}" 3lv
+        install -Dm755 -t "${{ inputs.install-directory }}" 3lv
         3lv --version
       env:
         VERSION: ${{ inputs.version }}
