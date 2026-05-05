@@ -8,6 +8,7 @@ inputs:
   install-directory:
     description: 'The directory to install the 3lv CLI to.'
     required: false
+    default: '$HOME/.local/bin'
   install-as-root:
     description: 'Whether to run the `install` command as root. This is necessary if the `install-directory` is a system directory like `/usr/local/bin`. Defaults to `false`.'
     required: false
@@ -51,15 +52,14 @@ runs:
 
         if [[ "$INSTALL_AS_ROOT" == 'true' ]]; then
           echo "Running install command as root since INSTALL_AS_ROOT is set to true."
-          sudo install -Dm755 -t "${{ env.INSTALL_DIRECTORY }}" 3lv # use GHA env and not bash native since we want $HOME to be expanded in the env variable
+          sudo install -Dm755 -t "${{ inputs.install-directory }}" 3lv # use GHA input directly and not bash env since we want $HOME to be expanded in the env variable
         else
-          install -Dm755 -t "${{ env.INSTALL_DIRECTORY }}" 3lv # same here
+          install -Dm755 -t "${{ inputs.install-directory }}" 3lv # same here
         fi
 
         3lv --version
       env:
         VERSION: ${{ inputs.version }}
-        INSTALL_DIRECTORY: ${{ inputs.install-directory == '' && '$HOME/.local/bin' || inputs.install-directory }}
         INSTALL_AS_ROOT: ${{ inputs.install-as-root }}
         GH_TOKEN: ${{ github.token }}
         CLI_REPOSITORY: '3lvia/cli'
