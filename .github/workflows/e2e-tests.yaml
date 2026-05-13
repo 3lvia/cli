@@ -16,7 +16,8 @@ jobs:
       matrix:
         command:
           - build
-          - create
+        # DEPRECATED
+        # - create
           - github-actions
           - init
           - scan

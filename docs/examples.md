@@ -107,7 +107,7 @@ to enable access from GitHub Actions to Kubernetes.
 Remember to also add your repository to the list of repositories in the `github-actions-deploy`-module
 in [iss-terraform](https://github.com/3lvia/iss-terraform) to enable access from GitHub Actions to ISS.
 
-## Create
+## Create - :warning: DEPRECATED :warning:
 
 ### Create a new .NET 8 API in the current directory
 
