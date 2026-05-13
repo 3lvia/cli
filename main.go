@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/3lvia/cli/pkg/build"
-	"github.com/3lvia/cli/pkg/create"
 	"github.com/3lvia/cli/pkg/deploy"
 	"github.com/3lvia/cli/pkg/githubactions"
 	"github.com/3lvia/cli/pkg/initialize"
@@ -43,7 +42,8 @@ func main() {
 			run.Command(),
 			scan.Command(),
 			githubactions.Command(),
-			create.Command(),
+			// DEPRECATED: see README of https://github.com/3lvia/application-templates
+			// create.Command(),
 			initialize.Command(),
 		},
 		version,
