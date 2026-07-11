@@ -9,7 +9,7 @@ require (
 	github.com/orsinium-labs/enum v1.5.0
 	github.com/samber/lo v1.53.0
 	github.com/urfave/cli/v3 v3.10.1
-	golang.org/x/mod v0.37.0
+	golang.org/x/mod v0.38.0
 	golang.org/x/text v0.39.0
 	gopkg.in/yaml.v3 v3.0.1
 )
