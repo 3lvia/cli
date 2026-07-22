@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/google/go-github/v86 v86.0.0
+	github.com/google/go-github/v89 v89.0.0
 	github.com/orsinium-labs/enum v1.5.0
 	github.com/samber/lo v1.53.0
 	github.com/urfave/cli/v3 v3.10.1
