@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/3lvia/cli/pkg/style"
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v90/github"
 )
 
 func RemoveZeroValues(slice []string) []string {
