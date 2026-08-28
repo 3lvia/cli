@@ -1,15 +1,20 @@
 version: '2'
 linters:
   default: all
+  enable:
+    - exhaustruct_v5
+    - gomodguard_v2
   disable:
     - cyclop
     - depguard
     - err113
+    - exhaustruct
     - funlen
     - gocognit
     - goconst
     - gocritic
     - godox
+    - gomodguard
     - gosec
     - mnd
     - nestif
@@ -20,12 +25,14 @@ linters:
     - wrapcheck
     - wsl
   settings:
-    exhaustruct:
-      exclude:
+    exhaustruct_v5:
+      ignore-patterns:
         - github.com\/urfave\/cli\/v[0-9]+\..+
         - github.com\/3lvia\/cli\/pkg\/auth\.AzLoginCommandOptions
         - github.com\/3lvia\/cli\/pkg\/build\.GenerateDockerfileOptions
         - github.com\/3lvia\/cli\/pkg\/command\.RunOptions
+        - github.com\/3lvia\/cli\/pkg\/command\.Output
+        - github.com\/3lvia\/cli\/pkg\/style\.PrintOptions
     staticcheck:
       checks:
         - ST1000

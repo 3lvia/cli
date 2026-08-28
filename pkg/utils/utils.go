@@ -162,10 +162,10 @@ func FirstNonEmpty(values ...string) string {
 	return ""
 }
 
-func GetAuthenticatedGithubClient() *github.Client {
+func GetAuthenticatedGithubClient() (*github.Client, error) {
 	if os.Getenv("CI") == "1" {
-		return github.NewClient(nil).WithAuthToken(os.Getenv("GITHUB_TOKEN"))
+		return github.NewClient(github.WithAuthToken(os.Getenv("GITHUB_TOKEN")))
 	}
 
-	return github.NewClient(nil)
+	return github.NewClient()
 }

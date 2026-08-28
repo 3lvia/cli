@@ -29,7 +29,7 @@ func formatDeploymentMessage(
 	options *FormatDeploymentMessageOptions,
 ) string {
 	if options == nil {
-		options = &FormatDeploymentMessageOptions{} //nolint:exhaustruct
+		options = &FormatDeploymentMessageOptions{} //nolint:exhaustruct_v5
 	}
 
 	deployedFrom := func() string {

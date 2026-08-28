@@ -163,7 +163,10 @@ func Upgrade(ctx context.Context, c *cli.Command, version string) error {
 }
 
 func getLatestBinaryURL(ctx context.Context) (string, error) {
-	githubClient := utils.GetAuthenticatedGithubClient()
+	githubClient, err := utils.GetAuthenticatedGithubClient()
+	if err != nil {
+		return "", err
+	}
 
 	if runtime.GOOS == "windows" {
 		return "",
@@ -204,14 +207,17 @@ func getLatestBinaryURL(ctx context.Context) (string, error) {
 }
 
 func GetLatestCLIVersion(ctx context.Context) (string, error) {
-	githubClient := utils.GetAuthenticatedGithubClient()
+	githubClient, err := utils.GetAuthenticatedGithubClient()
+	if err != nil {
+		return "", err
+	}
 
 	release, _, err := githubClient.Repositories.GetLatestRelease(ctx, "3lvia", "cli")
 	if err != nil {
 		return "", err
 	}
 
-	return strings.TrimPrefix(*release.TagName, "v"), nil
+	return strings.TrimPrefix(release.TagName, "v"), nil
 }
 
 func decompress(src, dest string) error {
