@@ -7,110 +7,180 @@ import (
 	"testing"
 )
 
-func TestGetProjectFileAndBuildContext1(t *testing.T) {
+func TestGetProjectFileRelativeToBuildContextAndGetBuildContextFromProjectFile(t *testing.T) {
 	t.Parallel()
 
 	const (
-		expectedCsprojFileName = "demo-api.csproj"
-		expectedBuildContext   = "."
+		expectedProjectFile  = "demo-api.csproj"
+		expectedBuildContext = "."
+
+		projectFileInput  = "demo-api.csproj"
+		buildContextInput = ""
 	)
 
-	csprojFileName, buildContext := getProjectFileAndBuildContext(
-		"demo-api.csproj",
-		"",
+	projectFile := getProjectFilePathRelativeToBuildContext(
+		projectFileInput,
+		buildContextInput,
 	)
 
-	if expectedCsprojFileName != csprojFileName {
-		t.Errorf("Csproj file name mismatch: expected %s, got %s", expectedCsprojFileName, csprojFileName)
+	if expectedProjectFile != projectFile {
+		t.Errorf("Project file mismatch: expected %s, got %s", expectedProjectFile, projectFile)
 	}
+
+	buildContext := getBuildContextFromProjectFile(
+		projectFileInput,
+		buildContextInput,
+	)
 
 	if expectedBuildContext != buildContext {
 		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, buildContext)
 	}
 }
 
-func TestGetProjectFileAndBuildContext2(t *testing.T) {
+func TestGetProjectFileRelativeToBuildContextAndGetBuildContextFromProjectFile2(t *testing.T) {
 	t.Parallel()
 
 	const (
-		expectedCsprojFileName = "demo-api.csproj"
-		expectedBuildContext   = "src/Things/DemoApi"
+		expectedProjectFile  = "demo-api.csproj"
+		expectedBuildContext = "src/Things/DemoApi"
+
+		projectFileInput  = "demo-api.csproj"
+		buildContextInput = "src/Things/DemoApi"
 	)
 
-	csprojFileName, buildContext := getProjectFileAndBuildContext(
-		"demo-api.csproj",
-		"src/Things/DemoApi",
+	projectFile := getProjectFilePathRelativeToBuildContext(
+		projectFileInput,
+		buildContextInput,
 	)
 
-	if expectedCsprojFileName != csprojFileName {
-		t.Errorf("Csproj file name mismatch: expected %s, got %s", expectedCsprojFileName, csprojFileName)
+	if expectedProjectFile != projectFile {
+		t.Errorf("Project file mismatch: expected %s, got %s", expectedProjectFile, projectFile)
 	}
+
+	buildContext := getBuildContextFromProjectFile(
+		projectFileInput,
+		buildContextInput,
+	)
 
 	if expectedBuildContext != buildContext {
 		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, buildContext)
 	}
 }
 
-func TestGetProjectFileAndBuildContext3(t *testing.T) {
+func TestGetProjectFileRelativeToBuildContextAndGetBuildContextFromProjectFile3(t *testing.T) {
 	t.Parallel()
 
 	const (
-		expectedCsprojFileName = "demo-api.csproj"
-		expectedBuildContext   = "src/Things/DemoApi"
+		expectedProjectFile  = "demo-api.csproj"
+		expectedBuildContext = "src/Things/DemoApi"
+
+		projectFileInput  = "src/Things/DemoApi/demo-api.csproj"
+		buildContextInput = ""
 	)
 
-	csprojFileName, buildContext := getProjectFileAndBuildContext(
-		"src/Things/DemoApi/demo-api.csproj",
-		"",
+	projectFile := getProjectFilePathRelativeToBuildContext(
+		projectFileInput,
+		buildContextInput,
 	)
 
-	if expectedCsprojFileName != csprojFileName {
-		t.Errorf("Csproj file name mismatch: expected %s, got %s", expectedCsprojFileName, csprojFileName)
+	if expectedProjectFile != projectFile {
+		t.Errorf("Project file mismatch: expected %s, got %s", expectedProjectFile, projectFile)
 	}
+
+	buildContext := getBuildContextFromProjectFile(
+		projectFileInput,
+		buildContextInput,
+	)
 
 	if expectedBuildContext != buildContext {
 		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, buildContext)
 	}
 }
 
-func TestGetProjectFileAndBuildContext4(t *testing.T) {
+func TestGetProjectFileRelativeToBuildContextAndGetBuildContextFromProjectFile4(t *testing.T) {
 	t.Parallel()
 
 	const (
-		expectedCsprojFileName = "DemoApi/demo-api.csproj"
-		expectedBuildContext   = "src/Things"
+		expectedProjectFile  = "DemoApi/demo-api.csproj"
+		expectedBuildContext = "src/Things"
+
+		projectFileInput  = "src/Things/DemoApi/demo-api.csproj"
+		buildContextInput = "src/Things"
 	)
 
-	csprojFileName, buildContext := getProjectFileAndBuildContext(
-		"src/Things/DemoApi/demo-api.csproj",
-		"src/Things",
+	projectFile := getProjectFilePathRelativeToBuildContext(
+		projectFileInput,
+		buildContextInput,
 	)
 
-	if expectedCsprojFileName != csprojFileName {
-		t.Errorf("Csproj file name mismatch: expected %s, got %s", expectedCsprojFileName, csprojFileName)
+	if expectedProjectFile != projectFile {
+		t.Errorf("Project file mismatch: expected %s, got %s", expectedProjectFile, projectFile)
 	}
+
+	buildContext := getBuildContextFromProjectFile(
+		projectFileInput,
+		buildContextInput,
+	)
 
 	if expectedBuildContext != buildContext {
 		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, buildContext)
 	}
 }
 
-func TestGetProjectFileAndBuildContext5(t *testing.T) {
+func TestGetProjectFileRelativeToBuildContextAndGetBuildContextFromProjectFile5(t *testing.T) {
 	t.Parallel()
 
 	const (
-		expectedCsprojFileName = "Things/DemoApi/demo-api.csproj"
-		expectedBuildContext   = "src"
+		expectedProjectFile  = "DemoApi/demo-api.csproj"
+		expectedBuildContext = "src/Things"
+
+		projectFileInput  = "src/Things/DemoApi/demo-api.csproj"
+		buildContextInput = "src/Things/"
 	)
 
-	csprojFileName, buildContext := getProjectFileAndBuildContext(
-		"src/Things/DemoApi/demo-api.csproj",
-		"src",
+	projectFile := getProjectFilePathRelativeToBuildContext(
+		projectFileInput,
+		buildContextInput,
 	)
 
-	if expectedCsprojFileName != csprojFileName {
-		t.Errorf("Csproj file name mismatch: expected %s, got %s", expectedCsprojFileName, csprojFileName)
+	if expectedProjectFile != projectFile {
+		t.Errorf("Project file mismatch: expected %s, got %s", expectedProjectFile, projectFile)
 	}
+
+	buildContext := getBuildContextFromProjectFile(
+		projectFileInput,
+		buildContextInput,
+	)
+
+	if expectedBuildContext != buildContext {
+		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, buildContext)
+	}
+}
+
+func TestGetProjectFileAndBuildContext6(t *testing.T) {
+	t.Parallel()
+
+	const (
+		expectedProjectFile  = "Things/DemoApi/demo-api.csproj"
+		expectedBuildContext = "src"
+
+		projectFileInput  = "src/Things/DemoApi/demo-api.csproj"
+		buildContextInput = "src"
+	)
+
+	projectFile := getProjectFilePathRelativeToBuildContext(
+		projectFileInput,
+		buildContextInput,
+	)
+
+	if expectedProjectFile != projectFile {
+		t.Errorf("Project file mismatch: expected %s, got %s", expectedProjectFile, projectFile)
+	}
+
+	buildContext := getBuildContextFromProjectFile(
+		projectFileInput,
+		buildContextInput,
+	)
 
 	if expectedBuildContext != buildContext {
 		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, buildContext)
@@ -125,9 +195,14 @@ func TestFindAssemblyName1(t *testing.T) {
 		expectedAssemblyName = "no-assembly-name.dll"
 	)
 
+	csprojXML, err := getXMLFromFile(projectFile)
+	if err != nil {
+		t.Errorf("Error reading XML from file: %v", err)
+	}
+
 	actualAssemblyName, err := findAssemblyName(
 		projectFile,
-		filepath.Base(projectFile),
+		csprojXML,
 	)
 	if err != nil {
 		t.Errorf("Error finding assembly name: %v", err)
@@ -146,13 +221,15 @@ func TestFindAssemblyName2(t *testing.T) {
 		expectedAssemblyName = "SelfDefinedAssemblyName.dll"
 	)
 
+	csprojXML, err := getXMLFromFile(projectFile)
+	if err != nil {
+		t.Errorf("Error reading XML from file: %v", err)
+	}
+
 	actualAssemblyName, err := findAssemblyName(
 		projectFile,
-		filepath.Base(projectFile),
+		csprojXML,
 	)
-	if err != nil {
-		t.Errorf("Error finding assembly name: %v", err)
-	}
 
 	if expectedAssemblyName != actualAssemblyName {
 		t.Errorf("Assembly name mismatch: expected %s, got %s", expectedAssemblyName, actualAssemblyName)
@@ -164,7 +241,12 @@ func TestFindRuntimeBaseImage1(t *testing.T) {
 
 	const projectFile = "_test/no-sdk.csproj"
 
-	_, err := findRuntimeBaseImage(projectFile)
+	csprojXML, err := getXMLFromFile(projectFile)
+	if err != nil {
+		t.Errorf("Error reading XML from file: %v", err)
+	}
+
+	_, err = findRuntimeBaseImage(csprojXML)
 	if err == nil {
 		t.Errorf("Expected error finding runtime base image")
 	}
@@ -178,7 +260,12 @@ func TestFindRuntimeBaseImage2(t *testing.T) {
 		expectedBaseImage = "mcr.microsoft.com/dotnet/runtime"
 	)
 
-	actualBaseImage, err := findRuntimeBaseImage(projectFile)
+	csprojXML, err := getXMLFromFile(projectFile)
+	if err != nil {
+		t.Errorf("Error reading XML from file: %v", err)
+	}
+
+	actualBaseImage, err := findRuntimeBaseImage(csprojXML)
 	if err != nil {
 		t.Errorf("Error finding runtime base image: %v", err)
 	}
@@ -201,7 +288,12 @@ func TestFindRuntimeBaseImage3(t *testing.T) {
 	}
 
 	for _, projectFile := range projectFiles {
-		actualBaseImage, err := findRuntimeBaseImage(projectFile)
+		csprojXML, err := getXMLFromFile(projectFile)
+		if err != nil {
+			t.Errorf("Error reading XML from file: %v", err)
+		}
+
+		actualBaseImage, err := findRuntimeBaseImage(csprojXML)
 		if err != nil {
 			t.Errorf("Error finding runtime base image: %v", err)
 		}
@@ -217,9 +309,9 @@ func TestFindBaseImageTag1(t *testing.T) {
 
 	const projectFile = "_test/this-does-not-exists.csproj"
 
-	_, err := findBaseImageTag(projectFile)
+	_, err := getXMLFromFile(projectFile)
 	if err == nil {
-		t.Errorf("Expected error finding base image tag")
+		t.Errorf("Expected error reading XML from file")
 	}
 }
 
@@ -228,7 +320,12 @@ func TestFindBaseImageTag2(t *testing.T) {
 
 	const projectFile = "_test/no-target-framework.csproj"
 
-	_, err := findBaseImageTag(projectFile)
+	csprojXML, err := getXMLFromFile(projectFile)
+	if err == nil {
+		t.Errorf("Expected error reading XML from file")
+	}
+
+	_, err = findBaseImageTag(csprojXML)
 	if err == nil {
 		t.Errorf("Expected error finding base image tag")
 	}
@@ -248,7 +345,12 @@ func TestFindBaseImageTag3(t *testing.T) {
 		projectFile := "_test/dotnet-" + frameworkVersion + ".csproj"
 		expectedBaseImageTag := frameworkVersion + "-alpine"
 
-		actualBaseImageTag, err := findBaseImageTag(projectFile)
+		csprojXML, err := getXMLFromFile(projectFile)
+		if err != nil {
+			t.Errorf("Error reading XML from file: %v", err)
+		}
+
+		actualBaseImageTag, err := findBaseImageTag(csprojXML)
 		if err != nil {
 			t.Errorf("Error finding base image tag: %v", err)
 		}
@@ -484,46 +586,5 @@ func TestGenerateDockerfileWithDockerfile3(t *testing.T) {
 
 	if expectedBuildContext != actualBuildContext {
 		t.Errorf("Build context mismatch: expected %s, got %s", expectedBuildContext, actualBuildContext)
-	}
-}
-
-func TestDotIfEmpty1(t *testing.T) {
-	t.Parallel()
-
-	const expected = "value"
-
-	actual := dotIfEmpty("value")
-
-	if expected != actual {
-		t.Errorf("Expected %s, got %s", expected, actual)
-	}
-}
-
-func TestDotIfEmpty2(t *testing.T) {
-	t.Parallel()
-
-	const expected = "."
-
-	actual := dotIfEmpty("")
-
-	if expected != actual {
-		t.Errorf("Expected %s, got %s", expected, actual)
-	}
-}
-
-func TestDotIfEmpty3(t *testing.T) {
-	t.Parallel()
-
-	const expected = "."
-
-	type testStruct struct {
-		value string
-	}
-
-	test := testStruct{} //nolint:exhaustruct
-	actual := dotIfEmpty(test.value)
-
-	if expected != actual {
-		t.Errorf("Expected %s, got %s", expected, actual)
 	}
 }
