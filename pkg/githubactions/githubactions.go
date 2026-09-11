@@ -30,7 +30,7 @@ func Command() *cli.Command {
 	return &cli.Command{
 		Name:      commandName,
 		Aliases:   []string{"gha"},
-		Usage:     "Add build and deploy with GitHub Actions to an exisiting project.",
+		Usage:     "Add build and deploy with GitHub Actions to an existing project.",
 		UsageText: "3lv github-actions [options] <project-directory>",
 		Flags: []cli.Flag{
 			shared.SystemNameFlag(
