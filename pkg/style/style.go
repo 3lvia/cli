@@ -3,7 +3,7 @@ package style
 import (
 	"fmt"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 )
 
 type PrintOptions struct {
