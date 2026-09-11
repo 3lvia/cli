@@ -208,7 +208,7 @@ func replaceWorkflowPlaceholders(
 	options *ReplaceWorkflowPlaceholdersOptions,
 ) error {
 	if options == nil {
-		options = &ReplaceWorkflowPlaceholdersOptions{} //nolint:exhaustruct
+		options = &ReplaceWorkflowPlaceholdersOptions{} //nolint:exhaustruct_v5
 	}
 
 	file, err := os.Open(workflowFilePath)
@@ -443,7 +443,7 @@ func resolveHelmValuesFile(
 	options *ResolveHelmValuesFileOptions,
 ) (string, error) {
 	if options == nil {
-		options = &ResolveHelmValuesFileOptions{} //nolint:exhaustruct
+		options = &ResolveHelmValuesFileOptions{} //nolint:exhaustruct_v5
 	}
 
 	if options.HelmValuesFile == "" {

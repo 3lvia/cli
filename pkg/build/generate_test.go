@@ -520,7 +520,7 @@ func TestDotIfEmpty3(t *testing.T) {
 		value string
 	}
 
-	test := testStruct{} //nolint:exhaustruct
+	test := testStruct{} //nolint:exhaustruct_v5
 	actual := dotIfEmpty(test.value)
 
 	if expected != actual {

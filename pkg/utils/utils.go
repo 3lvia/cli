@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/3lvia/cli/pkg/style"
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v90/github"
 )
 
 func RemoveZeroValues(slice []string) []string {
@@ -162,10 +162,10 @@ func FirstNonEmpty(values ...string) string {
 	return ""
 }
 
-func GetAuthenticatedGithubClient() *github.Client {
+func GetAuthenticatedGithubClient() (*github.Client, error) {
 	if os.Getenv("CI") == "1" {
-		return github.NewClient(nil).WithAuthToken(os.Getenv("GITHUB_TOKEN"))
+		return github.NewClient(github.WithAuthToken(os.Getenv("GITHUB_TOKEN")))
 	}
 
-	return github.NewClient(nil)
+	return github.NewClient()
 }

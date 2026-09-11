@@ -155,7 +155,7 @@ func TestGcloudGetCredentialsCommand4(t *testing.T) {
 
 	actualCommand := gcloudGetCredentialsCommand(
 		environment,
-		&GcloudGetCredentialsCommandOptions{ //nolint:exhaustruct
+		&GcloudGetCredentialsCommandOptions{ //nolint:exhaustruct_v5
 			RunOptions: &command.RunOptions{DryRun: true},
 		},
 	)

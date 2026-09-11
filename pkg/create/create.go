@@ -218,7 +218,7 @@ func Create(ctx context.Context, c *cli.Command) error {
 	config := shared.Config{
 		System: systemName,
 		Applications: []shared.Application{
-			{ //nolint:exhaustruct
+			{ //nolint:exhaustruct_v5
 				Name:           applicationName,
 				ProjectFile:    projectFile,
 				HelmValuesFile: helmValuesFile,
