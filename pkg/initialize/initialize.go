@@ -6,8 +6,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/3lvia/cli/pkg/shared"
 	"charm.land/huh/v2"
+	"github.com/3lvia/cli/pkg/shared"
 	"github.com/urfave/cli/v3"
 )
 
