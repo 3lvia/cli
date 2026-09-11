@@ -3,7 +3,7 @@ module github.com/3lvia/cli
 go 1.26.2
 
 require (
-	github.com/charmbracelet/huh v1.0.0
+	github.com/charmbracelet/huh/v2 v2.0.3
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/google/go-github/v91 v91.0.0
 	github.com/orsinium-labs/enum v1.5.0
