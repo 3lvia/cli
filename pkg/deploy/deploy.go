@@ -53,10 +53,10 @@ func Command() *cli.Command {
 			&cli.StringFlag{
 				Name:    "workload-type",
 				Aliases: []string{"w"},
-				Usage:   "The Kubernetes workload type to use: deployment, statefulset or job",
+				Usage:   "The Kubernetes workload type to use: deployment, statefulset, cronjob or job",
 				Value:   "deployment",
 				Action: func(_ context.Context, _ *cli.Command, workloadType string) error {
-					allowedWorkloadTypes := []string{"deployment", "statefulset", "job"}
+					allowedWorkloadTypes := []string{"deployment", "statefulset", "job", "cronjob"}
 					if !slices.Contains(allowedWorkloadTypes, workloadType) {
 						return cli.Exit(fmt.Sprintf("Invalid workload type provided: must be one of %v", allowedWorkloadTypes), 1)
 					}
@@ -289,8 +289,8 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		return cli.Exit(fmt.Errorf("Failed to deploy Helm chart: %w", helmDeployOutput.Error), 1)
 	}
 
-	// Jobs do not have a rollout status.
-	if workloadType != "job" {
+	// Jobs and CronJobs do not have a rollout status.
+	if workloadType != "job" && workloadType != "cronjob" {
 		if kubectlRolloutStatusOutput := kubectlRolloutStatusCommand(
 			applicationName,
 			systemName,
