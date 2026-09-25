@@ -35,9 +35,14 @@ func helmDeployCommand(
 	useISSChart bool,
 	runOptions *command.RunOptions,
 ) command.Output {
-	if workloadType != "deployment" && workloadType != "statefulset" && workloadType != "job" {
+	switch workloadType {
+	case "deployment", "statefulset", "job", "cronjob":
+	default:
 		return command.Error(
-			fmt.Errorf("Workload type must be either deployment, statefulset or job, got '%s'.", workloadType),
+			fmt.Errorf(
+				"Workload type must be either deployment, statefulset, cronjob or job, got '%s'.",
+				workloadType,
+			),
 		)
 	}
 
