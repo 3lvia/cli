@@ -93,8 +93,8 @@ This assumes you are currently in the root of your repository (hence the `.` at 
 3lv gha -s core -a my-cool-application -f src/MyProject.csproj .
 ```
 
-Remember to also add your repository to [github-repositories-terraform](https://github.com/3lvia/github-repositories-terraform)
-to enable access from GitHub Actions to Kubernetes.
+Remember to also add your repository to your system in the registry [3lvia/systems](https://github.com/3lvia/systems)
+(`systems/<system>.yaml`) to enable access from GitHub Actions to Kubernetes.
 
 ### Generate a GitHub Actions workflow for deploying to ISS, using an existing Helm values fils
 
