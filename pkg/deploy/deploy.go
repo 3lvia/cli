@@ -37,6 +37,11 @@ func Command() *cli.Command {
 				Usage:   "The image tag to deploy.",
 			},
 			&cli.StringFlag{
+				Name:    "image-digest",
+				Usage:   "The image digest (sha256:...) to pin the deployment to, in addition to the tag. Pinning by digest in the Deployment template keeps it identical to what admission webhooks (e.g. sigstore policy-controller) resolve on ReplicaSets, which otherwise causes an endless ReplicaSet rollout loop.",
+				Sources: cli.EnvVars("3LV_IMAGE_DIGEST"),
+			},
+			&cli.StringFlag{
 				Name:    "environment",
 				Aliases: []string{"e"},
 				Usage:   "The environment to deploy to: sandbox, dev, kptest, test or prod",
@@ -198,9 +203,7 @@ func Deploy(ctx context.Context, c *cli.Command) error {
 		return configForApplication.HelmValuesFile
 	}()
 	imageTag := c.String("image-tag")
-	// NOTE: Not fully implemented yet.
-	// imageDigest := getImageDigest(systemName, applicationName, imageTag)
-	const imageDigest = ""
+	imageDigest := c.String("image-digest")
 
 	commitHash, err := utils.ResolveCommitHash(c.String("commit-hash"))
 	if err != nil {
