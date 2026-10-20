@@ -40,7 +40,11 @@ func ErrorString(err string) Output {
 
 type RunOptions struct {
 	DryRun bool
+	// Silent discards the command's stdout and stderr; Output is empty.
 	Silent bool
+	// Quiet captures stdout and stderr in Output without echoing them to the terminal.
+	// Use it when the output is needed but must not end up in CI logs (e.g. rendered manifests).
+	Quiet bool
 }
 
 func Run(cmd exec.Cmd, options *RunOptions) Output {
@@ -63,10 +67,14 @@ func Run(cmd exec.Cmd, options *RunOptions) Output {
 
 	var errBuf, outBuf bytes.Buffer
 
-	if options.Silent {
+	switch {
+	case options.Silent:
 		cmd.Stdout = nil
 		cmd.Stderr = nil
-	} else {
+	case options.Quiet:
+		cmd.Stderr = &errBuf
+		cmd.Stdout = &outBuf
+	default:
 		cmd.Stderr = io.MultiWriter(os.Stderr, &errBuf)
 		cmd.Stdout = io.MultiWriter(os.Stdout, &outBuf)
 	}
