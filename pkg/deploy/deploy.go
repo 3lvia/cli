@@ -37,8 +37,11 @@ func Command() *cli.Command {
 				Usage:   "The image tag to deploy.",
 			},
 			&cli.StringFlag{
-				Name:    "image-digest",
-				Usage:   "The image digest (sha256:...) to pin the deployment to, in addition to the tag. Pinning by digest in the Deployment template keeps it identical to what admission webhooks (e.g. sigstore policy-controller) resolve on ReplicaSets, which otherwise causes an endless ReplicaSet rollout loop.",
+				Name: "image-digest",
+				Usage: "The image digest (sha256:...) to pin the deployment to, in addition to the tag. " +
+					"Pinning by digest in the Deployment template keeps it identical to what admission webhooks " +
+					"(e.g. sigstore policy-controller) resolve on ReplicaSets, which otherwise causes an endless " +
+					"ReplicaSet rollout loop.",
 				Sources: cli.EnvVars("3LV_IMAGE_DIGEST"),
 			},
 			&cli.StringFlag{
