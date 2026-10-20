@@ -407,3 +407,48 @@ func TestHelmDeployCommandWithGitHubActionsEnv(t *testing.T) {
 		actualCommand,
 	)
 }
+
+func TestHelmTemplateCommand(t *testing.T) {
+	t.Parallel()
+
+	expectedCommandString := strings.Join(
+		[]string{
+			"helm",
+			"template",
+			"-n",
+			"core",
+			"-f",
+			".github/deploy/values.yaml",
+			"demo-api",
+			"oci://ghcr.io/3lvia/charts/elvia-deployment",
+			"--set-string",
+			"environment=dev",
+			"--set-string",
+			"labels.repositoryName=core",
+			"--set-string",
+			"labels.commitHash=\"123456\"",
+			"--set-string",
+			"image.tag=v12",
+		},
+		" ",
+	)
+
+	actualCommand := helmTemplateCommand(
+		"demo-api",
+		"core",
+		".github/deploy/values.yaml",
+		"dev",
+		"deployment",
+		"v12",
+		"core",
+		"123456",
+		false,
+		&command.RunOptions{DryRun: true},
+	)
+
+	command.ExpectedCommandStringEqualsActualCommand(
+		t,
+		expectedCommandString,
+		actualCommand,
+	)
+}
