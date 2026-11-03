@@ -9,7 +9,7 @@ on:
 jobs:
   test-install-script:
     name: Test Install Script
-    runs-on: elvia-runner
+    runs-on: ubuntu-latest
     steps:
       - name: Test install script
         run: |

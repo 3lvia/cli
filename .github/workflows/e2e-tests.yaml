@@ -11,7 +11,7 @@ on:
 jobs:
   e2e-tests:
     name: End-to-End Tests
-    runs-on: elvia-runner
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         command:
@@ -39,7 +39,7 @@ jobs:
           registry: 'ghcr.io'
           username: ${{ github.actor }}
           password: ${{ github.token }}
-
+          
       - name: Install CLI from source
         run: make install
 
@@ -57,6 +57,16 @@ jobs:
       - name: Install uv
         if: ${{ matrix.command == 'create' }}
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install Trivy
+        shell: bash
+        run: |
+          # Install Trivy, not using Elvia runner
+          sudo apt-get install wget apt-transport-https gnupg lsb-release -y --no-install-recommends
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy -y
 
       - name: 'Run tests for ${{ matrix.command }} command'
         run: |
