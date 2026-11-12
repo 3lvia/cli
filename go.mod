@@ -1,10 +1,10 @@
 module github.com/3lvia/cli
 
-go 1.26.2
+go 1.26.7
 
 require (
 	charm.land/huh/v2 v2.0.3
-	charm.land/lipgloss/v2 v2.0.6
+	charm.land/lipgloss/v2 v2.1.0
 	github.com/google/go-github/v93 v93.0.0
 	github.com/orsinium-labs/enum v1.5.0
 	github.com/samber/lo v1.53.0
